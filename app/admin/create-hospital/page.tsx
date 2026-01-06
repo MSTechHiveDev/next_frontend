@@ -4,356 +4,373 @@ import React, { useState } from "react";
 import { adminService } from "@/lib/integrations";
 import { Building2, Plus, Trash2, MapPin, Globe, Phone, Mail, Calendar, Clock, Star, Bed, Activity } from "lucide-react";
 import toast from "react-hot-toast";
-import { 
-  PageHeader, 
-  Card, 
-  FormInput, 
-  Button 
+import {
+    PageHeader,
+    Card,
+    FormInput,
+    Button
 } from "@/components/admin";
 import type { CreateHospitalRequest } from "@/lib/integrations";
 
 export default function CreateHospital() {
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    email: "",
-    pincode: "",
-    establishedYear: "",
-    website: "",
-    operatingHours: "24/7",
-    numberOfBeds: "",
-    ICUBeds: "",
-    numberOfDoctors: "",
-    ambulanceAvailability: true,
-    rating: "4.5",
-    location: { lat: "", lng: "" },
-    specialities: [] as string[],
-    services: [] as string[]
-  });
+    const [formData, setFormData] = useState({
+        name: "",
+        address: "",
+        phone: "",
+        email: "",
+        pincode: "",
+        establishedYear: "",
+        website: "",
+        operatingHours: "24/7",
+        numberOfBeds: "",
+        ICUBeds: "",
+        numberOfDoctors: "",
+        ambulanceAvailability: true,
+        rating: "4.5",
+        location: { lat: "", lng: "" },
+        specialities: [] as string[],
+        services: [] as string[]
+    });
 
-  const [loading, setLoading] = useState(false);
-  const [tempSpecialty, setTempSpecialty] = useState("");
-  const [tempService, setTempService] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [tempSpecialty, setTempSpecialty] = useState("");
+    const [tempService, setTempService] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === "phone") {
-      if (/^\d{0,10}$/.test(value)) {
-        setFormData(prev => ({ ...prev, [name]: value }));
-      }
-      return;
-    }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
 
-    if (name.includes(".")) {
-      const parts = name.split(".");
-      setFormData(prev => ({
-        ...prev,
-        [parts[0]]: { ...((prev as any)[parts[0]] || {}), [parts[1]]: value }
-      }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const addItem = (field: 'specialities' | 'services', value: string, setter: (v: string) => void) => {
-    if (!value.trim()) return;
-    if (formData[field].includes(value.trim())) {
-        toast.error(`${value} already added`);
-        return;
-    }
-    setFormData(prev => ({ ...prev, [field]: [...prev[field], value.trim()] }));
-    setter("");
-  };
-
-  const removeItem = (field: 'specialities' | 'services', index: number) => {
-    setFormData(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formData.phone.length !== 10) {
-      toast.error("Phone number must be exactly 10 digits.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const payload: CreateHospitalRequest = {
-        ...formData,
-        establishedYear: Number(formData.establishedYear) || undefined,
-        numberOfBeds: Number(formData.numberOfBeds) || undefined,
-        ICUBeds: Number(formData.ICUBeds) || undefined,
-        numberOfDoctors: Number(formData.numberOfDoctors) || undefined,
-        location: {
-            lat: formData.location.lat || 0,
-            lng: formData.location.lng || 0
+        if (name === "phone") {
+            if (/^\d{0,10}$/.test(value)) {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            }
+            return;
         }
-      };
 
-      await adminService.createHospitalClient(payload);
-      toast.success(`Hospital created successfully!`, { duration: 5000 });
+        if (name.includes(".")) {
+            const parts = name.split(".");
+            setFormData(prev => ({
+                ...prev,
+                [parts[0]]: { ...((prev as any)[parts[0]] || {}), [parts[1]]: value }
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
 
-      setFormData({
-        name: "", address: "", phone: "", email: "", pincode: "",
-        establishedYear: "", website: "", operatingHours: "24/7",
-        numberOfBeds: "", ICUBeds: "", numberOfDoctors: "",
-        ambulanceAvailability: true, rating: "4.5",
-        location: { lat: "", lng: "" }, specialities: [], services: []
-      });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create hospital");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const addItem = (field: 'specialities' | 'services', value: string, setter: (v: string) => void) => {
+        if (!value.trim()) return;
+        if (formData[field].includes(value.trim())) {
+            toast.error(`${value} already added`);
+            return;
+        }
+        setFormData(prev => ({ ...prev, [field]: [...prev[field], value.trim()] }));
+        setter("");
+    };
 
-  return (
-    <div className="max-w-6xl mx-auto">
-      <PageHeader
-        title="Create New Hospital"
-        subtitle="Register a new healthcare facility into the system"
-        icon={<Building2 className="text-orange-500" />}
-      />
+    const removeItem = (field: 'specialities' | 'services', index: number) => {
+        setFormData(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
+    };
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Info */}
-        <Card title="Basic Information" padding="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <FormInput
-                    label="Hospital Name"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Sunrise Medical Center"
-                    icon={<Building2 size={18} className="text-gray-400" />}
-                />
-                <FormInput
-                    label="Email Address"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="contact@hospital.com"
-                    icon={<Mail size={18} className="text-gray-400" />}
-                />
-                <FormInput
-                    label="Phone Number"
-                    name="phone"
-                    required
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="10 digit number"
-                    icon={<Phone size={18} className="text-gray-400" />}
-                />
-                <FormInput
-                    label="Website URL"
-                    name="website"
-                    value={formData.website}
-                    onChange={handleChange}
-                    placeholder="https://www.hospital.com"
-                    icon={<Globe size={18} className="text-gray-400" />}
-                />
-                <FormInput
-                    label="Established Year"
-                    name="establishedYear"
-                    type="number"
-                    value={formData.establishedYear}
-                    onChange={handleChange}
-                    placeholder="Eg. 1995"
-                    icon={<Calendar size={18} className="text-gray-400" />}
-                />
-                 <FormInput
-                    label="Operating Hours"
-                    name="operatingHours"
-                    value={formData.operatingHours}
-                    onChange={handleChange}
-                    placeholder="Eg. 24/7 or 9am - 8pm"
-                    icon={<Clock size={18} className="text-gray-400" />}
-                />
-                <FormInput
-                    label="Hospital Rating"
-                    name="rating"
-                    value={formData.rating}
-                    onChange={handleChange}
-                    placeholder="Eg. 4.5"
-                    icon={<Star size={18} className="text-yellow-500" />}
-                />
-            </div>
-        </Card>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-        {/* Location Info */}
-        <Card title="Location & Address" padding="p-8">
-            <div className="space-y-6">
-                <FormInput
-                    label="Physical Street Address"
-                    name="address"
-                    required
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder="Street, Landmark, City"
-                    icon={<MapPin size={18} className="text-gray-400" />}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormInput
-                        label="Pincode"
-                        name="pincode"
-                        required
-                        value={formData.pincode}
-                        onChange={handleChange}
-                        placeholder="6-digit PIN"
-                    />
-                    <FormInput
-                        label="Latitude"
-                        name="location.lat"
-                        value={formData.location.lat}
-                        onChange={handleChange}
-                        placeholder="Eg. 12.9716"
-                    />
-                    <FormInput
-                        label="Longitude"
-                        name="location.lng"
-                        value={formData.location.lng}
-                        onChange={handleChange}
-                        placeholder="Eg. 77.5946"
-                    />
-                </div>
-            </div>
-        </Card>
+        if (formData.phone.length !== 10) {
+            toast.error("Phone number must be exactly 10 digits.");
+            return;
+        }
 
-        {/* Infrastructure Info */}
-        <Card title="Infrastructure & Capacity" padding="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <FormInput
-                    label="Total Bed Count"
-                    name="numberOfBeds"
-                    type="number"
-                    value={formData.numberOfBeds}
-                    onChange={handleChange}
-                    placeholder="Eg. 100"
-                    icon={<Bed size={18} className="text-blue-500" />}
-                />
-                <FormInput
-                    label="ICU Bed Count"
-                    name="ICUBeds"
-                    type="number"
-                    value={formData.ICUBeds}
-                    onChange={handleChange}
-                    placeholder="Eg. 20"
-                    icon={<Bed size={18} className="text-red-500" />}
-                />
-                <FormInput
-                    label="Total Doctors"
-                    name="numberOfDoctors"
-                    type="number"
-                    value={formData.numberOfDoctors}
-                    onChange={handleChange}
-                    placeholder="Eg. 15"
-                    icon={<Activity size={18} className="text-green-500" />}
-                />
-                <div className="flex flex-col justify-end">
-                    <label className="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-all group" style={{ borderColor: 'var(--border-color)' }}>
-                        <input
-                            type="checkbox"
-                            checked={formData.ambulanceAvailability}
-                            onChange={(e) => setFormData(prev => ({ ...prev, ambulanceAvailability: e.target.checked }))}
-                            className="w-5 h-5 accent-blue-600 rounded"
-                        />
-                        <span className="text-sm font-medium">Ambulance Available</span>
-                    </label>
-                </div>
-            </div>
-        </Card>
+        setLoading(true);
 
-        {/* Specialties & Services */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card title="Medical Specialties" padding="p-6">
-                <div className="space-y-4">
-                    <div className="flex gap-2">
+        try {
+            // Generate a unique ID to bypass backend generator issues
+            const timestamp = Date.now().toString().slice(-6);
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            const uniqueId = `HOSP${timestamp}${random}`;
+
+            const payload: CreateHospitalRequest = {
+                ...formData,
+                hospitalId: uniqueId,
+                establishedYear: Number(formData.establishedYear) || undefined,
+                numberOfBeds: Number(formData.numberOfBeds) || undefined,
+                ICUBeds: Number(formData.ICUBeds) || undefined,
+                numberOfDoctors: Number(formData.numberOfDoctors) || undefined,
+                location: {
+                    lat: Number(formData.location.lat) || 0,
+                    lng: Number(formData.location.lng) || 0
+                },
+                rating: formData.rating // Keep as string if backend expects string, or convert if needed. Types say string.
+            };
+
+            // Strict type cleanup
+            const cleanPayload = {
+                ...payload,
+                // Ensure we don't send empty strings for optional numbers
+                establishedYear: Number(formData.establishedYear) || undefined,
+                numberOfBeds: Number(formData.numberOfBeds) || undefined,
+                ICUBeds: Number(formData.ICUBeds) || undefined,
+                numberOfDoctors: Number(formData.numberOfDoctors) || undefined,
+            };
+
+            await adminService.createHospitalClient(payload);
+            toast.success(`Hospital created successfully!`, { duration: 5000 });
+
+            setFormData({
+                name: "", address: "", phone: "", email: "", pincode: "",
+                establishedYear: "", website: "", operatingHours: "24/7",
+                numberOfBeds: "", ICUBeds: "", numberOfDoctors: "",
+                ambulanceAvailability: true, rating: "4.5",
+                location: { lat: "", lng: "" }, specialities: [], services: []
+            });
+        } catch (err: any) {
+            toast.error(err.message || "Failed to create hospital");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="max-w-6xl mx-auto">
+            <PageHeader
+                title="Create New Hospital"
+                subtitle="Register a new healthcare facility into the system"
+                icon={<Building2 className="text-orange-500" />}
+            />
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Basic Info */}
+                <Card title="Basic Information" padding="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <FormInput
-                            label="Specialty Name"
-                            value={tempSpecialty}
-                            onChange={(e) => setTempSpecialty(e.target.value)}
-                            placeholder="Add eg. Cardiology"
-                            className="flex-1"
+                            label="Hospital Name"
+                            name="name"
+                            required
+                            value={formData.name}
+                            onChange={handleChange}
+                            placeholder="Sunrise Medical Center"
+                            icon={<Building2 size={18} className="text-gray-400" />}
                         />
-                        <div className="flex items-end">
-                            <button 
-                                type="button" 
-                                onClick={() => addItem('specialities', tempSpecialty, setTempSpecialty)} 
-                                className="bg-blue-600 text-white h-[46px] px-4 rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-95"
-                            >
-                                <Plus size={20} />
-                            </button>
+                        <FormInput
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="contact@hospital.com"
+                            icon={<Mail size={18} className="text-gray-400" />}
+                        />
+                        <FormInput
+                            label="Phone Number"
+                            name="phone"
+                            required
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="10 digit number"
+                            icon={<Phone size={18} className="text-gray-400" />}
+                        />
+                        <FormInput
+                            label="Website URL"
+                            name="website"
+                            value={formData.website}
+                            onChange={handleChange}
+                            placeholder="https://www.hospital.com"
+                            icon={<Globe size={18} className="text-gray-400" />}
+                        />
+                        <FormInput
+                            label="Established Year"
+                            name="establishedYear"
+                            type="number"
+                            value={formData.establishedYear}
+                            onChange={handleChange}
+                            placeholder="Eg. 1995"
+                            icon={<Calendar size={18} className="text-gray-400" />}
+                        />
+                        <FormInput
+                            label="Operating Hours"
+                            name="operatingHours"
+                            value={formData.operatingHours}
+                            onChange={handleChange}
+                            placeholder="Eg. 24/7 or 9am - 8pm"
+                            icon={<Clock size={18} className="text-gray-400" />}
+                        />
+                        <FormInput
+                            label="Hospital Rating"
+                            name="rating"
+                            value={formData.rating}
+                            onChange={handleChange}
+                            placeholder="Eg. 4.5"
+                            icon={<Star size={18} className="text-yellow-500" />}
+                        />
+                    </div>
+                </Card>
+
+                {/* Location Info */}
+                <Card title="Location & Address" padding="p-8">
+                    <div className="space-y-6">
+                        <FormInput
+                            label="Physical Street Address"
+                            name="address"
+                            required
+                            value={formData.address}
+                            onChange={handleChange}
+                            placeholder="Street, Landmark, City"
+                            icon={<MapPin size={18} className="text-gray-400" />}
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <FormInput
+                                label="Pincode"
+                                name="pincode"
+                                required
+                                value={formData.pincode}
+                                onChange={handleChange}
+                                placeholder="6-digit PIN"
+                            />
+                            <FormInput
+                                label="Latitude"
+                                name="location.lat"
+                                value={formData.location.lat}
+                                onChange={handleChange}
+                                placeholder="Eg. 12.9716"
+                            />
+                            <FormInput
+                                label="Longitude"
+                                name="location.lng"
+                                value={formData.location.lng}
+                                onChange={handleChange}
+                                placeholder="Eg. 77.5946"
+                            />
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 pt-2">
-                        {formData.specialities.length > 0 ? formData.specialities.map((item, idx) => (
-                            <div key={idx} className="bg-blue-500/10 text-blue-500 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 border border-blue-500/20">
-                                {item} 
-                                <button type="button" onClick={() => removeItem('specialities', idx)} className="hover:text-red-500 transition-colors">
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                        )) : (
-                            <p className="text-xs text-gray-400 italic">No specialties added yet.</p>
-                        )}
-                    </div>
-                </div>
-            </Card>
+                </Card>
 
-            <Card title="Hospital Services" padding="p-6">
-                <div className="space-y-4">
-                    <div className="flex gap-2">
+                {/* Infrastructure Info */}
+                <Card title="Infrastructure & Capacity" padding="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <FormInput
-                            label="Service Name"
-                            value={tempService}
-                            onChange={(e) => setTempService(e.target.value)}
-                            placeholder="Add eg. 24/7 Pharmacy"
-                            className="flex-1"
+                            label="Total Bed Count"
+                            name="numberOfBeds"
+                            type="number"
+                            value={formData.numberOfBeds}
+                            onChange={handleChange}
+                            placeholder="Eg. 100"
+                            icon={<Bed size={18} className="text-blue-500" />}
                         />
-                        <div className="flex items-end">
-                            <button 
-                                type="button" 
-                                onClick={() => addItem('services', tempService, setTempService)} 
-                                className="bg-green-600 text-white h-[46px] px-4 rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-95"
-                            >
-                                <Plus size={20} />
-                            </button>
+                        <FormInput
+                            label="ICU Bed Count"
+                            name="ICUBeds"
+                            type="number"
+                            value={formData.ICUBeds}
+                            onChange={handleChange}
+                            placeholder="Eg. 20"
+                            icon={<Bed size={18} className="text-red-500" />}
+                        />
+                        <FormInput
+                            label="Total Doctors"
+                            name="numberOfDoctors"
+                            type="number"
+                            value={formData.numberOfDoctors}
+                            onChange={handleChange}
+                            placeholder="Eg. 15"
+                            icon={<Activity size={18} className="text-green-500" />}
+                        />
+                        <div className="flex flex-col justify-end">
+                            <label className="flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900 transition-all group" style={{ borderColor: 'var(--border-color)' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.ambulanceAvailability}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, ambulanceAvailability: e.target.checked }))}
+                                    className="w-5 h-5 accent-blue-600 rounded"
+                                />
+                                <span className="text-sm font-medium">Ambulance Available</span>
+                            </label>
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 pt-2">
-                        {formData.services.length > 0 ? formData.services.map((item, idx) => (
-                            <div key={idx} className="bg-green-500/10 text-green-500 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 border border-green-500/20">
-                                {item} 
-                                <button type="button" onClick={() => removeItem('services', idx)} className="hover:text-red-500 transition-colors">
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                        )) : (
-                            <p className="text-xs text-gray-400 italic">No services added yet.</p>
-                        )}
-                    </div>
-                </div>
-            </Card>
-        </div>
+                </Card>
 
-        <div className="flex justify-end pt-4 pb-12">
-          <Button
-            type="submit"
-            loading={loading}
-            icon={<Building2 size={20} />}
-            className="w-full md:w-auto px-16 py-4 text-lg"
-          >
-            Finalize & Create Hospital
-          </Button>
+                {/* Specialties & Services */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <Card title="Medical Specialties" padding="p-6">
+                        <div className="space-y-4">
+                            <div className="flex gap-2">
+                                <FormInput
+                                    label="Specialty Name"
+                                    value={tempSpecialty}
+                                    onChange={(e) => setTempSpecialty(e.target.value)}
+                                    placeholder="Add eg. Cardiology"
+                                    className="flex-1"
+                                />
+                                <div className="flex items-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => addItem('specialities', tempSpecialty, setTempSpecialty)}
+                                        className="bg-blue-600 text-white h-[46px] px-4 rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-95"
+                                    >
+                                        <Plus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                {formData.specialities.length > 0 ? formData.specialities.map((item, idx) => (
+                                    <div key={idx} className="bg-blue-500/10 text-blue-500 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 border border-blue-500/20">
+                                        {item}
+                                        <button type="button" onClick={() => removeItem('specialities', idx)} className="hover:text-red-500 transition-colors">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                )) : (
+                                    <p className="text-xs text-gray-400 italic">No specialties added yet.</p>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card title="Hospital Services" padding="p-6">
+                        <div className="space-y-4">
+                            <div className="flex gap-2">
+                                <FormInput
+                                    label="Service Name"
+                                    value={tempService}
+                                    onChange={(e) => setTempService(e.target.value)}
+                                    placeholder="Add eg. 24/7 Pharmacy"
+                                    className="flex-1"
+                                />
+                                <div className="flex items-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => addItem('services', tempService, setTempService)}
+                                        className="bg-green-600 text-white h-[46px] px-4 rounded-xl hover:bg-green-700 transition-all shadow-md active:scale-95"
+                                    >
+                                        <Plus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                {formData.services.length > 0 ? formData.services.map((item, idx) => (
+                                    <div key={idx} className="bg-green-500/10 text-green-500 px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 border border-green-500/20">
+                                        {item}
+                                        <button type="button" onClick={() => removeItem('services', idx)} className="hover:text-red-500 transition-colors">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                )) : (
+                                    <p className="text-xs text-gray-400 italic">No services added yet.</p>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="flex justify-end pt-4 pb-12">
+                    <Button
+                        type="submit"
+                        loading={loading}
+                        icon={<Building2 size={20} />}
+                        className="w-full md:w-auto px-16 py-4 text-lg"
+                    >
+                        Finalize & Create Hospital
+                    </Button>
+                </div>
+            </form>
         </div>
-      </form>
-    </div>
-  );
+    );
 }

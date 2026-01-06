@@ -26,7 +26,8 @@ const adminMenu = [
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
+    // @ts-ignore - accessing new property
+    const { user, logout, isAuthenticated, checkAuth, isLoading, isInitialized } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState("");
     const [searchPlaceholder, setSearchPlaceholder] = useState("Search...");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -43,15 +44,15 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
         checkAuth();
     }, []);
 
-    // Redirect to login if not authenticated after loading completes
+    // Redirect to login if not authenticated after initialization
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
+        if (isInitialized && !isAuthenticated) {
             router.push('/auth/login');
         }
-    }, [isAuthenticated, isLoading, router]);
+    }, [isAuthenticated, isInitialized, router]);
 
     // Show loading while checking auth
-    if (isLoading) {
+    if (!isInitialized) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
                 <div className="text-(--text-color) text-lg">Loading...</div>
@@ -131,7 +132,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'hover:text-(--text-color)'
                                     }`}
-                                style={!isActive ? { 
+                                style={!isActive ? {
                                     backgroundColor: 'transparent',
                                     color: 'var(--secondary-color)'
                                 } : {}}

@@ -5,15 +5,15 @@ import { Trash2, User, Activity, Edit3, Search, Building2, Headphones } from "lu
 import toast from "react-hot-toast";
 import { adminService } from '@/lib/integrations';
 import { useAuthStore } from '@/stores/authStore';
-import { 
-  PageHeader, 
-  Table, 
-  Badge, 
-  Button, 
-  Modal, 
+import {
+  PageHeader,
+  Table,
+  Badge,
+  Button,
+  Modal,
   ConfirmModal,
   FormInput,
-  getStatusVariant 
+  getStatusVariant
 } from '@/components/admin';
 import type { Helpdesk } from '@/lib/integrations';
 
@@ -51,7 +51,7 @@ function HelpDesksList() {
     confirmText: "Delete",
     cancelText: "Cancel",
     type: "danger" as "danger" | "warning" | "info",
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   useEffect(() => {
@@ -84,10 +84,21 @@ function HelpDesksList() {
       onConfirm: async () => {
         setIsDeleting(true);
         try {
-          await adminService.deleteUserClient(id);
-          setHelpdesks(helpdesks.filter((h) => h._id !== id));
+          const helpdeskObj = helpdesks.find(h => h._id === id);
+          const targetId = (helpdeskObj as any)?.userId ||
+            (helpdeskObj as any)?.user?._id ||
+            (helpdeskObj as any)?.id ||
+            id;
+
+          console.log('Deleting helpdesk target:', { originalId: id, targetId });
+
+          // Service handles fallbacks and 404 swallowing
+          await adminService.deleteUserClient(targetId as string, 'helpdesk');
+
+          setHelpdesks(prev => prev.filter((h) => h._id !== id));
           toast.success("Staff deleted successfully");
         } catch (err: any) {
+          console.error("Helpdesk delete failed:", err);
           toast.error("Failed to delete staff");
         } finally {
           setIsDeleting(false);
@@ -152,15 +163,15 @@ function HelpDesksList() {
       />
 
       <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
-          />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
+        />
       </div>
 
       <Table headers={headers}>
@@ -183,12 +194,12 @@ function HelpDesksList() {
                 </div>
               </td>
               <td className="px-6 py-4">
-                 <div className="flex items-center gap-2">
-                    <Building2 size={14} className="text-gray-400" />
-                     <span className="text-sm font-medium">
-                        {(staff.hospital && typeof staff.hospital === 'object') ? (staff.hospital as any).name : 'Unassigned'}
-                     </span>
-                 </div>
+                <div className="flex items-center gap-2">
+                  <Building2 size={14} className="text-gray-400" />
+                  <span className="text-sm font-medium">
+                    {(staff.hospital && typeof staff.hospital === 'object') ? (staff.hospital as any).name : 'Unassigned'}
+                  </span>
+                </div>
               </td>
               <td className="px-6 py-4 text-sm">
                 <div>{staff.mobile || 'No Mobile'}</div>
@@ -200,38 +211,38 @@ function HelpDesksList() {
                 </Badge>
               </td>
               <td className="px-6 py-4">
-                 <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={(e) => handleEditClick(e, staff)}
-                      className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
-                      title="Edit"
-                    >
-                      <Edit3 size={18} />
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(e, staff._id)}
-                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                 </div>
+                <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleEditClick(e, staff)}
+                    className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                    title="Edit"
+                  >
+                    <Edit3 size={18} />
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(e, staff._id)}
+                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))
         ) : (
           <tr>
             <td colSpan={5} className="py-12 text-center text-gray-500 italic">
-               No helpdesk staff found.
+              No helpdesk staff found.
             </td>
           </tr>
         )}
       </Table>
 
       {/* Edit Modal */}
-      <Modal 
-        isOpen={!!editingStaff} 
-        onClose={() => setEditingStaff(null)} 
+      <Modal
+        isOpen={!!editingStaff}
+        onClose={() => setEditingStaff(null)}
         title="Edit Staff Info"
       >
         {editingStaff && (
@@ -239,20 +250,20 @@ function HelpDesksList() {
             <FormInput
               label="Full Name"
               value={editingStaff.name}
-              onChange={e => setEditingStaff({...editingStaff, name: e.target.value})}
+              onChange={e => setEditingStaff({ ...editingStaff, name: e.target.value })}
               required
             />
             <FormInput
               label="Email Address"
               type="email"
               value={editingStaff.email}
-              onChange={e => setEditingStaff({...editingStaff, email: e.target.value})}
+              onChange={e => setEditingStaff({ ...editingStaff, email: e.target.value })}
               required
             />
             <FormInput
               label="Mobile Number"
               value={editingStaff.mobile || ''}
-              onChange={e => setEditingStaff({...editingStaff, mobile: e.target.value})}
+              onChange={e => setEditingStaff({ ...editingStaff, mobile: e.target.value })}
             />
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="ghost" onClick={() => setEditingStaff(null)}>
@@ -276,46 +287,46 @@ function HelpDesksList() {
         {selectedStaff && (
           <div className="space-y-6">
             <div className="flex items-center gap-4 border-b pb-6" style={{ borderColor: 'var(--border-color)' }}>
-               <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-sm ${getColor(selectedStaff.name)}`}>
-                  {getInitials(selectedStaff.name)}
-               </div>
-               <div>
-                  <h2 className="text-2xl font-bold">{selectedStaff.name}</h2>
-                  <p className="text-orange-500 font-medium">Front Desk Staff</p>
-                  <div className="mt-2">
-                    <Badge variant={selectedStaff.status === 'active' ? 'success' : 'danger'}>
-                      {selectedStaff.status.toUpperCase()}
-                    </Badge>
-                  </div>
-               </div>
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-sm ${getColor(selectedStaff.name)}`}>
+                {getInitials(selectedStaff.name)}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{selectedStaff.name}</h2>
+                <p className="text-orange-500 font-medium">Front Desk Staff</p>
+                <div className="mt-2">
+                  <Badge variant={selectedStaff.status === 'active' ? 'success' : 'danger'}>
+                    {selectedStaff.status.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-8">
-               <div className="space-y-4">
-                  <div>
-                    <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Contact Details</span>
-                    <p className="mt-1 font-medium">{selectedStaff.mobile || 'N/A'}</p>
-                    <p className="text-sm opacity-70">{selectedStaff.email}</p>
-                  </div>
-               </div>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Contact Details</span>
+                  <p className="mt-1 font-medium">{selectedStaff.mobile || 'N/A'}</p>
+                  <p className="text-sm opacity-70">{selectedStaff.email}</p>
+                </div>
+              </div>
 
-               <div className="space-y-4">
-                  <div>
-                    <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Assigned At</span>
-                    <div className="flex items-center gap-2 mt-1">
-                       <Building2 size={16} className="text-gray-400" />
-                        <span className="font-medium">
-                           {(selectedStaff.hospital && typeof selectedStaff.hospital === 'object') ? (selectedStaff.hospital as any).name : 'Unassigned'}
-                        </span>
-                    </div>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Assigned At</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Building2 size={16} className="text-gray-400" />
+                    <span className="font-medium">
+                      {(selectedStaff.hospital && typeof selectedStaff.hospital === 'object') ? (selectedStaff.hospital as any).name : 'Unassigned'}
+                    </span>
                   </div>
-               </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
-               <Button variant="primary" onClick={() => setSelectedStaff(null)}>
-                  Close Profile
-               </Button>
+              <Button variant="primary" onClick={() => setSelectedStaff(null)}>
+                Close Profile
+              </Button>
             </div>
           </div>
         )}

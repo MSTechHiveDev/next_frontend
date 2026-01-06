@@ -18,11 +18,11 @@ export async function apiClient<T>(
 ): Promise<T> {
   const isClient = typeof window !== 'undefined';
   let token = isClient ? localStorage.getItem('accessToken') : null;
-  
+
   // Construct headers more robustly
   const headers = new Headers();
   headers.set('Content-Type', 'application/json');
-  
+
   // Merge existing headers if any
   if (options?.headers) {
     if (options.headers instanceof Headers) {
@@ -39,7 +39,7 @@ export async function apiClient<T>(
   }
 
   const url = `${API_CONFIG.BASE_URL}${path}`;
-  
+
   try {
     const res = await fetch(url, {
       ...options,
@@ -49,11 +49,11 @@ export async function apiClient<T>(
     // Handle 401 Unauthorized
     if (res.status === 401 && isClient && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       if (refreshToken) {
         if (!isRefreshing) {
           isRefreshing = true;
-          
+
           try {
             const refreshRes = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
               method: 'POST',
@@ -65,10 +65,10 @@ export async function apiClient<T>(
               const data = await refreshRes.json();
               const newAccessToken = data.tokens.accessToken;
               const newRefreshToken = data.tokens.refreshToken;
-              
+
               localStorage.setItem('accessToken', newAccessToken);
               localStorage.setItem('refreshToken', newRefreshToken);
-              
+
               isRefreshing = false;
               onTokenRefreshed(newAccessToken);
             } else {
@@ -101,7 +101,9 @@ export async function apiClient<T>(
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: 'API Error' }));
       console.error(`API Error [${res.status}] ${path}:`, errorData);
-      throw new Error(errorData.message || `HTTP ${res.status}`);
+      const error = new Error(errorData.message || `HTTP ${res.status}`);
+      (error as any).status = res.status;
+      throw error;
     }
 
     return res.json();

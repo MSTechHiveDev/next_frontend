@@ -2,35 +2,35 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { 
-  Trash2, 
-  User, 
-  Activity, 
-  Building2, 
-  Search, 
-  Edit3, 
-  Shield, 
-  Headphones, 
-  Stethoscope, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  X, 
-  AlertCircle 
+import {
+    Trash2,
+    User,
+    Activity,
+    Building2,
+    Search,
+    Edit3,
+    Shield,
+    Headphones,
+    Stethoscope,
+    Mail,
+    Phone,
+    MapPin,
+    Calendar,
+    X,
+    AlertCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { adminService } from '@/lib/integrations';
 import { useAuthStore } from '@/stores/authStore';
-import { 
-  PageHeader, 
-  Table, 
-  Badge, 
-  Button, 
-  Modal, 
-  ConfirmModal,
-  FormInput,
-  getStatusVariant
+import {
+    PageHeader,
+    Table,
+    Badge,
+    Button,
+    Modal,
+    ConfirmModal,
+    FormInput,
+    getStatusVariant
 } from '@/components/admin';
 import type { User as IntegrationUser, Doctor, Patient, Helpdesk, Admin } from '@/lib/integrations';
 
@@ -82,7 +82,7 @@ const UsersList = () => {
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         id: "",
-        onConfirm: () => {}
+        onConfirm: () => { }
     });
 
     useEffect(() => {
@@ -104,17 +104,33 @@ const UsersList = () => {
         }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = (id: string, roleParam?: string) => {
         setConfirmModal({
             isOpen: true,
             id: id,
             onConfirm: async () => {
                 try {
-                    await adminService.deleteUserClient(id);
-                    setUsers(prev => prev.filter((u) => u._id !== id));
+                    const userObj = users.find(u => u._id === id);
+
+                    if (!userObj?.userId) {
+                        // If no userId, try deleting with the object ID itself
+                        console.warn("No linked userId found, attempting delete with object ID:", id);
+                    }
+
+                    console.log('Deleting user:', {
+                        id: userObj?.userId || id,
+                        role: roleParam,
+                    });
+
+                    // Service now handles 404 fallbacks internally
+                    await adminService.deleteUserClient(userObj?.userId || id, roleParam);
+
+                    // Update UI
+                    setUsers(prev => prev.filter(u => u._id !== id));
                     toast.success("Account permanently deleted.");
                 } catch (err: any) {
-                    toast.error("Failed to delete user record.");
+                    console.error("Delete operation failed:", err);
+                    toast.error(err.message || "Failed to delete user record.");
                 } finally {
                     setConfirmModal(prev => ({ ...prev, isOpen: false }));
                 }
@@ -167,12 +183,12 @@ const UsersList = () => {
 
     if (loading) {
         return (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-sm font-medium opacity-50">Indexing global directory...</p>
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="text-sm font-medium opacity-50">Indexing global directory...</p>
+                </div>
             </div>
-          </div>
         );
     }
 
@@ -217,8 +233,8 @@ const UsersList = () => {
                             <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                     {user.role === 'doctor' && (user.profilePic || user.avatar) ? (
-                                        <img 
-                                            src={user.profilePic || user.avatar} 
+                                        <img
+                                            src={user.profilePic || user.avatar}
                                             className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-500/10"
                                             alt=""
                                             onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${user.name}&background=random`; }}
@@ -230,7 +246,7 @@ const UsersList = () => {
                                     )}
                                     <div className="max-w-[150px]">
                                         <div className="font-semibold truncate text-sm">{user.name}</div>
-                                        <div className="text-[10px] opacity-40 font-mono mt-0.5 truncate tracking-tighter">{ (user.doctorId || user.patientProfileId || user._id).toUpperCase() }</div>
+                                        <div className="text-[10px] opacity-40 font-mono mt-0.5 truncate tracking-tighter">{(user.doctorId || user.patientProfileId || user._id).toUpperCase()}</div>
                                     </div>
                                 </div>
                             </td>
@@ -270,7 +286,7 @@ const UsersList = () => {
                                         <Edit3 size={16} />
                                     </button>
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); handleDelete(user._id); }}
+                                        onClick={(e) => { e.stopPropagation(); handleDelete(user._id, user.role); }}
                                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                         title="Revoke Permission"
                                     >
@@ -506,9 +522,9 @@ const UsersList = () => {
 export default function UsersPage() {
     return (
         <Suspense fallback={
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
         }>
             <UsersList />
         </Suspense>
