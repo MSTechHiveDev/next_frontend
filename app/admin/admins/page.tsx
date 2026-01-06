@@ -5,14 +5,14 @@ import { Trash2, User, Activity, Edit3, Search, ShieldCheck } from "lucide-react
 import toast from "react-hot-toast";
 import { adminService } from '@/lib/integrations';
 import { useAuthStore } from '@/stores/authStore';
-import { 
-  PageHeader, 
-  Table, 
-  Badge, 
-  Button, 
-  Modal, 
+import {
+  PageHeader,
+  Table,
+  Badge,
+  Button,
+  Modal,
   ConfirmModal,
-  FormInput 
+  FormInput
 } from '@/components/admin';
 import type { Admin } from '@/lib/integrations';
 
@@ -45,7 +45,7 @@ function AdminsList() {
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     id: "",
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   useEffect(() => {
@@ -139,15 +139,15 @@ function AdminsList() {
       />
 
       <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
-          />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
+        />
       </div>
 
       <Table headers={headers}>
@@ -178,38 +178,38 @@ function AdminsList() {
                 </Badge>
               </td>
               <td className="px-6 py-4">
-                 <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => handleEditClick(admin)}
-                      className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
-                      title="Edit"
-                    >
-                      <Edit3 size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(admin._id)}
-                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                 </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => handleEditClick(admin)}
+                    className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                    title="Edit"
+                  >
+                    <Edit3 size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(admin._id)}
+                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))
         ) : (
           <tr>
             <td colSpan={4} className="py-12 text-center text-gray-500 italic">
-               No administrators found.
+              No administrators found.
             </td>
           </tr>
         )}
       </Table>
 
       {/* Edit Modal */}
-      <Modal 
-        isOpen={!!editingAdmin} 
-        onClose={() => setEditingAdmin(null)} 
+      <Modal
+        isOpen={!!editingAdmin}
+        onClose={() => setEditingAdmin(null)}
         title="Update Admin Record"
       >
         {editingAdmin && (
@@ -217,20 +217,20 @@ function AdminsList() {
             <FormInput
               label="Full Name"
               value={editingAdmin.name}
-              onChange={e => setEditingAdmin({...editingAdmin, name: e.target.value})}
+              onChange={e => setEditingAdmin({ ...editingAdmin, name: e.target.value })}
               required
             />
             <FormInput
               label="Email Address"
               type="email"
               value={editingAdmin.email}
-              onChange={e => setEditingAdmin({...editingAdmin, email: e.target.value})}
+              onChange={e => setEditingAdmin({ ...editingAdmin, email: e.target.value })}
               required
             />
             <FormInput
               label="Mobile Number"
               value={editingAdmin.mobile || ''}
-              onChange={e => setEditingAdmin({...editingAdmin, mobile: e.target.value})}
+              onChange={e => setEditingAdmin({ ...editingAdmin, mobile: e.target.value })}
             />
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="ghost" onClick={() => setEditingAdmin(null)}>

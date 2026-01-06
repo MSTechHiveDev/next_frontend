@@ -12,6 +12,7 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
@@ -23,6 +24,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
 
   initEvents: () => {
     if (typeof window !== 'undefined') {
@@ -66,18 +68,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuth: async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
       return;
     }
 
     set({ isLoading: true });
     try {
       const user = await authService.getMeClient();
-      set({ user, isAuthenticated: true, isLoading: false });
+      set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
     }
   },
 }));

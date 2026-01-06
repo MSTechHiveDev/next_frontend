@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import { adminService } from "@/lib/integrations";
 import { UserPlus, Building2, Stethoscope, Briefcase } from "lucide-react";
 import toast from "react-hot-toast";
-import { 
-  PageHeader, 
-  Card, 
-  FormInput, 
-  FormSelect, 
-  Button 
+import {
+  PageHeader,
+  Card,
+  FormInput,
+  FormSelect,
+  Button
 } from "@/components/admin";
 import type { Hospital, Doctor } from "@/lib/integrations";
 
@@ -20,7 +20,7 @@ export default function AssignDoctor() {
     specialties: "",
     consultationFee: ""
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -73,55 +73,55 @@ export default function AssignDoctor() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card title="Assignment Configuration" padding="p-8">
-           <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormSelect
-                  label="Select Hospital"
-                  value={formData.hospitalId}
-                  onChange={(e) => setFormData({ ...formData, hospitalId: e.target.value })}
-                  required
-                  options={[
-                    { label: fetchingData ? "Loading..." : "Choose Hospital", value: "" },
-                    ...hospitals.map(h => ({ label: h.name, value: h._id }))
-                  ]}
-                />
-
-                <FormSelect
-                  label="Select Doctor"
-                  value={formData.doctorId}
-                  onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
-                  required
-                  options={[
-                    { label: fetchingData ? "Loading..." : "Choose Doctor", value: "" },
-                    ...doctors.map(d => ({ label: d.name, value: d._id }))
-                  ]}
-                />
-              </div>
-
-              <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-3">
-                 <Building2 className="text-blue-500 mt-0.5" size={18} />
-                 <div className="text-xs text-blue-400 leading-relaxed">
-                    Once assigned, the doctor will be able to manage appointments and records for this specific hospital location.
-                 </div>
-              </div>
-
-              <FormInput
-                label="Role Specialties (Comma Separated)"
-                placeholder="Cardiology, Emergency, OPD"
-                value={formData.specialties}
-                onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormSelect
+                label="Select Hospital"
+                value={formData.hospitalId}
+                onChange={(e) => setFormData({ ...formData, hospitalId: e.target.value })}
                 required
+                options={[
+                  { label: fetchingData ? "Loading..." : "Choose Hospital", value: "" },
+                  ...hospitals.map(h => ({ label: h.name, value: h._id }))
+                ]}
               />
 
-              <FormInput
-                label="Consultation Fee (₹)"
-                type="number"
-                placeholder="Eg. 500"
-                value={formData.consultationFee}
-                onChange={(e) => setFormData({ ...formData, consultationFee: e.target.value })}
+              <FormSelect
+                label="Select Doctor"
+                value={formData.doctorId}
+                onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
                 required
+                options={[
+                  { label: fetchingData ? "Loading..." : "Choose Doctor", value: "" },
+                  ...doctors.map(d => ({ label: `${d.name} (${d.doctorId || 'No ID'})`, value: d.doctorId || d._id }))
+                ]}
               />
-           </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-3">
+              <Building2 className="text-blue-500 mt-0.5" size={18} />
+              <div className="text-xs text-blue-400 leading-relaxed">
+                Once assigned, the doctor will be able to manage appointments and records for this specific hospital location.
+              </div>
+            </div>
+
+            <FormInput
+              label="Role Specialties (Comma Separated)"
+              placeholder="Cardiology, Emergency, OPD"
+              value={formData.specialties}
+              onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
+              required
+            />
+
+            <FormInput
+              label="Consultation Fee (₹)"
+              type="number"
+              placeholder="Eg. 500"
+              value={formData.consultationFee}
+              onChange={(e) => setFormData({ ...formData, consultationFee: e.target.value })}
+              required
+            />
+          </div>
         </Card>
 
         <div className="flex justify-end pt-4">

@@ -5,15 +5,15 @@ import { Trash2, User, Activity, Edit3, Search, Stethoscope, Building2 } from "l
 import toast from "react-hot-toast";
 import { adminService } from '@/lib/integrations';
 import { useAuthStore } from '@/stores/authStore';
-import { 
-  PageHeader, 
-  Table, 
-  Badge, 
-  Button, 
-  Modal, 
+import {
+  PageHeader,
+  Table,
+  Badge,
+  Button,
+  Modal,
   ConfirmModal,
   FormInput,
-  getStatusVariant 
+  getStatusVariant
 } from '@/components/admin';
 import type { Doctor } from '@/lib/integrations';
 
@@ -51,7 +51,7 @@ function DoctorsList() {
     confirmText: "Delete",
     cancelText: "Cancel",
     type: "danger" as "danger" | "warning" | "info",
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   useEffect(() => {
@@ -153,15 +153,15 @@ function DoctorsList() {
       />
 
       <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Search by name, email or specialty..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
-          />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input
+          type="text"
+          placeholder="Search by name, email or specialty..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full border rounded-xl pl-10 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
+        />
       </div>
 
       <Table headers={headers}>
@@ -195,16 +195,16 @@ function DoctorsList() {
               </td>
               <td className="px-6 py-4">
                 <div className="flex flex-wrap gap-1">
-                   {doctor.specialties && doctor.specialties.length > 0 ? (
-                      doctor.specialties.slice(0, 2).map((s, i) => (
-                        <span key={i} className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                          {s}
-                        </span>
-                      ))
-                   ) : <span className="text-xs opacity-40 italic">None</span>}
-                   {doctor.specialties && doctor.specialties.length > 2 && (
-                      <span className="text-[10px] opacity-50">+{doctor.specialties.length - 2} more</span>
-                   )}
+                  {doctor.specialties && doctor.specialties.length > 0 ? (
+                    doctor.specialties.slice(0, 2).map((s, i) => (
+                      <span key={i} className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                        {s}
+                      </span>
+                    ))
+                  ) : <span className="text-xs opacity-40 italic">None</span>}
+                  {doctor.specialties && doctor.specialties.length > 2 && (
+                    <span className="text-[10px] opacity-50">+{doctor.specialties.length - 2} more</span>
+                  )}
                 </div>
               </td>
               <td className="px-6 py-4 text-sm">
@@ -217,38 +217,38 @@ function DoctorsList() {
                 </Badge>
               </td>
               <td className="px-6 py-4">
-                 <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                    <button
-                      onClick={(e) => handleEditClick(e, doctor)}
-                      className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
-                      title="Edit"
-                    >
-                      <Edit3 size={18} />
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(e, doctor._id)}
-                      className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                 </div>
+                <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => handleEditClick(e, doctor)}
+                    className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                    title="Edit"
+                  >
+                    <Edit3 size={18} />
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(e, doctor._id)}
+                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))
         ) : (
           <tr>
             <td colSpan={5} className="py-12 text-center text-gray-500 italic">
-               No doctors found.
+              No doctors found.
             </td>
           </tr>
         )}
       </Table>
 
       {/* Edit Modal */}
-      <Modal 
-        isOpen={!!editingDoctor} 
-        onClose={() => setEditingDoctor(null)} 
+      <Modal
+        isOpen={!!editingDoctor}
+        onClose={() => setEditingDoctor(null)}
         title="Edit Doctor Info"
       >
         {editingDoctor && (
@@ -256,20 +256,20 @@ function DoctorsList() {
             <FormInput
               label="Full Name"
               value={editingDoctor.name}
-              onChange={e => setEditingDoctor({...editingDoctor, name: e.target.value})}
+              onChange={e => setEditingDoctor({ ...editingDoctor, name: e.target.value })}
               required
             />
             <FormInput
               label="Email Address"
               type="email"
               value={editingDoctor.email}
-              onChange={e => setEditingDoctor({...editingDoctor, email: e.target.value})}
+              onChange={e => setEditingDoctor({ ...editingDoctor, email: e.target.value })}
               required
             />
             <FormInput
               label="Mobile Number"
               value={editingDoctor.mobile || ''}
-              onChange={e => setEditingDoctor({...editingDoctor, mobile: e.target.value})}
+              onChange={e => setEditingDoctor({ ...editingDoctor, mobile: e.target.value })}
             />
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="ghost" onClick={() => setEditingDoctor(null)}>
@@ -293,83 +293,83 @@ function DoctorsList() {
         {selectedDoctor && (
           <div className="space-y-6">
             <div className="flex items-center gap-4 border-b pb-6" style={{ borderColor: 'var(--border-color)' }}>
-               {selectedDoctor.profilePic ? (
-                  <img src={selectedDoctor.profilePic} className="w-24 h-24 rounded-2xl object-cover border shadow-sm" alt="" />
-               ) : (
-                  <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-sm ${getColor(selectedDoctor.name)}`}>
-                    {getInitials(selectedDoctor.name)}
-                  </div>
-               )}
-               <div>
-                  <h2 className="text-2xl font-bold">{selectedDoctor.name}</h2>
-                  <p className="text-blue-500 font-medium">{selectedDoctor.qualification || 'Medical Professional'}</p>
-                  <div className="mt-2">
-                    <Badge variant={selectedDoctor.status === 'active' ? 'success' : 'danger'}>
-                      {selectedDoctor.status.toUpperCase()}
-                    </Badge>
-                  </div>
-               </div>
+              {selectedDoctor.profilePic ? (
+                <img src={selectedDoctor.profilePic} className="w-24 h-24 rounded-2xl object-cover border shadow-sm" alt="" />
+              ) : (
+                <div className={`w-24 h-24 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-sm ${getColor(selectedDoctor.name)}`}>
+                  {getInitials(selectedDoctor.name)}
+                </div>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold">{selectedDoctor.name}</h2>
+                <p className="text-blue-500 font-medium">{selectedDoctor.qualification || 'Medical Professional'}</p>
+                <div className="mt-2">
+                  <Badge variant={selectedDoctor.status === 'active' ? 'success' : 'danger'}>
+                    {selectedDoctor.status.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-8">
-               <div className="space-y-4">
-                  <div>
-                    <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Contact Details</span>
-                    <p className="mt-1 font-medium">{selectedDoctor.mobile || 'N/A'}</p>
-                    <p className="text-sm opacity-70">{selectedDoctor.email}</p>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Contact Details</span>
+                  <p className="mt-1 font-medium">{selectedDoctor.mobile || 'N/A'}</p>
+                  <p className="text-sm opacity-70">{selectedDoctor.email}</p>
+                </div>
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Current Hospital</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Building2 size={16} className="text-gray-400" />
+                    <span className="font-medium">
+                      {(selectedDoctor.hospital && typeof selectedDoctor.hospital === 'object') ? (selectedDoctor.hospital as any).name : 'Not Assigned'}
+                    </span>
                   </div>
-                  <div>
-                    <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Current Hospital</span>
-                    <div className="flex items-center gap-2 mt-1">
-                       <Building2 size={16} className="text-gray-400" />
-                       <span className="font-medium">
-                          {(selectedDoctor.hospital && typeof selectedDoctor.hospital === 'object') ? (selectedDoctor.hospital as any).name : 'Not Assigned'}
-                       </span>
-                    </div>
-                  </div>
-               </div>
+                </div>
+              </div>
 
-               <div className="space-y-4">
-                  <div>
-                    <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Experience</span>
-                    <p className="mt-1 font-medium italic">
-                       {selectedDoctor.experienceStartDate ? `${new Date().getFullYear() - new Date(selectedDoctor.experienceStartDate).getFullYear()} Years Practice` : 'N/A'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Consultation Fee</span>
-                    <p className="mt-1 text-xl font-bold text-green-500">₹{selectedDoctor.consultationFee || 0}</p>
-                  </div>
-               </div>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Experience</span>
+                  <p className="mt-1 font-medium italic">
+                    {selectedDoctor.experienceStartDate ? `${new Date().getFullYear() - new Date(selectedDoctor.experienceStartDate).getFullYear()} Years Practice` : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Consultation Fee</span>
+                  <p className="mt-1 text-xl font-bold text-green-500">₹{selectedDoctor.consultationFee || 0}</p>
+                </div>
+              </div>
             </div>
 
             <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
-               <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Specialties</span>
-               <div className="flex flex-wrap gap-2 mt-2">
-                  {selectedDoctor.specialties && selectedDoctor.specialties.length > 0 ? 
-                    selectedDoctor.specialties.map((s, i) => (
-                      <span key={i} className="text-xs px-2 py-1 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20">
-                        {s}
-                      </span>
-                    )) : 
-                    <span className="text-sm italic opacity-50">None listed</span>
-                  }
-               </div>
+              <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Specialties</span>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedDoctor.specialties && selectedDoctor.specialties.length > 0 ?
+                  selectedDoctor.specialties.map((s, i) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                      {s}
+                    </span>
+                  )) :
+                  <span className="text-sm italic opacity-50">None listed</span>
+                }
+              </div>
             </div>
 
             {selectedDoctor.bio && (
-               <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
-                  <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Bio</span>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed italic">
-                    "{selectedDoctor.bio}"
-                  </p>
-               </div>
+              <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Bio</span>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed italic">
+                  "{selectedDoctor.bio}"
+                </p>
+              </div>
             )}
 
             <div className="flex justify-end gap-3 mt-6">
-               <Button variant="primary" onClick={() => setSelectedDoctor(null)}>
-                  Close Profile
-               </Button>
+              <Button variant="primary" onClick={() => setSelectedDoctor(null)}>
+                Close Profile
+              </Button>
             </div>
           </div>
         )}

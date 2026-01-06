@@ -175,6 +175,7 @@ export interface CreateHelpdeskRequest extends CreateAdminRequest {
 }
 
 export interface CreateHospitalRequest {
+  hospitalId?: string; // Manual override
   name: string;
   email: string;
   phone: string;
