@@ -84,8 +84,10 @@ const LoginPage = () => {
       const { user } = useAuthStore.getState();
       if (user?.role === 'admin' || user?.role === 'super-admin') {
         router.push('/admin');
+      } else if (user?.role === 'doctor') {
+        router.push('/doctor');
       } else {
-        router.push('/dashboard');
+        router.push('/helpdesk');
       }
     } catch (err: any) {
       setServerMsg(err.response?.data?.message || "Login failed");
@@ -254,13 +256,7 @@ const LoginPage = () => {
                     )}
                   </button>
 
-                  {/* SIGN UP */}
-                  <p className="text-center text-sm" style={{ color: 'var(--secondary-color)' }}>
-                    Don't have an account?{" "}
-                    <Link href="/auth/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-                      Register
-                    </Link>
-                  </p>
+                  {/* SIGN UP REMOVED */}
 
                   {/* DIVIDER */}
                   <div className="flex items-center gap-4 my-6">
