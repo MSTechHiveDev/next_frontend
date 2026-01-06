@@ -1,0 +1,43 @@
+export interface LoginRequest {
+  identifier: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  mobile: string;
+  email: string;
+  password: string;
+  otp: string;
+  consentGiven: boolean;
+}
+
+export interface OtpRequest {
+  mobile: string;
+  email: string;
+}
+
+export interface VerifyOtpRequest {
+  mobile: string;
+  otp: string;
+}
+
+export interface AuthResponse {
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+  user: {
+    id: string;
+    name: string;
+    role: string;
+  };
+}
+
+export interface MeResponse {
+  id: string;
+  name: string;
+  role: string;
+  email?: string;
+  mobile?: string;
+}

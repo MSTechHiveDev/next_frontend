@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Theme variables for MSCureChain */
+  --bg-color: #ffffff;
+  --card-bg: #f8fafc;
+  --text-color: #1e293b;
+  --secondary-color: #64748b;
+  --border-color: #e2e8f0;
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --sidebar-bg: #ffffff;
 }
 
 @theme inline {
@@ -10,6 +19,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text-color: #f1f5f9;
+  --secondary-color: #94a3b8;
+  --border-color: #334155;
+  --navbar-bg: rgba(15, 23, 42, 0.95);
+  --sidebar-bg: #0f172a;
 }
 
 @media (prefers-color-scheme: dark) {
