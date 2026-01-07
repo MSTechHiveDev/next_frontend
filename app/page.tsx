@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Lock, Activity, Database, Server, Code, Globe, CheckCircle, X, Sun, Moon } from "lucide-react";
+import { ShieldCheck, Lock, Activity, Database, Sun, Moon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import HeroCard from "@/components/cards/HeroCard";
 import Footer from "@/components/footer/Footer";
 
 export default function Home() {
     const router = useRouter();
-    const [consent, setConsent] = useState(false);
-    const [showTerms, setShowTerms] = useState(false);
     const [theme, setTheme] = useState('light');
 
     useEffect(() => {
@@ -45,12 +43,6 @@ export default function Home() {
         setTheme((prev) => (prev === "dark" ? "light" : "dark"));
     };
 
-    const handleRegisterClick = () => {
-        if (consent) {
-            router.push("/auth/register");
-        }
-    };
-
     return (
         <div className="min-h-screen p-2 selection:bg-blue-500/30" style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
             {/* Navbar */}
@@ -76,10 +68,10 @@ export default function Home() {
                         </button>
 
                         <button
-                            onClick={() => document.getElementById('get-started')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="bg-blue-600 hover:bg-blue-700 max-sm:text-[10px] text-white px-2 py-1 rounded-lg text-sm font-medium transition-all"
+                            onClick={() => router.push('/auth/login')}
+                            className="bg-blue-600 hover:bg-blue-700 max-sm:text-[10px] text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
                         >
-                            Get Started
+                            Login
                         </button>
                     </div>
                 </div>
@@ -114,6 +106,13 @@ export default function Home() {
                         <p className="text-lg md:text-xl mb-8 leading-relaxed" style={{ color: 'var(--secondary-color)' }}>
                             A comprehensive Hospital Management System built for privacy, efficiency, and seamless care coordination.
                         </p>
+
+                        <button
+                            onClick={() => router.push('/auth/login')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/20"
+                        >
+                            Access Platform
+                        </button>
                     </div>
 
                     {/* Features Grid */}
@@ -134,92 +133,11 @@ export default function Home() {
                             desc="A single source of truth for patient history across all departments."
                         />
                     </div>
-
-                    {/* Consent & CTA Section */}
-                    <div id="get-started" className="max-w-md mx-auto border rounded-2xl p-5 shadow-2xl relative overflow-hidden"
-                        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
-                        <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-
-                        <h3 className="text-2xl font-bold mb-2 text-center" style={{ color: 'var(--text-color)' }}>Join MSCureChain</h3>
-                        <p className="text-center text-sm mb-8" style={{ color: 'var(--secondary-color)' }}>
-                            Create your account to access secure health services.
-                        </p>
-
-                        <div className="space-y-6 relative z-10">
-                            <div className="flex items-start gap-3 p-4 rounded-lg border"
-                                style={{ backgroundColor: 'var(--bg-color)', borderColor: 'var(--border-color)' }}>
-                                <div className="pt-0.5">
-                                    <input
-                                        type="checkbox"
-                                        id="consent"
-                                        checked={consent}
-                                        onChange={(e) => setConsent(e.target.checked)}
-                                        className="w-5 h-5 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-900 cursor-pointer"
-                                    />
-                                </div>
-                                <label htmlFor="consent" className="text-sm cursor-pointer select-none" style={{ color: 'var(--secondary-color)' }}>
-                                    I agree to the <button onClick={(e) => { e.preventDefault(); setShowTerms(true); }} className="text-blue-400 hover:text-blue-300 underline underline-offset-2">Terms & Conditions</button> and Privacy Policy. I understand that my data will be securely stored.
-                                </label>
-                            </div>
-
-                            <button
-                                onClick={handleRegisterClick}
-                                disabled={!consent}
-                                className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2
-                                        ${consent
-                                        ? "bg-blue-400 hover:bg-blue-700 text-white translate-y-0"
-                                        : "bg-gray-700 text-gray-400 cursor-not-allowed"
-                                    }`}
-                            >
-                                <span>Create Account</span>
-                                {consent && <CheckCircle size={16} />}
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
             {/* Footer */}
             <Footer />
-
-            {/* Terms Modal */}
-            {showTerms && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="w-full max-w-2xl rounded-2xl shadow-2xl border flex flex-col max-h-[80vh] animate-in fade-in zoom-in duration-200"
-                        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
-                        <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
-                            <h2 className="text-xl font-bold" style={{ color: 'var(--text-color)' }}>Terms & Conditions</h2>
-                            <button
-                                onClick={() => setShowTerms(false)}
-                                className="transition-colors p-1 rounded-lg hover:bg-gray-700/20"
-                                style={{ color: 'var(--secondary-color)' }}
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-                        <div className="p-6 overflow-y-auto text-sm space-y-4 leading-relaxed custom-scrollbar" style={{ color: 'var(--secondary-color)' }}>
-                            <p><strong>1. Acceptance of Terms:</strong> By accessing and using MSCureChain, you agree to be bound by these Terms and Conditions.</p>
-                            <p><strong>2. Privacy & Data Security:</strong> We prioritize your privacy. Your medical data is encrypted and stored securely. We do not share your personal information with third parties without your explicit consent, except as required by law.</p>
-                            <p><strong>3. User Responsibilities:</strong> You are responsible for maintaining the confidentiality of your account credentials. You agree to provide accurate and up-to-date information during registration.</p>
-                            <p><strong>4. Medical Disclaimer:</strong> MSCureChain is a management tool and does not provide medical advice. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.</p>
-                            <p><strong>5. Service Availability:</strong> We strive to ensure 24/7 availability but do not guarantee uninterrupted access due to maintenance or unforeseen technical issues.</p>
-                            <p><strong>6. Termination:</strong> We reserve the right to suspend or terminate accounts that violate these terms or engage in fraudulent activity.</p>
-                            <div className="mt-8 pt-4 border-t text-xs" style={{ borderColor: 'var(--border-color)', color: 'var(--secondary-color)' }}>
-                                Last updated: November 2025
-                            </div>
-                        </div>
-                        <div className="p-4 border-t rounded-b-2xl flex justify-end"
-                            style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-color)' }}>
-                            <button
-                                onClick={() => { setShowTerms(false); setConsent(true); }}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                I Understand & Agree
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
