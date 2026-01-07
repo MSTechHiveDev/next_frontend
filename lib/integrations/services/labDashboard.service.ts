@@ -1,4 +1,5 @@
 import { apiClient } from '../api/apiClient';
+import { LAB_ENDPOINTS } from '../config/endpoints';
 
 export interface DashboardStats {
     revenue: number;
@@ -20,6 +21,6 @@ export interface DashboardStats {
 
 export const LabDashboardService = {
     getStats: async (range: string = 'today'): Promise<DashboardStats> => {
-        return apiClient<DashboardStats>(`/lab/dashboard-stats?range=${range}`);
+        return apiClient<DashboardStats>(`${LAB_ENDPOINTS.DASHBOARD.STATS}?range=${range}`);
     }
 };

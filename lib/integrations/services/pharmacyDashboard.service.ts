@@ -1,4 +1,5 @@
 import { apiClient } from '../api/apiClient';
+import { PHARMACY_ENDPOINTS } from '../config/endpoints';
 
 export interface DashboardStats {
     todayStats: {
@@ -21,6 +22,6 @@ export interface DashboardStats {
 
 export const PharmacyDashboardService = {
     getStats: async (): Promise<DashboardStats> => {
-        return apiClient<DashboardStats>('/pharmacy/bills/stats');
+        return apiClient<DashboardStats>(PHARMACY_ENDPOINTS.BILLS.STATS);
     }
 };
