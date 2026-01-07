@@ -84,6 +84,10 @@ const LoginPage = () => {
       const { user } = useAuthStore.getState();
       if (user?.role === 'admin' || user?.role === 'super-admin') {
         router.push('/admin');
+      } else if (user?.role === 'lab') {
+        router.push('/lab/dashboard');
+      } else if (user?.role === 'pharmacy') {
+        router.push('/pharmacy/dashboard');
       } else {
         router.push('/dashboard');
       }

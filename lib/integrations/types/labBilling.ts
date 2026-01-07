@@ -1,0 +1,33 @@
+export interface BillItem {
+    testName: string;
+    price: number;
+    discount?: number; // ✅ optional
+}
+
+export interface PatientDetails {
+    name: string;
+    age: number;
+    gender: 'Male' | 'Female' | 'Other';
+    mobile: string;
+    refDoctor: string; // ✅ REQUIRED
+}
+
+
+export interface BillPayload {
+    patientDetails: PatientDetails;
+    items: BillItem[];
+    totalAmount: number;
+    discount: number;
+    finalAmount: number;
+    paidAmount: number;
+    balance: number;
+    paymentMode: 'Cash' | 'UPI' | 'Card';
+}
+
+export interface BillResponse extends BillPayload {
+    _id: string;
+    invoiceId: string;
+    labId: string;
+    status: 'Paid' | 'Partial' | 'Due';
+    createdAt: string;
+}
