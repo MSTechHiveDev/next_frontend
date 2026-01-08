@@ -73,7 +73,7 @@ const HospitalsList = () => {
     setConfirmModal({
       isOpen: true,
       title: "Decommission Hospital",
-      message: "Are you sure you want to remove this hospital from the network? This action is irreversible.",
+      message: "Are you sure you want to remove this hospital from the network? This will permanently delete the hospital and all associated helpdesks and doctor assignments. This action is irreversible.",
       confirmText: "Decommission",
       cancelText: "Cancel",
       type: "danger",
@@ -81,9 +81,12 @@ const HospitalsList = () => {
         try {
           await adminService.deleteHospitalClient(id);
           setHospitals(prev => prev.filter((h) => h._id !== id));
-          toast.success("Hospital decommissioned successfully");
+          toast.success("Hospital and all associated records deleted successfully");
+          
+          // Refresh the list to ensure consistency
+          await fetchHospitals();
         } catch (err: any) {
-          toast.error("Failed to decommission hospital");
+          toast.error(err.message || "Failed to decommission hospital");
         } finally {
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         }

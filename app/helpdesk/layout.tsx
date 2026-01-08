@@ -16,8 +16,10 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  User
 } from "lucide-react";
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const helpdeskMenu = [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: "/helpdesk" },
@@ -34,6 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const pathname = usePathname();
     const { user, logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
     // Auth guard
     useEffect(() => {
@@ -44,8 +47,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
             router.push('/auth/login');
+        } else if (!isLoading && isAuthenticated && user?.role === 'hospital-admin') {
+            // Redirect hospital-admin to their own dashboard
+            router.push('/hospital-admin');
         }
-    }, [isAuthenticated, isLoading, router]);
+    }, [isAuthenticated, isLoading, user?.role, router]);
 
     if (isLoading) {
         return (
@@ -60,6 +66,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     if (!isAuthenticated) {
         return null;
+    }
+
+    // Redirect hospital-admin users away from helpdesk routes
+    if (user?.role === 'hospital-admin') {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="text-gray-600 dark:text-gray-400 font-medium">Redirecting to hospital admin dashboard...</div>
+            </div>
+        );
+    }
+
+    // Only allow helpdesk role
+    if (user?.role !== 'helpdesk') {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="text-red-500 font-medium">Access denied. This area is for helpdesk staff only.</div>
+            </div>
+        );
     }
 
     return (
@@ -100,19 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     })}
                 </nav>
 
-                <div className="absolute bottom-4 left-0 w-full px-4 space-y-1">
-                    <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 w-full transition-all">
-                        <Settings size={20} />
-                        Settings
-                    </button>
-                    <button 
-                        onClick={logout}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 w-full transition-all"
-                    >
-                        <LogOut size={20} />
-                        Logout
-                    </button>
-                </div>
+
             </aside>
 
             {/* Main Content Area */}
@@ -138,6 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <ThemeToggle />
                         <button className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all relative">
                             <Bell size={20} />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111]"></span>
@@ -145,14 +158,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         
                         <div className="h-8 w-px bg-gray-200 dark:border-gray-800 mx-2"></div>
 
-                        <div className="flex items-center gap-3">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold">
-                                {user?.name?.charAt(0)}
-                            </div>
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                            >
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Helpdesk</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-shadow">
+                                    {user?.name?.charAt(0)}
+                                </div>
+                            </button>
+
+                            {isProfileDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setIsProfileDropdownOpen(false)} />
+                                    <div className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 z-40 overflow-hidden bg-white dark:bg-[#111]">
+                                        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow">
+                                                    {user?.name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900 dark:text-white">{user?.name}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Helpdesk Staff</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="py-2">
+                                            <button
+                                                onClick={() => { router.push('/helpdesk/profile'); setIsProfileDropdownOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                            >
+                                                <User size={18} className="text-blue-600" />
+                                                <span>My Profile</span>
+                                            </button>
+                                            <button
+                                                onClick={() => { logout(); setIsProfileDropdownOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                            >
+                                                <LogOut size={18} />
+                                                <span>Logout</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>

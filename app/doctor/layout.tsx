@@ -17,16 +17,36 @@ import {
   Activity,
   Clock
 } from "lucide-react";
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const doctorMenu = [
-    { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: "/doctor" },
-    { icon: <Users size={20} />, label: "Patients", path: "/doctor/patients" },
-    { icon: <Calendar size={20} />, label: "Appointments", path: "/doctor/appointments" },
-    { icon: <FileText size={20} />, label: "Prescription", path: "/doctor/prescription" },
-    { icon: <User size={20} />, label: "Front Desk", path: "/helpdesk" }, // Reusing helpdesk link for now
-    { icon: <Activity size={20} />, label: "Analytics", path: "/doctor/analytics" },
-    { icon: <Clock size={20} />, label: "Leaves", path: "/doctor/leaves" },
-    { icon: <Settings size={20} />, label: "Support & Feedback", path: "/doctor/support" },
+    { 
+        group: "Main",
+        items: [
+            { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: "/doctor" },
+            { icon: <Activity size={20} />, label: "Analytics", path: "/doctor/analytics" },
+        ]
+    },
+    {
+        group: "Clinical Management",
+        items: [
+            { icon: <Users size={20} />, label: "Patients", path: "/doctor/patients" },
+            { icon: <Calendar size={20} />, label: "Appointments", path: "/doctor/appointments" },
+            { icon: <FileText size={20} />, label: "Prescriptions", path: "/doctor/prescription" },
+        ]
+    },
+    {
+        group: "Personnel",
+        items: [
+            { icon: <Clock size={20} />, label: "Leave Requests", path: "/doctor/leaves" },
+        ]
+    },
+    {
+        group: "System",
+        items: [
+            { icon: <Settings size={20} />, label: "Support & Feedback", path: "/doctor/support" },
+        ]
+    }
 ];
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +54,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const { user, logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
     useEffect(() => {
         useAuthStore.getState().initEvents();
@@ -76,43 +97,42 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                     </h1>
                 </div>
 
-                <nav className="p-4 space-y-1">
-                    {doctorMenu.map((item) => {
-                        const isActive = pathname === item.path;
-                        return (
-                            <button
-                                key={item.path}
-                                onClick={() => {
-                                    router.push(item.path);
-                                    setIsSidebarOpen(false);
-                                }}
-                                className={`
-                                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all w-full
-                                    ${isActive 
-                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' 
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-emerald-600'}
-                                `}
-                            >
-                                {item.icon}
-                                {item.label}
-                            </button>
-                        );
-                    })}
+                <nav className="p-4 space-y-8 h-[calc(100vh-64px)] overflow-y-auto">
+                    {doctorMenu.map((group) => (
+                        <div key={group.group} className="space-y-2">
+                            <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                {group.group}
+                            </h3>
+                            <div className="space-y-1">
+                                {group.items.map((item) => {
+                                    const isActive = pathname === item.path;
+                                    return (
+                                        <button
+                                            key={item.path}
+                                            onClick={() => {
+                                                router.push(item.path);
+                                                setIsSidebarOpen(false);
+                                            }}
+                                            className={`
+                                                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full group
+                                                ${isActive 
+                                                    ? 'bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none' 
+                                                    : 'text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600'}
+                                            `}
+                                        >
+                                            <span className={`${isActive ? 'text-white' : 'text-gray-400 group-hover:text-emerald-500'} transition-colors`}>
+                                                {item.icon}
+                                            </span>
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </nav>
 
-                <div className="absolute bottom-4 left-0 w-full px-4 space-y-1">
-                    <button className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 w-full transition-all">
-                        <Settings size={20} />
-                        Settings
-                    </button>
-                    <button 
-                        onClick={logout}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 w-full transition-all"
-                    >
-                        <LogOut size={20} />
-                        Logout
-                    </button>
-                </div>
+
             </aside>
 
             {/* Main Content */}
@@ -137,6 +157,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <ThemeToggle />
                         <button className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all relative">
                             <Bell size={20} />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111]"></span>
@@ -144,14 +165,54 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                         
                         <div className="h-8 w-px bg-gray-200 dark:border-gray-800 mx-2"></div>
 
-                        <div className="flex items-center gap-3">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white">Dr. {user?.name}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role || 'Senior Consultant'}</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold">
-                                {user?.name?.charAt(0)}
-                            </div>
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                            >
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">Dr. {user?.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Doctor</p>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-shadow">
+                                    {user?.name?.charAt(0)}
+                                </div>
+                            </button>
+
+                            {isProfileDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setIsProfileDropdownOpen(false)} />
+                                    <div className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-800 z-40 overflow-hidden bg-white dark:bg-[#111]">
+                                        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow">
+                                                    {user?.name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900 dark:text-white">Dr. {user?.name}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Medical Doctor</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="py-2">
+                                            <button
+                                                onClick={() => { router.push('/doctor/profile'); setIsProfileDropdownOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                            >
+                                                <User size={18} className="text-emerald-600" />
+                                                <span>My Profile</span>
+                                            </button>
+                                            <button
+                                                onClick={() => { logout(); setIsProfileDropdownOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                            >
+                                                <LogOut size={18} />
+                                                <span>Logout</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </header>

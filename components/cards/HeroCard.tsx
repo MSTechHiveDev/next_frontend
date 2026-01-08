@@ -103,23 +103,26 @@ const HeroCard = () => {
                         <StatCard
                             number="90%"
                             label="Reduction in Waiting Time"
-                            icon="/assets/icons/clock.png"
+                            icon={<Clock className="w-8 h-8 text-green-500" />}
+                            isComponent={true}
                         />
                         <StatCard
                             number="100+"
                             label="Hospitals Trust Us"
-                            icon={<Building className="w-6 h-6 text-blue-500" />}
+                            icon={<Building className="w-8 h-8 text-blue-500" />}
                             isComponent={true}
                         />
                         <StatCard
                             number="50K+"
                             label="Patients Served"
-                            icon="/assets/icons/users.png"
+                            icon={<Users className="w-8 h-8 text-purple-500" />}
+                            isComponent={true}
                         />
                         <StatCard
                             number="24/7"
                             label="AI Support Available"
-                            icon="/assets/icons/brain.png"
+                            icon={<Brain className="w-8 h-8 text-orange-500" />}
+                            isComponent={true}
                         />
                     </div>
 

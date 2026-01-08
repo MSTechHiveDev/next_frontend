@@ -3,22 +3,29 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/navbar/Navbar';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
-import { LayoutDashboard, CalendarCheck } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Calendar, Clock, Bell, User, ReceiptText, BookOpenCheck } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 const staffMenuItems: SidebarItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/staff' },
-    { icon: CalendarCheck, label: 'Leaves', href: '/staff/leave' },
+    { icon: Clock, label: 'Attendance', href: '/staff/attendance' },
+    { icon: CalendarCheck, label: 'Leave & Absence', href: '/staff/leaves' },
+    { icon: BookOpenCheck, label: 'My Schedule', href: '/staff/schedule' },
+    { icon: Bell, label: 'Announcements', href: '/staff/announcements' },
+    { icon: ReceiptText, label: 'Payroll & Salary', href: '/staff/payroll' },
+    { icon: User, label: 'My Profile', href: '/staff/profile' },
 ];
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false); // Basic state for demo
 
-    // Placeholder user for the Navbar
+    const { user, logout } = useAuthStore();
+    
     const staffUser = {
-        name: "Staff Member",
+        name: user?.name || "Staff Member",
         role: "Staff",
-        image: "" // Placeholder or empty
+        image: "" 
     };
 
     return (
@@ -28,7 +35,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 items={staffMenuItems}
-                onLogout={() => console.log("Logout clicked")}
+                onLogout={logout}
             />
 
             {/* Main Content Area */}

@@ -5,9 +5,10 @@ interface CardProps {
   className?: string;
   padding?: string;
   title?: string;
+  icon?: React.ReactNode;
 }
 
-export const Card: React.FC<CardProps> = ({ children, className = "", padding = "p-6 md:p-8", title }) => {
+export const Card: React.FC<CardProps> = ({ children, className = "", padding = "p-6 md:p-8", title, icon }) => {
   return (
     <div
       className={`rounded-xl border shadow-lg ${padding} ${className}`}
@@ -18,9 +19,10 @@ export const Card: React.FC<CardProps> = ({ children, className = "", padding = 
     >
       {title && (
         <h3
-          className="text-lg font-bold mb-4 pb-2 border-b"
+          className="text-lg font-bold mb-4 pb-2 border-b flex items-center gap-2"
           style={{ color: 'var(--text-color)', borderColor: 'var(--border-color)' }}
         >
+          {icon && <span className="inline-flex">{icon}</span>}
           {title}
         </h3>
       )}

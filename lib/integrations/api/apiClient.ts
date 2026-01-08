@@ -44,6 +44,27 @@ export async function apiClient<T>(
     const res = await fetch(url, {
       ...options,
       headers,
+    }).catch((fetchError) => {
+      // Handle network errors (server not running, CORS, etc.)
+      const isAuthCheck = path.includes('/auth/me') || path.includes('/auth/refresh');
+      const isLogin = path.includes('/auth/login');
+      
+      // Only log warnings (not errors) for network issues to reduce noise
+      // These are expected when backend is not running
+      if (!isAuthCheck && isLogin) {
+        console.warn(`⚠️ Backend server appears to be offline.`);
+        console.warn(`   URL: ${API_CONFIG.BASE_URL}`);
+        console.warn(`   Please start the backend server to login.`);
+      }
+      
+      const networkError = new Error(
+        fetchError.message === 'Failed to fetch' 
+          ? `Cannot connect to server. Please ensure the backend is running at ${API_CONFIG.BASE_URL}`
+          : `Network error: ${fetchError.message}`
+      );
+      // Mark as network error so calling code can handle it appropriately
+      (networkError as any).isNetworkError = true;
+      throw networkError;
     });
 
     // Handle 401 Unauthorized
@@ -100,15 +121,39 @@ export async function apiClient<T>(
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({ message: 'API Error' }));
-      console.error(`API Error [${res.status}] ${path}:`, errorData);
-      const error = new Error(errorData.message || `HTTP ${res.status}`);
+      // Don't log 404 errors - they're expected when trying fallback endpoints
+      // and will be handled gracefully by the calling code
+      if (res.status !== 404) {
+        console.error(`API Error [${res.status}] ${path}:`, errorData);
+      }
+      // Extract error message - handle both string and object formats
+      let errorMessage = errorData.message || `HTTP ${res.status}`;
+      if (typeof errorData === 'object' && errorData.error) {
+        errorMessage = typeof errorData.error === 'string' ? errorData.error : errorData.error.message || errorMessage;
+      }
+      const error = new Error(errorMessage);
       (error as any).status = res.status;
+      (error as any).error = errorData.error || errorData;
       throw error;
     }
 
     return res.json();
   } catch (error: any) {
-    console.error(`Fetch Error ${path}:`, error);
+    // Don't log errors for 404 status codes - they're expected when trying fallback endpoints
+    // Don't log network errors for auth endpoints (to avoid spam when backend is down)
+    const isAuthEndpoint = path.includes('/auth/me') || path.includes('/auth/refresh');
+    const isLogin = path.includes('/auth/login');
+    const isNetworkError = error?.isNetworkError || error?.message?.includes('Cannot connect to server');
+    
+    // Suppress error logging for network errors on auth endpoints (except login which we handle above)
+    if (error?.status !== 404 && !error?.message?.includes('404') && !error?.message?.toLowerCase().includes('not found')) {
+      if (!isAuthEndpoint || (!isNetworkError && isLogin)) {
+        // Only log non-network errors or login errors that aren't network issues
+        if (!isNetworkError || isLogin) {
+          console.error(`API Error ${path}:`, error);
+        }
+      }
+    }
     throw error;
   }
 }
