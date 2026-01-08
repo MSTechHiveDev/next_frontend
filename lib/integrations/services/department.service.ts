@@ -16,6 +16,14 @@ export const DepartmentService = {
         return apiClient<Department[]>(LAB_ENDPOINTS.DEPARTMENTS.BASE);
     },
 
+    // Update a department
+    updateDepartment: async (id: string, data: Partial<DepartmentPayload>): Promise<{ message: string; department: Department }> => {
+        return apiClient<{ message: string; department: Department }>(LAB_ENDPOINTS.DEPARTMENTS.BY_ID(id), {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+
     // Delete a department
     deleteDepartment: async (id: string): Promise<{ message: string }> => {
         return apiClient<{ message: string }>(LAB_ENDPOINTS.DEPARTMENTS.BY_ID(id), {

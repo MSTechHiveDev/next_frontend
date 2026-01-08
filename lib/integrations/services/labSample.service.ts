@@ -16,5 +16,11 @@ export const LabSampleService = {
             method: 'PUT',
             body: JSON.stringify(payload)
         });
+    },
+
+    collectSample: async (id: string): Promise<{ message: string; sample: LabSample }> => {
+        return apiClient<{ message: string; sample: LabSample }>(LAB_ENDPOINTS.SAMPLES.STATUS(id), {
+            method: 'PUT'
+        });
     }
 };

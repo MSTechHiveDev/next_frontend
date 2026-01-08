@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { LabBillingService } from '@/lib/integrations/services/labBilling.service';
 import { BillItem, PatientDetails, BillPayload } from '@/lib/integrations/types/labBilling';
@@ -12,6 +13,7 @@ import { LabTestService } from '@/lib/integrations/services/labTest.service';
 import { LabTest } from '@/lib/integrations/types/labTest';
 
 export default function LabBillingPage() {
+    const router = useRouter();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [testsLoading, setTestsLoading] = useState(true);
@@ -39,15 +41,70 @@ export default function LabBillingPage() {
     const [patient, setPatient] = useState<PatientDetails>({
         name: '',
         age: 0,
-        gender: 'Male',
+        gender: '' as any, // Start with empty so they must pick one
         mobile: '',
         refDoctor: '',
     });
 
     const [selectedTests, setSelectedTests] = useState<BillItem[]>([]);
-    const [discount, setDiscount] = useState(0);
-    const [paidAmount, setPaidAmount] = useState(0);
-    const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card'>('Cash');
+    const [discount, setDiscount] = useState<number>(0);
+    const [paidAmount, setPaidAmount] = useState<number>(0);
+    const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card' | 'Mixed'>('Cash');
+    const [mixedPayments, setMixedPayments] = useState({ cash: 0, card: 0, upi: 0 });
+
+    // Validation state
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    // Watch for validation errors
+    const validate = () => {
+        const newErrors: { [key: string]: string } = {};
+
+        // Mobile: Exactly 10 digits
+        if (!/^\d{10}$/.test(patient.mobile)) {
+            newErrors.mobile = "Please enter a valid 10-digit mobile number";
+        }
+
+        // Age: Positive integers only 0-120
+        if (patient.age < 0 || patient.age > 120 || !Number.isInteger(Number(patient.age))) {
+            newErrors.age = "Age must be between 0 and 120";
+        }
+
+        // Gender: Mandatory
+        if (!patient.gender) {
+            newErrors.gender = "Gender is mandatory";
+        }
+
+        // Discount: Non-negative
+        if (discount < 0) {
+            newErrors.discount = "Discount value cannot be negative";
+        } else if (discount > totalAmount) {
+            newErrors.discount = "Discount cannot exceed total bill amount";
+        }
+
+        // Amount Paid: Non-negative
+        if (paidAmount < 0) {
+            newErrors.paidAmount = "Amount paid cannot be negative";
+        }
+
+        // Mixed Payments
+        if (paymentMode === 'Mixed') {
+            const { cash, card, upi } = mixedPayments;
+            if (cash < 0 || card < 0 || upi < 0) {
+                newErrors.mixed = "Payment amounts cannot be negative";
+            }
+            const totalMixed = Number(cash) + Number(card) + Number(upi);
+            if (Math.abs(totalMixed - finalAmount) > 0.01) {
+                newErrors.mixedMatch = "Total payment does not match amount paid";
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    React.useEffect(() => {
+        validate();
+    }, [patient, discount, paidAmount, paymentMode, mixedPayments, selectedTests]);
 
     /* ----------------------------------------
        Calculations
@@ -55,6 +112,14 @@ export default function LabBillingPage() {
     const totalAmount = selectedTests.reduce((sum, item) => sum + item.price, 0);
     const finalAmount = Math.max(0, totalAmount - discount);
     const balance = Math.max(0, finalAmount - paidAmount);
+
+    // Auto-update paid amount and mixed payments
+    React.useEffect(() => {
+        setPaidAmount(finalAmount);
+        if (paymentMode === 'Mixed') {
+            setMixedPayments({ cash: finalAmount, card: 0, upi: 0 });
+        }
+    }, [finalAmount, paymentMode]);
 
     /* ----------------------------------------
        Print Setup
@@ -73,10 +138,11 @@ export default function LabBillingPage() {
         const test = availableTests.find(t => t._id === e.target.value);
         if (!test) return;
 
-        if (!selectedTests.find(t => t.testName === test.name)) {
+        const nameToUse = test.testName || test.name || "Unknown Test";
+        if (!selectedTests.find(t => t.testName === nameToUse)) {
             setSelectedTests([
                 ...selectedTests,
-                { testName: test.name, price: test.price, discount: 0 },
+                { testName: nameToUse, price: test.price, discount: 0 },
             ]);
         }
     };
@@ -93,6 +159,14 @@ export default function LabBillingPage() {
             return;
         }
 
+        if (paymentMode === 'Mixed') {
+            const totalMixed = Number(mixedPayments.cash) + Number(mixedPayments.card) + Number(mixedPayments.upi);
+            if (Math.abs(totalMixed - finalAmount) > 2) {
+                toast.error(`Mixed payments (₹${totalMixed}) must match Total (₹${finalAmount})`);
+                return;
+            }
+        }
+
         setLoading(true);
         try {
             const payload: BillPayload = {
@@ -104,6 +178,7 @@ export default function LabBillingPage() {
                 paidAmount,
                 balance,
                 paymentMode,
+                paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined
             };
 
             const res = await LabBillingService.createBill(payload);
@@ -119,7 +194,8 @@ export default function LabBillingPage() {
             // Trigger print after state update
             setTimeout(() => {
                 handlePrint();
-            }, 300);
+                router.push('/lab/samples');
+            }, 500);
         } catch (err: any) {
             console.error(err);
             toast.error(err.message || 'Billing failed');
@@ -156,33 +232,52 @@ export default function LabBillingPage() {
                             <input
                                 type="number"
                                 placeholder="Age"
-                                className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+                                min="0"
+                                max="120"
+                                className={`w-full bg-gray-50/50 border ${errors.age ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium`}
                                 value={patient.age || ''}
-                                onChange={e => setPatient({ ...patient, age: Number(e.target.value) })}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    if (val === '' || (/^\d+$/.test(val))) {
+                                        setPatient({ ...patient, age: val === '' ? 0 : parseInt(val) });
+                                    }
+                                }}
                             />
+                            {errors.age && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.age}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">&nbsp;</label>
-                            <select
-                                className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium appearance-none"
-                                value={patient.gender}
-                                onChange={e => setPatient({ ...patient, gender: e.target.value as any })}
-                            >
-                                <option>Male</option>
-                                <option>Female</option>
-                                <option>Other</option>
-                            </select>
+                            <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Gender</label>
+                            <div className="flex bg-gray-50 items-center justify-between gap-1 p-1 rounded-xl border border-gray-100">
+                                {['Male', 'Female', 'Other'].map(g => (
+                                    <button
+                                        key={g}
+                                        type="button"
+                                        onClick={() => setPatient({ ...patient, gender: g as any })}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-black uppercase transition-all ${patient.gender === g ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100' : 'text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        {g}
+                                    </button>
+                                ))}
+                            </div>
+                            {errors.gender && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.gender}</p>}
                         </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Mobile</label>
                         <input
-                            placeholder="Enter mobile number"
-                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+                            placeholder="Enter 10-digit mobile"
+                            maxLength={10}
+                            className={`w-full bg-gray-50/50 border ${errors.mobile ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium`}
                             value={patient.mobile}
-                            onChange={e => setPatient({ ...patient, mobile: e.target.value })}
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '' || /^\d+$/.test(val)) {
+                                    setPatient({ ...patient, mobile: val });
+                                }
+                            }}
                         />
+                        {errors.mobile && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.mobile}</p>}
                     </div>
 
                     <div>
@@ -211,7 +306,7 @@ export default function LabBillingPage() {
                             </option>
                             {availableTests.map(t => (
                                 <option key={t._id} value={t._id}>
-                                    {t.name}
+                                    {t.testName || t.name} - ₹{t.price}
                                 </option>
                             ))}
                         </select>
@@ -222,27 +317,43 @@ export default function LabBillingPage() {
 
                     <div className="flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
                         {availableTests.map((test) => {
-                            const isSelected = selectedTests.some(t => t.testName === test.name);
+                            const currentName = test.testName || test.name || "Unknown Test";
+                            const isSelected = selectedTests.some(t => t.testName === currentName);
                             return (
                                 <div
                                     key={test._id}
                                     onClick={() => {
+                                        const nameToUse = test.testName || test.name || "Unknown Test";
                                         if (isSelected) {
-                                            const idx = selectedTests.findIndex(t => t.testName === test.name);
+                                            const idx = selectedTests.findIndex(t => t.testName === nameToUse);
                                             removeTest(idx);
                                         } else {
-                                            setSelectedTests([...selectedTests, { testName: test.name, price: test.price, discount: 0 }]);
+                                            setSelectedTests([...selectedTests, { testName: nameToUse, price: test.price, discount: 0 }]);
                                         }
                                     }}
-                                    className={`flex justify-between items-center p-4 rounded-xl mb-2 cursor-pointer transition-all border ${isSelected ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-transparent hover:bg-gray-50'}`}
+                                    className={`flex justify-between items-start p-4 rounded-xl mb-2 cursor-pointer transition-all border ${isSelected ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-transparent hover:bg-gray-50'}`}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'}`}>
+                                    <div className="flex items-start gap-3">
+                                        <div className={`mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'}`}>
                                             {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
                                         </div>
-                                        <p className={`font-bold text-sm ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>{test.name}</p>
+                                        <div>
+                                            <p className={`font-black text-sm leading-tight mb-1 ${isSelected ? 'text-indigo-900' : 'text-gray-800'}`}>
+                                                {test.testName || test.name}
+                                            </p>
+                                            <div className="flex gap-2 items-center">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase">
+                                                    Sample: <span className="text-gray-600">{test.sampleType || 'N/A'}</span>
+                                                </span>
+                                                {test.departmentId && (
+                                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">
+                                                        | {(typeof test.departmentId === 'object' ? test.departmentId.name : 'Lab')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className={`font-black text-sm ${isSelected ? 'text-indigo-600' : 'text-gray-400'}`}>₹{test.price}</p>
+                                    <p className={`font-black text-sm whitespace-nowrap pt-1 ${isSelected ? 'text-indigo-600' : 'text-gray-400'}`}>₹{test.price}</p>
                                 </div>
                             );
                         })}
@@ -263,10 +374,17 @@ export default function LabBillingPage() {
                         <input
                             type="number"
                             placeholder="0"
-                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-black text-lg text-right"
+                            min="0"
+                            className={`w-full bg-gray-50/50 border ${errors.discount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right`}
                             value={discount || ''}
-                            onChange={e => setDiscount(Number(e.target.value))}
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '' || (parseFloat(val) >= 0)) {
+                                    setDiscount(val === '' ? 0 : parseFloat(val));
+                                }
+                            }}
                         />
+                        {errors.discount && <p className="text-[10px] text-red-500 font-bold mt-1 text-right">{errors.discount}</p>}
                     </div>
 
                     <div className="flex justify-between items-center border-t border-dashed pt-4">
@@ -279,10 +397,17 @@ export default function LabBillingPage() {
                         <input
                             type="number"
                             placeholder="0"
-                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-black text-lg text-right"
+                            min="0"
+                            className={`w-full bg-gray-50/50 border ${errors.paidAmount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right`}
                             value={paidAmount || ''}
-                            onChange={e => setPaidAmount(Number(e.target.value))}
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === '' || (parseFloat(val) >= 0)) {
+                                    setPaidAmount(val === '' ? 0 : parseFloat(val));
+                                }
+                            }}
                         />
+                        {errors.paidAmount && <p className="text-[10px] text-red-500 font-bold mt-1 text-right">{errors.paidAmount}</p>}
                     </div>
 
                     <div className="flex justify-between items-center bg-orange-50/50 p-4 rounded-xl border border-orange-100 border-dashed">
@@ -292,8 +417,8 @@ export default function LabBillingPage() {
 
                     <div className="space-y-3 pt-2">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Payment Method</label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {['Cash', 'UPI', 'Card'].map((mode) => (
+                        <div className="grid grid-cols-2 gap-2">
+                            {['Cash', 'UPI', 'Card', 'Mixed'].map((mode) => (
                                 <button
                                     key={mode}
                                     onClick={() => setPaymentMode(mode as any)}
@@ -305,12 +430,78 @@ export default function LabBillingPage() {
                         </div>
                     </div>
 
+                    {paymentMode === 'Mixed' && (
+                        <div className="space-y-3 p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100 border-dashed">
+                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider mb-2">Split Amount</p>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-xs font-bold text-gray-500 w-12">CASH</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right"
+                                        value={mixedPayments.cash || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || parseFloat(val) >= 0) {
+                                                setMixedPayments({ ...mixedPayments, cash: val === '' ? 0 : parseFloat(val) });
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-xs font-bold text-gray-500 w-12">UPI</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right"
+                                        value={mixedPayments.upi || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || parseFloat(val) >= 0) {
+                                                setMixedPayments({ ...mixedPayments, upi: val === '' ? 0 : parseFloat(val) });
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-xs font-bold text-gray-500 w-12">CARD</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right"
+                                        value={mixedPayments.card || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || parseFloat(val) >= 0) {
+                                                setMixedPayments({ ...mixedPayments, card: val === '' ? 0 : parseFloat(val) });
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="pt-2 border-t border-indigo-100 flex flex-col gap-1">
+                                    <div className="flex justify-between text-[10px] font-black tracking-widest uppercase">
+                                        <span className="text-gray-400">Total Mixed:</span>
+                                        <span className={errors.mixedMatch ? 'text-red-500' : 'text-indigo-600'}>
+                                            ₹{mixedPayments.cash + mixedPayments.upi + mixedPayments.card} / ₹{finalAmount}
+                                        </span>
+                                    </div>
+                                    {(errors.mixed || errors.mixedMatch) && (
+                                        <p className="text-[9px] text-red-500 font-bold uppercase tracking-tighter">
+                                            {errors.mixed || errors.mixedMatch}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <button
                         onClick={handleGenerateBill}
-                        disabled={loading}
-                        className="mt-4 w-full bg-[#b388ff] text-white py-4 rounded-2xl font-black uppercase tracking-[2px] transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                        disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
+                        className="mt-4 w-full bg-[#b388ff] text-white py-4 rounded-2xl font-black uppercase tracking-[2px] transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                     >
-                        {loading ? 'Processing...' : 'Generate Bill'}
+                        {loading ? 'Processing...' : Object.keys(errors).length > 0 ? 'Fix Errors' : 'Generate Bill'}
                     </button>
                 </div>
             </div>

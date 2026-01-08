@@ -45,6 +45,7 @@ export const ADMIN_ENDPOINTS = {
 };
 
 export const PHARMACY_ENDPOINTS = {
+  DASHBOARD: '/pharmacy/dashboard',
   PRODUCTS: {
     BASE: '/pharmacy/products',
     BULK: '/pharmacy/products/bulk',
@@ -56,25 +57,25 @@ export const PHARMACY_ENDPOINTS = {
     PRODUCTS: (id: string) => `/pharmacy/suppliers/${id}/products`,
   },
   BILLS: {
-    BASE: '/pharmacy/bills',
-    BY_ID: (id: string) => `/pharmacy/bills/${id}`,
-    STATS: '/pharmacy/bills/stats',
+    BASE: '/pharmacy/invoices',
+    BY_ID: (id: string) => `/pharmacy/invoices/${id}`,
+    STATS: '/pharmacy/reports/dashboard',
   },
 };
 
 export const LAB_ENDPOINTS = {
   BILLING: {
-    BASE: '/lab/billing',
-    BY_ID: (id: string) => `/lab/billing/${id}`,
+    BASE: '/lab/invoices',
+    BY_ID: (id: string) => `/lab/orders/${id}/invoice`,
   },
   DASHBOARD: {
     STATS: '/lab/dashboard-stats',
   },
   SAMPLES: {
-    BASE: '/lab/samples',
-    BY_ID: (id: string) => `/lab/samples/${id}`,
-    STATUS: (id: string) => `/lab/samples/${id}/status`,
-    RESULTS: (id: string) => `/lab/samples/${id}/results`,
+    BASE: '/lab/orders',
+    BY_ID: (id: string) => `/lab/orders/${id}`,
+    STATUS: (id: string) => `/lab/orders/${id}/collect`,
+    RESULTS: (id: string) => `/lab/orders/${id}/results`,
   },
   TESTS: {
     BASE: '/lab/tests',
@@ -84,6 +85,7 @@ export const LAB_ENDPOINTS = {
     BASE: '/lab/departments',
     BY_ID: (id: string) => `/lab/departments/${id}`,
   },
+  META: '/lab/meta',
 };
 
 export const HOSPITAL_ADMIN_ENDPOINTS = {
@@ -147,7 +149,7 @@ export const STAFF_ENDPOINTS = {
   DASHBOARD: '/staff/dashboard',
   PROFILE: '/staff/me',
 
-  
+
   // Attendance
   ATTENDANCE: '/staff/attendance',
   ATTENDANCE_HISTORY: '/staff/attendance/history',
@@ -155,7 +157,7 @@ export const STAFF_ENDPOINTS = {
   CHECK_IN: '/staff/attendance/check-in',
   CHECK_OUT: '/staff/attendance/check-out',
 
-  
+
   // Leave Management
   LEAVES: '/staff/leaves',
   LEAVE_DETAIL: (id: string) => `/staff/leaves/${id}`,

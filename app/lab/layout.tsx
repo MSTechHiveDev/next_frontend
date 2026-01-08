@@ -11,7 +11,7 @@ const labMenu = [
     { icon: FileText, label: "Billing", path: "/lab/billing" },
     { icon: Activity, label: "Transactions", path: "/lab/billing/transactions" },
     { icon: FlaskConical, label: "Samples", path: "/lab/samples" },
-     { icon: FileText, label: "Departments", path: "/lab/departments" },
+    { icon: FileText, label: "Departments", path: "/lab/departments" },
     { icon: FlaskConical, label: "Test Master", path: "/lab/tests" },
 ];
 
@@ -44,7 +44,7 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
             if (user?.role === 'admin' || user?.role === 'super-admin') {
                 router.push('/admin');
             } else {
-                router.push('/dashboard');
+                router.push('/hospital-admin');
             }
         }
     }, [isAuthenticated, isInitialized, router, user]);

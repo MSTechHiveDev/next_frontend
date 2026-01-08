@@ -15,6 +15,7 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
     const [sample, setSample] = useState<LabSample | null>(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
+    const isCompleted = sample?.status === 'Completed';
 
     // Temp state for editing
     const [testResults, setTestResults] = useState<SampleTestResult[]>([]);
@@ -28,7 +29,21 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
         try {
             const data = await LabSampleService.getSampleById(id);
             setSample(data);
-            setTestResults(data.tests); // Initialize form with existing tests
+
+            // Initialize form with existing tests and Ensure sub-tests exist for convenience
+            const initializedTests = data.tests.map(test => {
+                if (!test.subTests || test.subTests.length === 0) {
+                    return {
+                        ...test,
+                        subTests: [
+                            { name: '', result: '', unit: '', range: '' },
+                            { name: '', result: '', unit: '', range: '' }
+                        ]
+                    };
+                }
+                return test;
+            });
+            setTestResults(initializedTests);
         } catch (error) {
             console.error(error);
             toast.error('Failed to load sample details');
@@ -78,21 +93,33 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
 
     const handleSubmit = async () => {
         if (!sample) return;
+
+        // Validation: Every test must have a resultValue
+        const missingResults = testResults.filter(t => !t.resultValue || t.resultValue.trim() === '');
+        if (missingResults.length > 0) {
+            toast.error(`Please enter Result Value for all tests (${missingResults.length} pending)`);
+            return;
+        }
+
         setProcessing(true);
         try {
-            const isComplete = testResults.every(t => t.resultValue && t.resultValue.trim() !== '');
-            const newStatus = isComplete ? 'Completed' : 'In Processing';
+            // Transition to Completed after result entry
+            const newStatus = 'Completed';
 
-            // If completing, set report date
-            const reportDate = isComplete ? new Date().toISOString() : undefined;
+            // Filter out empty subtests before sending
+            const cleanedTests = testResults.map(test => ({
+                ...test,
+                subTests: test.subTests?.filter(st => st.name.trim() !== '') || []
+            }));
+
             // If starting processing (first time), set collection date if missing
             const collectionDate = sample.collectionDate || new Date().toISOString();
 
             await LabSampleService.updateResults(sample._id, {
-                tests: testResults,
+                tests: cleanedTests,
                 status: newStatus,
                 collectionDate,
-                reportDate
+                reportDate: new Date().toISOString() // Set report date upon completion
             });
 
             toast.success('Report submitted successfully!');
@@ -113,6 +140,26 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
         contentRef: printRef,
         documentTitle: sample ? `Report_${sample.sampleId}` : 'LabReport',
     });
+
+    const getDisplayRange = (test: SampleTestResult) => {
+        if (!sample || !test.normalRanges) return test.normalRange || 'N/A';
+        const { age, gender } = sample.patientDetails;
+
+        let range;
+        if (age < 12) {
+            range = test.normalRanges.child;
+        } else if (gender.toLowerCase() === 'male') {
+            range = test.normalRanges.male;
+        } else if (gender.toLowerCase() === 'female') {
+            range = test.normalRanges.female;
+        }
+
+        if (range && (range.min !== undefined || range.max !== undefined)) {
+            return `${range.min ?? 0} - ${range.max ?? 0}`;
+        }
+
+        return test.normalRange || 'N/A';
+    };
 
     if (loading) return <div className="p-10 text-center">Loading...</div>;
     if (!sample) return <div className="p-10 text-center text-red-500">Sample not found</div>;
@@ -145,15 +192,17 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-900">{test.testName}</h3>
                                     <div className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">
-                                        UNIT: {test.unit || 'N/A'} • NORMAL RANGE: {test.normalRange || 'N/A'}
+                                        UNIT: {test.unit || 'N/A'} • NORMAL RANGE: {getDisplayRange(test)}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => handleAddSubTest(index)}
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-none shadow-sm"
-                                >
-                                    + Add Sub Test
-                                </button>
+                                {!isCompleted && (
+                                    <button
+                                        onClick={() => handleAddSubTest(index)}
+                                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-none shadow-sm"
+                                    >
+                                        + Add Sub Test
+                                    </button>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end mb-6">
@@ -161,9 +210,10 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
                                 <div className="md:col-span-4">
                                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Result Value *</label>
                                     <input
-                                        className="w-full border border-gray-300 rounded px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        className="w-full border border-gray-300 rounded px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 disabled:text-gray-500 font-bold"
                                         placeholder="Enter main value"
                                         value={test.resultValue || ''}
+                                        disabled={isCompleted}
                                         onChange={(e) => handleResultChange(index, 'resultValue', e.target.value)}
                                     />
                                 </div>
@@ -172,9 +222,10 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
                                 <div className="md:col-span-5">
                                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Remarks</label>
                                     <input
-                                        className="w-full border border-gray-300 rounded px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        className="w-full border border-gray-300 rounded px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-50 disabled:text-gray-500"
                                         placeholder="Optional remarks"
                                         value={test.remarks || ''}
+                                        disabled={isCompleted}
                                         onChange={(e) => handleResultChange(index, 'remarks', e.target.value)}
                                     />
                                 </div>
@@ -186,11 +237,12 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
                                         <label className="flex items-center cursor-pointer select-none space-x-3 w-full">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 text-red-600 rounded focus:ring-red-500 border-gray-300 transition-none"
+                                                className="w-4 h-4 text-red-600 rounded focus:ring-red-500 border-gray-300 transition-none disabled:opacity-50"
                                                 checked={test.isAbnormal}
+                                                disabled={isCompleted}
                                                 onChange={(e) => handleResultChange(index, 'isAbnormal', e.target.checked)}
                                             />
-                                            <span className={`text-xs font-black tracking-tighter ${test.isAbnormal ? 'text-red-600' : 'text-gray-500'} uppercase`}>
+                                            <span className={`text-xs font-black tracking-tighter ${test.isAbnormal ? 'text-red-600' : 'text-gray-500/50'} uppercase`}>
                                                 ⚠️ Mark Abnormal
                                             </span>
                                         </label>
@@ -210,43 +262,49 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
                                             <div key={sIndex} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
                                                 <div className="md:col-span-4">
                                                     <input
-                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none"
+                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50"
                                                         placeholder="Sub-test Name"
                                                         value={sub.name}
+                                                        disabled={isCompleted}
                                                         onChange={(e) => handleSubTestChange(index, sIndex, 'name', e.target.value)}
                                                     />
                                                 </div>
                                                 <div className="md:col-span-2">
                                                     <input
-                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none"
+                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50 font-bold"
                                                         placeholder="Result"
                                                         value={sub.result}
+                                                        disabled={isCompleted}
                                                         onChange={(e) => handleSubTestChange(index, sIndex, 'result', e.target.value)}
                                                     />
                                                 </div>
                                                 <div className="md:col-span-2">
                                                     <input
-                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none"
+                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50"
                                                         placeholder="Units"
                                                         value={sub.unit}
+                                                        disabled={isCompleted}
                                                         onChange={(e) => handleSubTestChange(index, sIndex, 'unit', e.target.value)}
                                                     />
                                                 </div>
                                                 <div className="md:col-span-3">
                                                     <input
-                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none"
+                                                        className="w-full border bg-white border-gray-200 rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50"
                                                         placeholder="Ref range"
-                                                        value={sub.range}
+                                                        value={sub.range || ''}
+                                                        disabled={isCompleted}
                                                         onChange={(e) => handleSubTestChange(index, sIndex, 'range', e.target.value)}
                                                     />
                                                 </div>
                                                 <div className="md:col-span-1 flex justify-end">
-                                                    <button
-                                                        onClick={() => removeSubTest(index, sIndex)}
-                                                        className="text-red-400 p-1 transition-none"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    </button>
+                                                    {!isCompleted && (
+                                                        <button
+                                                            onClick={() => removeSubTest(index, sIndex)}
+                                                            className="text-red-400 p-1 transition-none"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -269,13 +327,15 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
                     </button>
                 )}
 
-                <button
-                    onClick={handleSubmit}
-                    disabled={processing}
-                    className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-lg transition-none active:scale-95"
-                >
-                    {processing ? 'SAVING...' : 'REPORT SUBMISSION'}
-                </button>
+                {!isCompleted && (
+                    <button
+                        onClick={handleSubmit}
+                        disabled={processing}
+                        className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-lg transition-none active:scale-95"
+                    >
+                        {processing ? 'SAVING...' : 'REPORT SUBMISSION'}
+                    </button>
+                )}
             </div>
 
             {/* Hidden Print Component */}

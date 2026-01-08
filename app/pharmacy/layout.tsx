@@ -28,6 +28,8 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
+    const isPharma = user?.role === 'pharma-owner' || user?.role === 'pharmacy';
+
     const pharmacyUser = user || {
         name: "Pharmacy User",
         role: "pharmacy",
@@ -43,17 +45,17 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         if (isInitialized && !isAuthenticated) {
             router.push('/auth/login');
-        } else if (isInitialized && isAuthenticated && user?.role !== 'pharmacy') {
+        } else if (isInitialized && isAuthenticated && !isPharma) {
             // Redirect non-pharmacy users
             if (user?.role === 'admin' || user?.role === 'super-admin') {
                 router.push('/admin');
             } else if (user?.role === 'lab') {
                 router.push('/lab/dashboard');
             } else {
-                router.push('/dashboard');
+                router.push('/hospital-admin');
             }
         }
-    }, [isAuthenticated, isInitialized, router, user]);
+    }, [isAuthenticated, isInitialized, router, user, isPharma]);
 
     // Handle logout
     const handleLogout = async () => {
@@ -69,14 +71,14 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
-    if (!isAuthenticated || user?.role !== 'pharmacy') {
-        return null; 
+    if (!isAuthenticated || !isPharma) {
+        return null;
     }
 
     return (
         <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-            <Sidebar 
-                isOpen={isSidebarOpen} 
+            <Sidebar
+                isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 items={pharmacyMenu}
                 onLogout={handleLogout}
