@@ -71,31 +71,31 @@ export const adminService = {
   createHospitalAdminClient: (data: CreateAdminRequest & { hospitalId: string }) =>
     apiClient<any>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, role: 'hospital-admin' }),
     }),
 
   createDoctorClient: (data: CreateDoctorRequest) =>
     apiClient<Doctor>(ADMIN_ENDPOINTS.CREATE_DOCTOR, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, role: 'doctor' }),
     }),
 
   createHelpdeskClient: (data: CreateHelpdeskRequest) =>
     apiClient<Helpdesk>(ADMIN_ENDPOINTS.ASSIGN_HELPDESK, {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, role: 'helpdesk' }),
     }),
 
   createPharmaClient: (data: CreatePharmaRequest) =>
     apiClient<Pharma>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
       method: 'POST',
-      body: JSON.stringify({ ...data, role: 'pharma' }),
+      body: JSON.stringify({ ...data, role: 'pharma-owner' }),
     }),
 
   createLabsClient: (data: CreateLabsRequest) =>
     apiClient<Labs>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
       method: 'POST',
-      body: JSON.stringify({ ...data, role: 'labs' }),
+      body: JSON.stringify({ ...data, role: 'lab' }),
     }),
 
   createHospitalClient: (data: CreateHospitalRequest) => {
