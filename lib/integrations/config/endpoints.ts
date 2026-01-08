@@ -147,6 +147,7 @@ export const STAFF_ENDPOINTS = {
   DASHBOARD: '/staff/dashboard',
   PROFILE: '/staff/me',
 
+  
   // Attendance
   ATTENDANCE: '/staff/attendance',
   ATTENDANCE_HISTORY: '/staff/attendance/history',
@@ -154,6 +155,7 @@ export const STAFF_ENDPOINTS = {
   CHECK_IN: '/staff/attendance/check-in',
   CHECK_OUT: '/staff/attendance/check-out',
 
+  
   // Leave Management
   LEAVES: '/staff/leaves',
   LEAVE_DETAIL: (id: string) => `/staff/leaves/${id}`,
