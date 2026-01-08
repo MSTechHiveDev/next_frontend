@@ -9,3 +9,4 @@ export * from './helpdesk.service';
 export * from './doctor.service';
 export * from './staff.service';
 export * from './patient.service';
+export * from './staff.service';

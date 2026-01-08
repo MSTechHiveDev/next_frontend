@@ -17,6 +17,7 @@ export const authService = {
       body: JSON.stringify(data),
     }),
 
+
   registerClient: (data: RegisterRequest) =>
     apiClient<AuthResponse>(endpoints.auth.register, {
       method: 'POST',

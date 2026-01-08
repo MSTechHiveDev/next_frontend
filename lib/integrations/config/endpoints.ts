@@ -6,41 +6,46 @@ export const AUTH_ENDPOINTS = {
   ME: '/auth/me',
   LOGOUT: '/auth/logout',
   REFRESH: '/auth/refresh',
+  CHECK_EXISTENCE: '/auth/check-existence',
 };
 
 export const USER_ENDPOINTS = {
-  PROFILE: '/users/profile',
-  UPDATE_PROFILE: '/users/profile',
-  ATTENDANCE: '/attendance',
-  ATTENDANCE_TODAY_STATUS: '/attendance/today-status',
-  ATTENDANCE_CHECK_IN: '/attendance/check-in',
-  ATTENDANCE_CHECK_OUT: '/attendance/check-out',
+  PROFILE: '/auth/me', // Unified profile endpoint in new backend
+  PATCH_PROFILE: '/auth/me',
+  PATIENT_PROFILE: '/patients/profile',
+  DOCTOR_PROFILE: '/doctors/me',
+  UPDATE_PATIENT_PROFILE: '/patients/profile',
+  UPDATE_DOCTOR_PROFILE: '/doctors/me',
+  ATTENDANCE: '/staff/attendance/me',
+  ATTENDANCE_TODAY_STATUS: '/staff/attendance/me', // Use /me and filter today in frontend if needed, or backend might return it
+  ATTENDANCE_CHECK_IN: '/staff/attendance/check-in',
+  ATTENDANCE_CHECK_OUT: '/staff/attendance/check-out',
 };
 
 export const ADMIN_ENDPOINTS = {
-  DASHBOARD: '/admin/analytics/dashboard',
-  USERS: '/admin/users',
-  DOCTORS: '/admin/users?role=doctor',
-  PATIENTS: '/admin/users?role=patient',
-  HELPDESKS: '/admin/users?role=helpdesk',
-  ADMINS: '/admin/users?role=admin',
-  HOSPITALS: '/admin/hospitals',
-  CREATE_HOSPITAL: '/admin/create-hospital',
-  UPDATE_HOSPITAL: (id: string) => `/admin/hospitals/${id}`,
-  DELETE_HOSPITAL: (id: string) => `/admin/hospitals/${id}`,
-  UPDATE_HOSPITAL_STATUS: (id: string) => `/admin/hospitals/${id}/status`,
-  ASSIGN_DOCTOR: '/admin/hospitals/assign-doctor',
-  ASSIGN_HELPDESK: '/admin/assign-helpdesk',
-  CREATE_ADMIN: '/admin/create-admin',
-  CREATE_HOSPITAL_ADMIN: '/admin/create-hospital-admin',
-  CREATE_DOCTOR: '/admin/create-doctor',
-  UPDATE_USER: (id: string) => `/admin/users/${id}`,
-  DELETE_USER: (id: string, role?: string) => role ? `/admin/users/${id}?role=${role}` : `/admin/users/${id}`,
-  DELETE_HELPDESK: (id: string) => `/admin/helpdesks/${id}`,
-  BROADCAST: '/admin/broadcast',
-  AUDITS: '/admin/audits',
-  HOSPITAL_DETAILS: (id: string) => `/admin/hospitals/${id}/details`,
-  HOSPITAL_DOCTORS: (id: string) => `/admin/hospitals/${id}/doctors`,
+  DASHBOARD: '/super-admin/stats',
+  USERS: '/super-admin/users',
+  DOCTORS: '/super-admin/users?role=doctor',
+  PATIENTS: '/super-admin/users?role=patient',
+  HELPDESKS: '/super-admin/users?role=helpdesk',
+  ADMINS: '/super-admin/users?role=admin',
+  HOSPITALS: '/super-admin/hospitals',
+  CREATE_HOSPITAL: '/super-admin/create-hospital',
+  UPDATE_HOSPITAL: (id: string) => `/hospitals/${id}`,
+  DELETE_HOSPITAL: (id: string) => `/hospitals/${id}`,
+  UPDATE_HOSPITAL_STATUS: (id: string) => `/super-admin/hospitals/${id}/status`,
+  ASSIGN_DOCTOR: '/hospital/assign-doctor',
+  ASSIGN_HELPDESK: '/hospital/assign-helpdesk',
+  CREATE_ADMIN: '/super-admin/create-hospital-admin',
+  CREATE_HOSPITAL_ADMIN: '/super-admin/create-hospital-admin',
+  CREATE_DOCTOR: '/hospital/create-doctor',
+  UPDATE_USER: (id: string) => `/super-admin/users/${id}`,
+  DELETE_USER: (id: string, _role?: string) => `/super-admin/users/${id}`,
+  DELETE_HELPDESK: (id: string) => `/helpdesk/${id}`,
+  BROADCAST: '/super-admin/broadcast',
+  AUDITS: '/super-admin/audits',
+  HOSPITAL_DETAILS: (id: string) => `/hospital/hospitals/${id}/details`,
+  HOSPITAL_DOCTORS: (id: string) => `/hospital/hospitals/${id}/doctors`,
   SUPPORT_REQUESTS: '/support',
 };
 
@@ -87,54 +92,55 @@ export const LAB_ENDPOINTS = {
 };
 
 export const HOSPITAL_ADMIN_ENDPOINTS = {
-  DASHBOARD: '/hospital-admin/dashboard',
-  HOSPITAL: '/hospital-admin/hospital',
-  DOCTORS: '/hospital-admin/doctors',
-  CREATE_DOCTOR: '/hospital-admin/doctors',
-  DOCTOR_DETAIL: (id: string) => `/hospital-admin/doctors/${id}`,
-  UPDATE_DOCTOR: (id: string) => `/hospital-admin/doctors/${id}`,
-  DELETE_DOCTOR: (id: string) => `/hospital-admin/doctors/${id}`,
-  HELPDESKS: '/hospital-admin/helpdesks',
-  CREATE_HELPDESK: '/hospital-admin/helpdesks',
-  HELPDESK_DETAIL: (id: string) => `/hospital-admin/helpdesks/${id}`,
-  PATIENTS: '/hospital-admin/patients',
-  PHARMA: '/hospital-admin/pharma',
-  LABS: '/hospital-admin/labs',
-  STAFF: '/hospital-admin/staff',
-  STAFF_DETAIL: (id: string) => `/hospital-admin/staff/${id}`,
-  CREATE_STAFF: '/hospital-admin/staff',
-  UPDATE_STAFF: (id: string) => `/hospital-admin/staff/${id}`,
-  DELETE_STAFF: (id: string) => `/hospital-admin/staff/${id}`,
-  ATTENDANCE: '/hospital-admin/attendance',
-  ATTENDANCE_STATS: '/hospital-admin/attendance/stats',
-  ATTENDANCE_DETAIL: (id: string) => `/hospital-admin/attendance/${id}`,
-  UPDATE_ATTENDANCE: (id: string) => `/hospital-admin/attendance/${id}`,
-  DELETE_ATTENDANCE: (id: string) => `/hospital-admin/attendance/${id}`,
-  PAYROLL: '/hospital-admin/payroll',
-  ANNOUNCEMENTS: '/announcements/hospital',
+  DASHBOARD: '/hospital/dashboard',
+  STATS: '/hospital/stats',
+  HOSPITAL: '/hospital/hospital',
+  DOCTORS: '/hospital/users?role=doctor',
+  CREATE_DOCTOR: '/hospital/create-doctor',
+  DOCTOR_DETAIL: (id: string) => `/doctors/${id}`,
+  UPDATE_DOCTOR: (id: string) => `/hospital/users/${id}`,
+  DELETE_DOCTOR: (id: string) => `/super-admin/users/${id}`,
+  HELPDESKS: '/hospital/users?role=helpdesk',
+  CREATE_HELPDESK: '/hospital/create-helpdesk',
+  HELPDESK_DETAIL: (id: string) => `/helpdesk/${id}`,
+  PATIENTS: '/hospital/users?role=patient',
+  PHARMA: '/hospital/users?role=pharma-owner',
+  LABS: '/hospital/users?role=lab',
+  STAFF: '/hospital/users?role=staff',
+  STAFF_DETAIL: (id: string) => `/hospital/users/${id}`,
+  CREATE_STAFF: '/hospital/users',
+  UPDATE_STAFF: (id: string) => `/hospital/users/${id}`,
+  DELETE_STAFF: (id: string) => `/super-admin/users/${id}`,
+  ATTENDANCE: '/hospital/attendance/report',
+  ATTENDANCE_STATS: '/hospital/attendance/report',
+  ATTENDANCE_DETAIL: (id: string) => `/hospital/attendance/${id}`,
+  UPDATE_ATTENDANCE: (id: string) => `/hospital/attendance/${id}`,
+  DELETE_ATTENDANCE: (id: string) => `/hospital/attendance/${id}`,
+  PAYROLL: '/staff/attendance/payroll',
+  ANNOUNCEMENTS: '/notifications',
 };
 
 export const HELPDESK_ENDPOINTS = {
   DASHBOARD: '/helpdesk/dashboard',
   ME: '/helpdesk/me',
-  DOCTORS: '/helpdesk/doctors',
-  CREATE_DOCTOR: '/helpdesk/doctor',
-  PATIENTS_SEARCH: '/helpdesk/patients/search',
-  PATIENT_DETAILS: (id: string) => `/helpdesk/patients/${id}`,
-  REGISTER_PATIENT: '/helpdesk/patients/register',
-  APPOINTMENTS: '/helpdesk/appointments',
-  APPOINTMENT_STATUS: (id: string) => `/helpdesk/appointments/${id}/status`,
+  DOCTORS: '/doctors',
+  CREATE_DOCTOR: '/hospital/create-doctor',
+  PATIENTS_SEARCH: '/frontdesk/patients',
+  PATIENT_DETAILS: (id: string) => `/frontdesk/patients/${id}`,
+  REGISTER_PATIENT: '/frontdesk/patients/register',
+  APPOINTMENTS: '/bookings/my-appointments',
+  APPOINTMENT_STATUS: (id: string) => `/bookings/${id}/status`,
 };
 
 export const BOOKING_ENDPOINTS = {
   AVAILABILITY: '/bookings/availability',
   BOOK: '/bookings/book',
-  STATS: '/bookings/hospital-stats',
+  STATS: '/bookings/hospital/stats',
   MY_APPOINTMENTS: '/bookings/my-appointments',
 };
 
 export const DOCTOR_ENDPOINTS = {
-  DASHBOARD: '/doctors/dashboard',
+  DASHBOARD: '/doctors/me',
   PROFILE: '/doctors/me',
   MY_PATIENTS: '/doctors/my-patients',
   CALENDAR_STATS: '/doctors/calendar/stats',
@@ -145,32 +151,34 @@ export const DOCTOR_ENDPOINTS = {
 };
 
 export const STAFF_ENDPOINTS = {
-  DASHBOARD: '/staff/dashboard',
-  PROFILE: '/staff/me',
+  DASHBOARD: '/staff/attendance/me',
+  PROFILE: '/auth/me',
 
+  
   // Attendance
-  ATTENDANCE: '/staff/attendance',
-  ATTENDANCE_HISTORY: '/staff/attendance/history',
-  TODAY_STATUS: '/staff/attendance/today-status',
+  ATTENDANCE: '/staff/attendance/me',
+  ATTENDANCE_HISTORY: '/staff/attendance/me',
+  TODAY_STATUS: '/staff/attendance/me',
   CHECK_IN: '/staff/attendance/check-in',
   CHECK_OUT: '/staff/attendance/check-out',
 
+  
   // Leave Management
-  LEAVES: '/staff/leaves',
-  LEAVE_DETAIL: (id: string) => `/staff/leaves/${id}`,
-  CREATE_LEAVE: '/staff/leaves',
-  UPDATE_LEAVE: (id: string) => `/staff/leaves/${id}`,
-  DELETE_LEAVE: (id: string) => `/staff/leaves/${id}`,
-  LEAVE_BALANCE: '/staff/leaves/balance',
+  LEAVES: '/leaves',
+  LEAVE_DETAIL: (id: string) => `/leaves/${id}`,
+  CREATE_LEAVE: '/leaves',
+  UPDATE_LEAVE: (id: string) => `/leaves/${id}`,
+  DELETE_LEAVE: (id: string) => `/leaves/${id}`,
+  LEAVE_BALANCE: '/leaves/balance',
 
   // Schedules
   SCHEDULE: '/staff/schedule',
 
   // Payroll
-  PAYROLL: '/staff/payroll',
+  PAYROLL: '/staff/attendance/payroll',
 
   // Announcements
-  ANNOUNCEMENTS: '/staff/announcements',
+  ANNOUNCEMENTS: '/notifications',
 };
 
 export const PATIENT_ENDPOINTS = {
@@ -188,7 +196,7 @@ export const SUPPORT_ENDPOINTS = {
 };
 
 export const COMMON_ENDPOINTS = {
-  MY_ANNOUNCEMENTS: '/announcements/my',
+  MY_ANNOUNCEMENTS: '/notifications',
 };
 
 
@@ -203,7 +211,7 @@ export const endpoints = {
     logout: AUTH_ENDPOINTS.LOGOUT,
     refresh: AUTH_ENDPOINTS.REFRESH,
   },
-  users: '/users',
+  users: '/super-admin/users',
   admin: {
     dashboard: ADMIN_ENDPOINTS.DASHBOARD,
     users: ADMIN_ENDPOINTS.USERS,

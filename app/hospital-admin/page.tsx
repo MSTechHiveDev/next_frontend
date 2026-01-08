@@ -57,7 +57,16 @@ export default function HospitalAdminDashboard() {
     );
   }
 
-  const { hospital, stats } = dashboardData;
+  if (!dashboardData || !dashboardData.stats) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Activity className="w-12 h-12 text-gray-300 animate-pulse" />
+        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Initializing System Nodes...</p>
+      </div>
+    );
+  }
+
+  const { hospital = {}, stats = {} } = dashboardData;
 
   const statCards = [
     { label: "Active Doctors", value: stats.totalDoctors, icon: Stethoscope, color: "blue", trend: "+2.4%" },
@@ -135,7 +144,7 @@ export default function HospitalAdminDashboard() {
          </div>
 
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {dashboardData.liveQueue?.length > 0 ? dashboardData.liveQueue.map((item: any, i: number) => (
+            {dashboardData?.liveQueue?.length > 0 ? dashboardData.liveQueue.map((item: any, i: number) => (
                <div key={i} className={`p-5 rounded-3xl border transition-all ${item.status === 'in-progress' ? 'bg-blue-50/50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-800/30' : 'bg-gray-50 dark:bg-gray-700/30 border-transparent'}`}>
                   <div className="flex items-center justify-between mb-4">
                      <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${item.status === 'in-progress' ? 'bg-blue-600 text-white animate-pulse' : 'bg-gray-200 text-gray-600'}`}>{item.status}</span>
@@ -220,10 +229,10 @@ export default function HospitalAdminDashboard() {
                 <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6">
                    <Building2 size={32} />
                 </div>
-                <h2 className="text-4xl font-black tracking-tighter mb-2">{hospital.name}</h2>
+                <h2 className="text-4xl font-black tracking-tighter mb-2">{hospital?.name || "HMS Portal"}</h2>
                 <div className="flex items-center gap-2 opacity-80 mb-8">
                    <MapPin size={14} />
-                   <span className="text-sm font-bold uppercase tracking-widest">{hospital.address}</span>
+                   <span className="text-sm font-bold uppercase tracking-widest">{hospital?.address || "Universal Health Registry"}</span>
                 </div>
               </div>
 
@@ -235,7 +244,7 @@ export default function HospitalAdminDashboard() {
                        </div>
                        <div>
                           <p className="text-[10px] font-black uppercase opacity-60 tracking-widest">Emergency Line</p>
-                          <p className="text-lg font-bold">{hospital.phone || "N/A"}</p>
+                          <p className="text-lg font-bold">{hospital?.phone || "N/A"}</p>
                        </div>
                     </div>
                     <div className="flex items-center gap-4 group">
@@ -244,7 +253,7 @@ export default function HospitalAdminDashboard() {
                        </div>
                        <div>
                           <p className="text-[10px] font-black uppercase opacity-60 tracking-widest">Digital Registry</p>
-                          <p className="text-lg font-bold truncate max-w-[200px]">{hospital.email || "hms@portal.com"}</p>
+                          <p className="text-lg font-bold truncate max-w-[200px]">{hospital?.email || "hms@portal.com"}</p>
                        </div>
                     </div>
                  </div>
