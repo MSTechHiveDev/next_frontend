@@ -44,6 +44,48 @@ export const ADMIN_ENDPOINTS = {
   SUPPORT_REQUESTS: '/support',
 };
 
+export const PHARMACY_ENDPOINTS = {
+  PRODUCTS: {
+    BASE: '/pharmacy/products',
+    BULK: '/pharmacy/products/bulk',
+    BY_ID: (id: string) => `/pharmacy/products/${id}`,
+  },
+  SUPPLIERS: {
+    BASE: '/pharmacy/suppliers',
+    BY_ID: (id: string) => `/pharmacy/suppliers/${id}`,
+    PRODUCTS: (id: string) => `/pharmacy/suppliers/${id}/products`,
+  },
+  BILLS: {
+    BASE: '/pharmacy/bills',
+    BY_ID: (id: string) => `/pharmacy/bills/${id}`,
+    STATS: '/pharmacy/bills/stats',
+  },
+};
+
+export const LAB_ENDPOINTS = {
+  BILLING: {
+    BASE: '/lab/billing',
+    BY_ID: (id: string) => `/lab/billing/${id}`,
+  },
+  DASHBOARD: {
+    STATS: '/lab/dashboard-stats',
+  },
+  SAMPLES: {
+    BASE: '/lab/samples',
+    BY_ID: (id: string) => `/lab/samples/${id}`,
+    STATUS: (id: string) => `/lab/samples/${id}/status`,
+    RESULTS: (id: string) => `/lab/samples/${id}/results`,
+  },
+  TESTS: {
+    BASE: '/lab/tests',
+    BY_ID: (id: string) => `/lab/tests/${id}`,
+  },
+  DEPARTMENTS: {
+    BASE: '/lab/departments',
+    BY_ID: (id: string) => `/lab/departments/${id}`,
+  },
+};
+
 export const HOSPITAL_ADMIN_ENDPOINTS = {
   DASHBOARD: '/hospital-admin/dashboard',
   HOSPITAL: '/hospital-admin/hospital',
@@ -104,6 +146,7 @@ export const DOCTOR_ENDPOINTS = {
 export const STAFF_ENDPOINTS = {
   DASHBOARD: '/staff/dashboard',
   PROFILE: '/staff/me',
+
   
   // Attendance
   ATTENDANCE: '/staff/attendance',
@@ -111,6 +154,7 @@ export const STAFF_ENDPOINTS = {
   TODAY_STATUS: '/staff/attendance/today-status',
   CHECK_IN: '/staff/attendance/check-in',
   CHECK_OUT: '/staff/attendance/check-out',
+
   
   // Leave Management
   LEAVES: '/staff/leaves',
@@ -133,6 +177,7 @@ export const STAFF_ENDPOINTS = {
 export const COMMON_ENDPOINTS = {
   MY_ANNOUNCEMENTS: '/announcements/my',
 };
+
 
 // Legacy support to avoid breaking existing code immediately
 export const endpoints = {

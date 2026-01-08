@@ -95,8 +95,8 @@ export default function Sidebar({
                             <X className="w-6 h-6" />
                         </button>
                         {/* Desktop spacer or branding placeholder */}
-                        <div className="hidden lg:block text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                            Main Menu
+                        <div className="hidden lg:block text-2xl font-semibold   tracking-wider">
+                            MScurechain
                         </div>
                     </div>
 
@@ -155,7 +155,7 @@ export default function Sidebar({
                                     <span>Sign Out</span>
                                 </button>
                             )}
-                    
+                
                         </div>
                     )}
                 </div>

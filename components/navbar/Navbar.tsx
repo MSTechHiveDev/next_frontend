@@ -115,12 +115,7 @@ export default function Navbar({
                 </button>
 
                 {/* Custom Actions or Default Notifications */}
-                {actions ? actions : (
-                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-300 relative">
-                        <Bell className="w-5 h-5" />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
-                    </button>
-                )}
+                
 
                 {/* Profile Dropdown Trigger */}
                 <div className="flex items-center gap-3 pl-2 border-l border-gray-200 dark:border-gray-700 ml-2">
