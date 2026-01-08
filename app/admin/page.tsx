@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import toast from "react-hot-toast";
 import { adminService } from "@/lib/integrations";
 import { useAuthStore } from "@/stores/authStore";
 import { 
@@ -22,22 +23,37 @@ import type { DashboardStats } from "@/lib/integrations";
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function AdminDashboard() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isInitialized && isAuthenticated) {
       fetchDashboardData();
+    } else if (isInitialized && !isAuthenticated) {
+      setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInitialized]);
 
   const fetchDashboardData = async () => {
     try {
+      setLoading(true);
       const data = await adminService.getDashboardClient();
       setStats(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch dashboard data:", error);
+      toast.error(error.message || "Failed to load dashboard statistics");
+      // Set empty stats to prevent infinite loading
+      setStats({
+        totalUsers: 0,
+        totalDoctors: 0,
+        totalPatients: 0,
+        totalHospitals: 0,
+        totalAdmins: 0,
+        totalHelpDesks: 0,
+        recentRegistrations: [],
+        activityStats: []
+      });
     } finally {
       setLoading(false);
     }

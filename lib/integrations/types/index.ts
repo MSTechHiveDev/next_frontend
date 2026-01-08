@@ -2,3 +2,7 @@ export * from './api';
 export * from './user';
 export * from './auth';
 export * from './admin';
+export * from './doctor';
+export * from './hospitalAdmin';
+export * from './staff';
+export * from './helpdesk';

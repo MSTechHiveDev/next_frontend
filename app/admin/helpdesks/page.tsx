@@ -84,22 +84,18 @@ function HelpDesksList() {
       onConfirm: async () => {
         setIsDeleting(true);
         try {
-          const helpdeskObj = helpdesks.find(h => h._id === id);
-          const targetId = (helpdeskObj as any)?.userId ||
-            (helpdeskObj as any)?.user?._id ||
-            (helpdeskObj as any)?.id ||
-            id;
+          // Use the dedicated helpdesk delete endpoint
+          await adminService.deleteHelpdeskClient(id);
 
-          console.log('Deleting helpdesk target:', { originalId: id, targetId });
-
-          // Service handles fallbacks and 404 swallowing
-          await adminService.deleteUserClient(targetId as string, 'helpdesk');
-
+          // Remove from local state
           setHelpdesks(prev => prev.filter((h) => h._id !== id));
           toast.success("Staff deleted successfully");
+          
+          // Refresh the list to ensure consistency
+          await fetchHelpDesks();
         } catch (err: any) {
           console.error("Helpdesk delete failed:", err);
-          toast.error("Failed to delete staff");
+          toast.error(err.message || "Failed to delete staff");
         } finally {
           setIsDeleting(false);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));

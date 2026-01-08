@@ -90,6 +90,7 @@ export default function CreateDoctor() {
         mobile: formData.mobile,
         password: formData.password,
         gender: formData.gender,
+        medicalRegistrationNumber: formData.mobile, // Temporary - use mobile as placeholder
         experienceStart: formData.experienceStart,
         profilePic: formData.profilePic || undefined,
         bio: formData.bio,

@@ -59,6 +59,14 @@ const LoginPage = () => {
   const handleIdentifierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
+    // Clear identifier error when user starts typing
+    if (errors.identifier) {
+      setErrors({ ...errors, identifier: '' });
+    }
+    if (serverMsg) {
+      setServerMsg('');
+    }
+
     // Check if the first character is a digit
     if (/^\d/.test(value)) {
       // If it starts with a digit, enforce numeric only and max 10 chars
@@ -68,6 +76,20 @@ const LoginPage = () => {
       // Allow alphanumeric for Doctor ID
       setForm({ ...form, identifier: value });
     }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Clear password error when user starts typing
+    if (errors.password) {
+      setErrors({ ...errors, password: '' });
+    }
+    if (serverMsg) {
+      setServerMsg('');
+    }
+    
+    setForm({ ...form, password: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,11 +110,52 @@ const LoginPage = () => {
         router.push('/lab/dashboard');
       } else if (user?.role === 'pharmacy') {
         router.push('/pharmacy/dashboard');
+      } else if (user?.role === 'doctor') {
+        router.push('/doctor');
+      } else if (user?.role === 'hospital-admin') {
+        router.push('/hospital-admin');
+      } else if (user?.role === 'helpdesk') {
+        router.push('/helpdesk');
+      } else if (user?.role === 'staff') {
+        router.push('/staff');
       } else {
-        router.push('/dashboard');
+        router.push('/helpdesk'); // Default fallback
       }
     } catch (err: any) {
-      setServerMsg(err.response?.data?.message || "Login failed");
+      // Extract error message
+      const errorMessage = err?.message || err?.response?.data?.message || err?.error?.message || '';
+      
+      // Handle network errors
+      if (errorMessage.includes('Cannot connect to server') || errorMessage.includes('Failed to fetch')) {
+        setServerMsg(`Cannot connect to server. Please ensure the backend is running.`);
+        return;
+      }
+
+      // Map backend error messages to form fields
+      const fieldErrors: Record<string, string> = {};
+      
+      if (errorMessage.toLowerCase().includes('password is wrong') || 
+          errorMessage.toLowerCase().includes('password') && errorMessage.toLowerCase().includes('wrong')) {
+        fieldErrors.password = 'Incorrect password. Please try again.';
+      } else if (errorMessage.toLowerCase().includes('mobile number is wrong') || 
+                 errorMessage.toLowerCase().includes('mobile') && errorMessage.toLowerCase().includes('wrong')) {
+        fieldErrors.identifier = 'Mobile number not found. Please check and try again.';
+      } else if (errorMessage.toLowerCase().includes('doctor id is wrong') || 
+                 errorMessage.toLowerCase().includes('doctor id') && errorMessage.toLowerCase().includes('wrong')) {
+        fieldErrors.identifier = 'Doctor ID not found. Please check and try again.';
+      } else if (errorMessage.toLowerCase().includes('invalid doctor id')) {
+        fieldErrors.identifier = 'Invalid Doctor ID access.';
+      } else if (errorMessage) {
+        // For other errors, show as server message
+        setServerMsg(errorMessage);
+        return;
+      } else {
+        setServerMsg('Login failed. Please check your credentials.');
+        return;
+      }
+
+      // Set field-specific errors
+      setErrors(fieldErrors);
     }
   };
 
@@ -129,7 +192,10 @@ const LoginPage = () => {
         {/* ⭐ LEFT SIDE — FULL FIRST-PAGE UI */}
         <div className="hidden lg:flex flex-col w-1/2 items-start justify-center px-16 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
           {/* Background Elements */}
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('/assets/grid.svg')] opacity-10"></div>
+          <div className="absolute top-0 left-0 w-full h-full opacity-10" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: '60px 60px'
+          }}></div>
           <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-green-500/10 rounded-full blur-3xl"></div>
 
@@ -181,7 +247,9 @@ const LoginPage = () => {
                       Mobile Number or Doctor ID
                     </label>
 
-                    <div className="flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all" style={{ backgroundColor: 'var(--bg-color)', borderColor: 'var(--border-color)' }}>
+                    <div className={`flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all ${
+                      errors.identifier ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500' : ''
+                    }`} style={{ backgroundColor: 'var(--bg-color)', borderColor: errors.identifier ? '#ef4444' : 'var(--border-color)' }}>
                       <img src="/assets/user.png" className="w-6 h-6 mr-2" alt="user" />
                       <input
                         type="text"
@@ -199,28 +267,38 @@ const LoginPage = () => {
                   </div>
 
                   {/* PASSWORD */}
-                  <div className="flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all relative"
-                    style={{ backgroundColor: 'var(--bg-color)', borderColor: 'var(--border-color)' }}
-                  >
-                    <img src="/assets/passoword.png" className="w-6 h-6 mr-2" alt="lock" />
-
-                    <input
-                      type={showPassword ? "text" : "password"}  // ✔ FIXED
-                      className="w-full bg-transparent outline-none placeholder-gray-500"
-                      style={{ color: 'var(--text-color)' }}
-                      placeholder="Enter your password"
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    />
-
-                    <button
-                      type="button"
-                      className="absolute right-4 hover:text-white transition-colors"
-                      style={{ color: 'var(--secondary-color)' }}
-                      onClick={() => setShowPassword(!showPassword)}
+                  <div>
+                    <label className="text-sm font-medium mb-2.5 block" style={{ color: 'var(--secondary-color)' }}>
+                      Password
+                    </label>
+                    <div className={`flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all relative ${
+                      errors.password ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500' : ''
+                    }`}
+                      style={{ backgroundColor: 'var(--bg-color)', borderColor: errors.password ? '#ef4444' : 'var(--border-color)' }}
                     >
-                      {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
-                    </button>
+                      <img src="/assets/passoword.png" className="w-6 h-6 mr-2" alt="lock" />
+
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="w-full bg-transparent outline-none placeholder-gray-500"
+                        style={{ color: 'var(--text-color)' }}
+                        placeholder="Enter your password"
+                        value={form.password}
+                        onChange={handlePasswordChange}
+                      />
+
+                      <button
+                        type="button"
+                        className="absolute right-4 hover:text-white transition-colors"
+                        style={{ color: 'var(--secondary-color)' }}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-red-400 text-xs mt-1.5 ml-1">{errors.password}</p>
+                    )}
                   </div>
 
 
@@ -258,13 +336,7 @@ const LoginPage = () => {
                     )}
                   </button>
 
-                  {/* SIGN UP */}
-                  <p className="text-center text-sm" style={{ color: 'var(--secondary-color)' }}>
-                    Don't have an account?{" "}
-                    <Link href="/auth/register" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-                      Register
-                    </Link>
-                  </p>
+                  {/* SIGN UP REMOVED */}
 
                   {/* DIVIDER */}
                   <div className="flex items-center gap-4 my-6">

@@ -6,11 +6,15 @@ import type {
   Doctor,
   Patient,
   Helpdesk,
+  Pharma,
+  Labs,
   AuditLog,
   SupportTicket,
   CreateAdminRequest,
   CreateDoctorRequest,
   CreateHelpdeskRequest,
+  CreatePharmaRequest,
+  CreateLabsRequest,
   CreateHospitalRequest,
   AssignDoctorRequest,
   BroadcastRequest
@@ -64,6 +68,12 @@ export const adminService = {
       body: JSON.stringify(data),
     }),
 
+  createHospitalAdminClient: (data: CreateAdminRequest & { hospitalId: string }) =>
+    apiClient<any>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   createDoctorClient: (data: CreateDoctorRequest) =>
     apiClient<Doctor>(ADMIN_ENDPOINTS.CREATE_DOCTOR, {
       method: 'POST',
@@ -76,36 +86,48 @@ export const adminService = {
       body: JSON.stringify(data),
     }),
 
-  createHospitalClient: (data: CreateHospitalRequest) => {
-    // Generate fallback legacy fields
-    const lat = data.location?.lat ? Number(data.location.lat) : undefined;
-    const lng = data.location?.lng ? Number(data.location.lng) : undefined;
+  createPharmaClient: (data: CreatePharmaRequest) =>
+    apiClient<Pharma>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, role: 'pharma' }),
+    }),
 
-    // Shotgun approach: try multiple common ID keys to see if backend accepts any override
-    const idOverride = data.hospitalId;
+  createLabsClient: (data: CreateLabsRequest) =>
+    apiClient<Labs>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, role: 'labs' }),
+    }),
+
+  createHospitalClient: (data: CreateHospitalRequest) => {
+    // Clean payload - remove hospitalId as backend generates it
+    const cleanData: any = { ...data };
+    
+    // Remove hospitalId if present (backend generates it)
+    delete cleanData.hospitalId;
+    
+    // Ensure consistent field naming for backend
+    if (cleanData.specialities && cleanData.specialities.length > 0) {
+      cleanData.specialities = cleanData.specialities;
+    } else if (cleanData.specialties && cleanData.specialties.length > 0) {
+      cleanData.specialities = cleanData.specialties;
+      delete cleanData.specialties;
+    }
+    
+    // Ensure ambulanceAvailability is boolean
+    if (cleanData.ambulanceAvailability !== undefined) {
+      cleanData.ambulanceAvailability = Boolean(cleanData.ambulanceAvailability);
+    }
+    
+    // Remove only undefined values (keep empty strings, backend handles them)
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === undefined) {
+        delete cleanData[key];
+      }
+    });
 
     return apiClient<Hospital>(ADMIN_ENDPOINTS.CREATE_HOSPITAL, {
       method: 'POST',
-      body: JSON.stringify({
-        ...data,
-        // Common overrides
-        id: idOverride,
-        hospital_id: idOverride,
-        code: idOverride,
-
-        // Ensure consistent field naming for backend
-        specialities: data.specialities || data.specialties || [],
-        specialties: data.specialities || data.specialties || [],
-        numDoctors: data.numberOfDoctors || data.numDoctors,
-        numberOfDoctors: data.numberOfDoctors || data.numDoctors,
-        totalBeds: data.numberOfBeds || data.totalBeds,
-        numberOfBeds: data.numberOfBeds || data.totalBeds,
-        ambulanceAvailable: data.ambulanceAvailable ?? data.ambulanceAvailability,
-        ambulanceAvailability: data.ambulanceAvailable ?? data.ambulanceAvailability,
-        // Add legacy top-level coords just in case
-        lat,
-        lng
-      }),
+      body: JSON.stringify(cleanData),
     });
   },
 
@@ -132,45 +154,62 @@ export const adminService = {
       body: JSON.stringify(data),
     }),
 
+  deleteHelpdeskClient: async (id: string) => {
+    return apiClient<void>(ADMIN_ENDPOINTS.DELETE_HELPDESK(id), {
+      method: 'DELETE',
+    });
+  },
+
   deleteUserClient: async (id: string, role?: string) => {
+    // If it's a helpdesk, use the dedicated helpdesk endpoint
+    if (role === 'helpdesk') {
+      return apiClient<void>(ADMIN_ENDPOINTS.DELETE_HELPDESK(id), {
+        method: 'DELETE',
+      });
+    }
+
     const endpointsToTry = [
       ADMIN_ENDPOINTS.DELETE_USER(id, role),
-      // Fallback 1: Try without role if role was provided
+      // Fallback: Try without role if role was provided
       ...(role ? [ADMIN_ENDPOINTS.DELETE_USER(id)] : []),
-      // Fallback 2: Try specific helpdesk endpoint if role is helpdesk
-      ...(role === 'helpdesk' ? [`/admin/helpdesks/${id}`] : []),
-      // Fallback 3: Try general users endpoint
-      `/users/${id}`
     ];
 
     let lastError: any;
 
     for (const url of endpointsToTry) {
       try {
-        console.log(`Attempting delete via: ${url}`);
         await apiClient<void>(url, { method: 'DELETE' });
-        return; // Success
+        return; // Success - resource deleted
       } catch (err: any) {
-        console.warn(`Delete failed for ${url}:`, err.message);
-        lastError = err;
-        // If 404, it might be the wrong endpoint, or already deleted. 
-        // We continue to try other endpoints.
+        // Check if it's a 404 (resource not found or already deleted)
+        const is404 = err.status === 404 ||
+          err.message?.includes('404') ||
+          err.message?.toLowerCase().includes('not found') ||
+          err.message === 'API Error';
+
+        if (is404) {
+          // 404 means resource doesn't exist (already deleted or wrong endpoint)
+          lastError = err;
+          continue;
+        } else {
+          // Non-404 error - this is a real problem
+          throw err;
+        }
       }
     }
 
-    // If all attempts failed
+    // If all attempts resulted in 404s, consider it success (idempotent delete)
     if (lastError) {
-      // If the last error was a 404, we can arguably consider it "success" (idempotent)
-      // to appease the UI if the user wants it GONE.
       const is404 = lastError.status === 404 ||
-        lastError.message.includes('404') ||
-        lastError.message.toLowerCase().includes('not found') ||
-        lastError.message === 'API Error'; // Backend often returns empty body resulting in generic msg
+        lastError.message?.includes('404') ||
+        lastError.message?.toLowerCase().includes('not found') ||
+        lastError.message === 'API Error';
 
       if (is404) {
-        console.warn("All delete attempts 404'd or deemed not found. Assuming resource is already gone.");
+        // Silently succeed - resource is already deleted
         return;
       }
+      // Real error - throw it
       throw lastError;
     }
   },
@@ -186,4 +225,26 @@ export const adminService = {
 
   getSupportRequestsClient: () =>
     apiClient<SupportTicket[]>(ADMIN_ENDPOINTS.SUPPORT_REQUESTS),
+
+  // Leave Management
+  requestLeaveClient: (data: any) =>
+    apiClient<any>('/leaves/request', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getLeavesClient: () =>
+    apiClient<{ leaves: any[] }>('/leaves'),
+
+  updateLeaveStatusClient: (id: string, data: any) =>
+    apiClient<any>(`/leaves/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  getLeaveByIdClient: (id: string) =>
+    apiClient<{ leave: any }>(`/leaves/${id}`),
+
+  getMyLeavesClient: () =>
+    apiClient<{ leaves: any[] }>('/leaves/my'),
 };

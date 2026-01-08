@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { adminService } from "@/lib/integrations/services";
+import { adminService } from "@/lib/integrations";
 import { Shield, UserPlus, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageHeader, Card, FormInput, Button } from "@/components/admin";

@@ -81,7 +81,7 @@ const PharmacyBillPrint: React.FC<PharmacyBillPrintProps> = ({ billData }) => {
                 </tbody>
             </table>
 
-            {/* Summary */}
+           
             <div className="flex flex-col items-end gap-2 mb-8 pr-2 border-b-2 border-gray-200 pb-4">
                 <div className="flex justify-between w-full max-w-[250px]">
                     <span className="text-sm font-semibold">Subtotal:</span>

@@ -1,15 +1,15 @@
 "use server";
 
 import { apiServer } from '../api/apiServer';
-import { endpoints } from '../config';
-import type { 
-  DashboardStats, 
-  Hospital, 
-  Doctor, 
-  Patient, 
-  Helpdesk, 
-  AuditLog, 
-  SupportTicket 
+import { endpoints, ADMIN_ENDPOINTS } from '../config';
+import type {
+  DashboardStats,
+  Hospital,
+  Doctor,
+  Patient,
+  Helpdesk,
+  AuditLog,
+  SupportTicket
 } from '../types';
 
 export async function getDashboardAction() {
@@ -69,4 +69,44 @@ export async function deleteHospitalAction(id: string) {
   });
   import('next/cache').then(m => m.revalidatePath('/admin/hospitals'));
   return result;
+}
+
+// Staff Creation Actions
+export async function createHospitalAdminAction(data: any) {
+  try {
+    const result = await apiServer<any>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    import('next/cache').then(m => m.revalidatePath('/admin/hospital-admins'));
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to create hospital admin' };
+  }
+}
+
+export async function createPharmaAction(data: any) {
+  try {
+    const result = await apiServer<any>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, role: 'pharma' }),
+    });
+    import('next/cache').then(m => m.revalidatePath('/admin/users'));
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to create pharma staff' };
+  }
+}
+
+export async function createLabsAction(data: any) {
+  try {
+    const result = await apiServer<any>(ADMIN_ENDPOINTS.CREATE_HOSPITAL_ADMIN, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, role: 'labs' }),
+    });
+    import('next/cache').then(m => m.revalidatePath('/admin/users'));
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to create labs staff' };
+  }
 }

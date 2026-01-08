@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
-import { Settings, LogOut, X } from "lucide-react";
+import { Settings, LogOut, X, User } from "lucide-react";
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const adminMenu = [
     { icon: "/dashboard.png", label: "Dashboard", path: "/admin" },
@@ -13,7 +14,9 @@ const adminMenu = [
     { icon: "/assets/user.png", label: "Patients", path: "/admin/patients" },
     { icon: "/assets/user.png", label: "Front Desk", path: "/admin/helpdesks" },
     { icon: "/assets/user.png", label: "Create Admin", path: "/admin/create-admin" },
+    { icon: "/assets/doctor.png", label: "Create Hospital Admin", path: "/admin/create-hospital-admin" },
     { icon: "/assets/user.png", label: "Admins", path: "/admin/admins" },
+    { icon: "/assets/doctor.png", label: "Hospital Admins", path: "/admin/hospital-admins" },
     { icon: "/assets/doctor.png", label: "Create Doctor", path: "/admin/create-doctor" },
     { icon: "/assets/user.png", label: "Create HelpDesk", path: "/admin/create-helpdesk" },
     { icon: "/assets/doctor.png", label: "Create Hospital", path: "/admin/create-hospital" },
@@ -31,6 +34,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchPlaceholder, setSearchPlaceholder] = useState("Search...");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
     const adminUser = user || {
         name: "Super Admin",
@@ -160,33 +164,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                     })}
                 </div>
 
-                {/* Footer (Settings + Logout) */}
-                <div className="p-4 border-t space-y-2" style={{ borderColor: 'var(--border-color)' }}>
-                    <button
-                        onClick={() => router.push('/admin/settings')}
-                        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-                        style={{ color: 'var(--secondary-color)' }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--card-bg)';
-                            e.currentTarget.style.color = 'var(--text-color)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = 'var(--secondary-color)';
-                        }}
-                    >
-                        <Settings size={20} />
-                        Settings
-                    </button>
 
-                    <button
-                        onClick={logout}
-                        className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
-                    >
-                        <LogOut size={20} />
-                        Logout
-                    </button>
-                </div>
             </div>
 
             {/* Main Content */}
@@ -219,14 +197,65 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                             }}
                         />
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <span style={{ color: 'var(--text-color)' }}>{adminUser.name}</span>
+                    <div className="flex items-center gap-3">
+                        <ThemeToggle />
+                        <div className="h-6 w-px" style={{ backgroundColor: 'var(--border-color)' }}></div>
+                        <div className="relative">
                         <button
-                            onClick={logout}
-                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                         >
-                            Logout
+                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-shadow">
+                                {adminUser.name?.charAt(0).toUpperCase() || "A"}
+                            </div>
+                            <div className="hidden md:block text-left">
+                                <p className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>
+                                    {adminUser.name}
+                                </p>
+                                <p className="text-xs opacity-60">Super Admin</p>
+                            </div>
                         </button>
+
+                        {/* Dropdown Menu */}
+                        {isProfileDropdownOpen && (
+                            <>
+                                <div className="fixed inset-0 z-30" onClick={() => setIsProfileDropdownOpen(false)} />
+                                <div
+                                    className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl border z-40 overflow-hidden"
+                                    style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
+                                >
+                                    <div className="p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow">
+                                                {adminUser.name?.charAt(0).toUpperCase() || "A"}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold" style={{ color: 'var(--text-color)' }}>{adminUser.name}</p>
+                                                <p className="text-xs opacity-60">Super Administrator</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="py-2">
+                                        <button
+                                            onClick={() => { router.push('/admin/profile'); setIsProfileDropdownOpen(false); }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                                            style={{ color: 'var(--text-color)' }}
+                                        >
+                                            <User size={18} className="text-blue-500" />
+                                            <span>My Profile</span>
+                                        </button>
+                                        <button
+                                            onClick={() => { logout(); setIsProfileDropdownOpen(false); }}
+                                            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                        >
+                                            <LogOut size={18} />
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
                     </div>
                 </header>
 

@@ -38,16 +38,53 @@ export interface Doctor {
   mobile: string;
   role: 'doctor';
   gender?: string;
+  dateOfBirth?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
   hospital?: string | Hospital | any;
   specialties: string[];
   qualifications?: string[];
   qualification?: string; // Legacy field
+  medicalRegistrationNumber?: string;
+  registrationCouncil?: string;
+  registrationYear?: number;
+  registrationExpiryDate?: string;
   experienceStartDate?: string;
   experienceStart?: string; // Legacy field
+  experienceYears?: number; // Calculated on backend
+  department?: string;
+  designation?: string;
+  employeeId?: string;
   consultationFee?: number;
+  consultationDuration?: number;
+  maxAppointmentsPerDay?: number;
+  availability?: Array<{
+    days: string[];
+    startTime: string;
+    breakStart?: string;
+    breakEnd?: string;
+    endTime: string;
+  }>;
+  room?: string;
   bio?: string;
   profilePic?: string;
   avatar?: string;
+  signature?: string;
+  languages?: string[];
+  awards?: string[];
+  permissions?: {
+    canAccessEMR?: boolean;
+    canAccessBilling?: boolean;
+    canAccessLabReports?: boolean;
+    canPrescribe?: boolean;
+    canAdmitPatients?: boolean;
+    canPerformSurgery?: boolean;
+  };
   status: 'active' | 'inactive';
   createdAt: string;
   hospitals?: Array<{
@@ -92,6 +129,32 @@ export interface Admin {
   email: string;
   mobile: string;
   role: 'admin';
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
+export interface Pharma {
+  _id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  role: 'pharma';
+  hospital?: string | Hospital;
+  hospitalId?: string;
+  hospitalName?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
+export interface Labs {
+  _id: string;
+  name: string;
+  email: string;
+  mobile: string;
+  role: 'labs';
+  hospital?: string | Hospital;
+  hospitalId?: string;
+  hospitalName?: string;
   status: 'active' | 'inactive';
   createdAt: string;
 }
@@ -151,17 +214,68 @@ export interface CreateAdminRequest {
 }
 
 export interface CreateDoctorRequest extends CreateAdminRequest {
+  // Personal Information
   gender: string;
-  hospitalId?: string;
-  hospital?: string; // legacy
+  dateOfBirth?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  
+  // Professional & Clinical Details
   specialties: string[];
   qualifications?: string[];
-  qualification?: string; // legacy
+  medicalRegistrationNumber: string; // NMC Registration - Mandatory
+  registrationCouncil?: string;
+  registrationYear?: number;
+  registrationExpiryDate?: string;
   experienceStart: string;
-  experienceStartDate?: string; // legacy
+  yearsOfExperience?: number;
+  
+  // Department & Affiliation
+  department?: string;
+  designation?: 'Consultant' | 'Senior Consultant' | 'Surgeon' | 'Resident' | 'Fellow' | 'Professor' | 'Other';
+  employeeId?: string;
+  
+  // Scheduling & Availability
+  hospitalId?: string;
+  hospital?: string; // legacy
   consultationFee: number;
+  consultationDuration?: number; // in minutes
+  maxAppointmentsPerDay?: number;
+  availability?: Array<{
+    days: string[];
+    startTime: string;
+    breakStart?: string;
+    breakEnd?: string;
+    endTime: string;
+  }>;
+  room?: string; // Room/Chamber assignment
+  
+  // System Access & Permissions
+  permissions?: {
+    canAccessEMR?: boolean;
+    canAccessBilling?: boolean;
+    canAccessLabReports?: boolean;
+    canPrescribe?: boolean;
+    canAdmitPatients?: boolean;
+    canPerformSurgery?: boolean;
+  };
+  
+  // Profile & Additional Info
   bio: string;
   profilePic?: string;
+  signature?: string;
+  languages?: string[];
+  awards?: string[];
+  publications?: string[];
+  
+  // Legacy fields for backward compatibility
+  qualification?: string;
+  experienceStartDate?: string;
   assignHospitals?: Array<{
     hospitalId: string;
     specialties: string[];
@@ -170,6 +284,23 @@ export interface CreateDoctorRequest extends CreateAdminRequest {
 }
 
 export interface CreateHelpdeskRequest extends CreateAdminRequest {
+  hospitalId: string;
+  hospital?: string; // legacy
+}
+
+export interface CreateHospitalHelpdeskRequest {
+  staffId: string;
+  loginId: string;
+  password: string;
+  additionalNotes?: string;
+}
+
+export interface CreatePharmaRequest extends CreateAdminRequest {
+  hospitalId: string;
+  hospital?: string; // legacy
+}
+
+export interface CreateLabsRequest extends CreateAdminRequest {
   hospitalId: string;
   hospital?: string; // legacy
 }

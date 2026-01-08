@@ -82,38 +82,38 @@ export default function CreateHospital() {
         setLoading(true);
 
         try {
-            // Generate a unique ID to bypass backend generator issues
-            const timestamp = Date.now().toString().slice(-6);
-            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            const uniqueId = `HOSP${timestamp}${random}`;
-
-            const payload: CreateHospitalRequest = {
-                ...formData,
-                hospitalId: uniqueId,
-                establishedYear: Number(formData.establishedYear) || undefined,
-                numberOfBeds: Number(formData.numberOfBeds) || undefined,
-                ICUBeds: Number(formData.ICUBeds) || undefined,
-                numberOfDoctors: Number(formData.numberOfDoctors) || undefined,
-                location: {
-                    lat: Number(formData.location.lat) || 0,
-                    lng: Number(formData.location.lng) || 0
-                },
-                rating: formData.rating // Keep as string if backend expects string, or convert if needed. Types say string.
+            // Prepare payload similar to old frontend - send data directly, backend handles conversion
+            const payload: any = {
+                name: formData.name.trim(),
+                address: formData.address.trim(),
+                phone: formData.phone.trim(),
+                email: formData.email?.trim() || "",
+                pincode: formData.pincode?.trim() || "",
+                establishedYear: formData.establishedYear || "",
+                numberOfBeds: formData.numberOfBeds || "",
+                ICUBeds: formData.ICUBeds || "",
+                numberOfDoctors: formData.numberOfDoctors || "",
+                website: formData.website?.trim() || "",
+                operatingHours: formData.operatingHours?.trim() || "24/7",
+                ambulanceAvailability: formData.ambulanceAvailability,
+                rating: formData.rating || "",
+                specialities: formData.specialities || [],
+                services: formData.services || [],
             };
 
-            // Strict type cleanup
-            const cleanPayload = {
-                ...payload,
-                // Ensure we don't send empty strings for optional numbers
-                establishedYear: Number(formData.establishedYear) || undefined,
-                numberOfBeds: Number(formData.numberOfBeds) || undefined,
-                ICUBeds: Number(formData.ICUBeds) || undefined,
-                numberOfDoctors: Number(formData.numberOfDoctors) || undefined,
-            };
+            // Add location only if both lat and lng are provided
+            if (formData.location.lat && formData.location.lng) {
+                payload.location = {
+                    lat: formData.location.lat,
+                    lng: formData.location.lng
+                };
+            }
 
-            await adminService.createHospitalClient(payload);
-            toast.success(`Hospital created successfully!`, { duration: 5000 });
+            const result = await adminService.createHospitalClient(payload);
+            const hospitalId = result?.hospitalId || "Unknown ID";
+            toast.success(`Hospital created successfully! ID: ${hospitalId}`, { duration: 5000 });
 
+            // Reset form
             setFormData({
                 name: "", address: "", phone: "", email: "", pincode: "",
                 establishedYear: "", website: "", operatingHours: "24/7",
@@ -122,7 +122,10 @@ export default function CreateHospital() {
                 location: { lat: "", lng: "" }, specialities: [], services: []
             });
         } catch (err: any) {
-            toast.error(err.message || "Failed to create hospital");
+            console.error("Create hospital error:", err);
+            // Show detailed error message from backend
+            const errorMessage = err.message || err.error || "Failed to create hospital";
+            toast.error(errorMessage, { duration: 5000 });
         } finally {
             setLoading(false);
         }

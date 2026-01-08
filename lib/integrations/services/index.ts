@@ -4,3 +4,7 @@ export * from './product.service';
 export * from './pharmacyBilling.service';
 export * from './supplier.service';
 export * from './admin.service';
+export * from './hospitalAdmin.service';
+export * from './helpdesk.service';
+export * from './doctor.service';
+export * from './staff.service';
