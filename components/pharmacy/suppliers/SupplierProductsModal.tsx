@@ -64,7 +64,7 @@ const SupplierProductsModal: React.FC<SupplierProductsModalProps> = ({ isOpen, o
                     </button>
                 </div>
 
-                {/* Table Body */}
+                
                 <div className="flex-1 overflow-y-auto p-8">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
