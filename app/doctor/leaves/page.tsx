@@ -90,20 +90,18 @@ export default function DoctorLeaves() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           { label: "Total Applied", value: leaves.length, icon: FileText, color: "blue", sub: "Lifetime requests" },
-          { label: "Approved Index", value: leaves.filter(l => l.status === 'approved').length, icon: CheckCircle2, color: "emerald", sub: "Operational absences" },
+         
           { label: "Pending Load", value: leaves.filter(l => l.status === 'pending').length, icon: Clock, color: "amber", sub: "Awaiting clearance" }
         ].map((stat, i) => (
           <div key={i} className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 group hover:border-emerald-500 transition-all">
             <div className="flex items-center justify-between mb-4">
-               <div className={`p-3 bg-${stat.color}-50 dark:bg-${stat.color}-900/20 rounded-2xl text-${stat.color}-600 dark:text-${stat.color}-400`}>
-                  <stat.icon size={24} />
-               </div>
-               <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Global</span>
+               
+               
             </div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
             <div className="flex items-baseline gap-2">
                <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">{stat.value}</h3>
-               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.sub}</span>
+             
             </div>
           </div>
         ))}

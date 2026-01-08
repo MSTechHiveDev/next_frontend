@@ -4,3 +4,4 @@ export * from './admin.actions';
 export * from './doctor.actions';
 export * from './staff.actions';
 export * from './hospitalAdmin.actions';
+export * from './patient.actions';

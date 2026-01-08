@@ -10,37 +10,47 @@ export interface DoctorAppointment {
   patientName: string;
   patientId: string;
   time: string;
-  type: string; // 'Consultation', 'Follow-up'
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
-  notes?: string;
+  type: string;
+  status: string;
+  hospital?: string;
 }
 
 export interface DoctorPatient {
   id: string;
   name: string;
-  age: number;
-  gender: string;
-  lastVisit: string;
-  condition: string;
+  mobile?: string;
+  email?: string;
+  lastVisit: string | Date;
+  // Fields used in frontend but maybe not in dashboard response
+  age?: number;
+  gender?: string;
+  condition?: string;
 }
 
-export interface DoctorReport {
-  id: string;
-  patientName: string;
-  patientId: string;
-  testName: string;
-  date: string;
-  status: 'Pending' | 'Ready';
-  priority: 'Normal' | 'Urgent';
+export interface DoctorQuickNote {
+  _id: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface DoctorDashboardData {
+  stats: DoctorStats;
+  appointments: DoctorAppointment[];
+  recentPatients: DoctorPatient[];
 }
 
 export interface DoctorProfile {
-  id: string;
-  name: string;
-  specialty: string;
-  email: string;
-  phone: string;
-  experience: string;
-  availability: string;
-  bio: string;
+  _id: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    mobile?: string;
+    doctorId?: string;
+  };
+  specialties?: string[];
+  qualifications?: string[];
+  bio?: string;
+  consultationFee?: number;
+  quickNotes?: DoctorQuickNote[];
 }

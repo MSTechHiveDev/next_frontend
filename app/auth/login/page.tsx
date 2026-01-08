@@ -80,7 +80,7 @@ const LoginPage = () => {
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
+
     // Clear password error when user starts typing
     if (errors.password) {
       setErrors({ ...errors, password: '' });
@@ -88,7 +88,7 @@ const LoginPage = () => {
     if (serverMsg) {
       setServerMsg('');
     }
-    
+
     setForm({ ...form, password: value });
   };
 
@@ -118,13 +118,15 @@ const LoginPage = () => {
         router.push('/helpdesk');
       } else if (user?.role === 'staff') {
         router.push('/staff');
+      } else if (user?.role === 'patient') {
+        router.push('/patient');
       } else {
         router.push('/helpdesk'); // Default fallback
       }
     } catch (err: any) {
       // Extract error message
       const errorMessage = err?.message || err?.response?.data?.message || err?.error?.message || '';
-      
+
       // Handle network errors
       if (errorMessage.includes('Cannot connect to server') || errorMessage.includes('Failed to fetch')) {
         setServerMsg(`Cannot connect to server. Please ensure the backend is running.`);
@@ -133,15 +135,15 @@ const LoginPage = () => {
 
       // Map backend error messages to form fields
       const fieldErrors: Record<string, string> = {};
-      
-      if (errorMessage.toLowerCase().includes('password is wrong') || 
-          errorMessage.toLowerCase().includes('password') && errorMessage.toLowerCase().includes('wrong')) {
+
+      if (errorMessage.toLowerCase().includes('password is wrong') ||
+        errorMessage.toLowerCase().includes('password') && errorMessage.toLowerCase().includes('wrong')) {
         fieldErrors.password = 'Incorrect password. Please try again.';
-      } else if (errorMessage.toLowerCase().includes('mobile number is wrong') || 
-                 errorMessage.toLowerCase().includes('mobile') && errorMessage.toLowerCase().includes('wrong')) {
+      } else if (errorMessage.toLowerCase().includes('mobile number is wrong') ||
+        errorMessage.toLowerCase().includes('mobile') && errorMessage.toLowerCase().includes('wrong')) {
         fieldErrors.identifier = 'Mobile number not found. Please check and try again.';
-      } else if (errorMessage.toLowerCase().includes('doctor id is wrong') || 
-                 errorMessage.toLowerCase().includes('doctor id') && errorMessage.toLowerCase().includes('wrong')) {
+      } else if (errorMessage.toLowerCase().includes('doctor id is wrong') ||
+        errorMessage.toLowerCase().includes('doctor id') && errorMessage.toLowerCase().includes('wrong')) {
         fieldErrors.identifier = 'Doctor ID not found. Please check and try again.';
       } else if (errorMessage.toLowerCase().includes('invalid doctor id')) {
         fieldErrors.identifier = 'Invalid Doctor ID access.';
@@ -247,9 +249,8 @@ const LoginPage = () => {
                       Mobile Number or Doctor ID
                     </label>
 
-                    <div className={`flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all ${
-                      errors.identifier ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500' : ''
-                    }`} style={{ backgroundColor: 'var(--bg-color)', borderColor: errors.identifier ? '#ef4444' : 'var(--border-color)' }}>
+                    <div className={`flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all ${errors.identifier ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500' : ''
+                      }`} style={{ backgroundColor: 'var(--bg-color)', borderColor: errors.identifier ? '#ef4444' : 'var(--border-color)' }}>
                       <img src="/assets/user.png" className="w-6 h-6 mr-2" alt="user" />
                       <input
                         type="text"
@@ -271,9 +272,8 @@ const LoginPage = () => {
                     <label className="text-sm font-medium mb-2.5 block" style={{ color: 'var(--secondary-color)' }}>
                       Password
                     </label>
-                    <div className={`flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all relative ${
-                      errors.password ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500' : ''
-                    }`}
+                    <div className={`flex items-center border rounded-xl px-4 py-3 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all relative ${errors.password ? 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500' : ''
+                      }`}
                       style={{ backgroundColor: 'var(--bg-color)', borderColor: errors.password ? '#ef4444' : 'var(--border-color)' }}
                     >
                       <img src="/assets/passoword.png" className="w-6 h-6 mr-2" alt="lock" />

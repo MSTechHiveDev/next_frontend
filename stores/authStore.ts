@@ -43,6 +43,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('refreshToken', tokens.refreshToken);
       // Store user in localStorage for offline recovery
       localStorage.setItem('user', JSON.stringify(user));
+
+      // Set Cookies for Server Components (apiServer.ts)
+      document.cookie = `accessToken=${tokens.accessToken}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `refreshToken=${tokens.refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+
       set({ user, isAuthenticated: true, isLoading: false });
     } catch (error) {
       set({ isLoading: false });
@@ -83,22 +88,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error: any) {
       // Check if it's a network error (backend unavailable)
-      const isNetworkError = error?.isNetworkError || 
-                            error?.message?.includes('Cannot connect to server') || 
-                            error?.message?.includes('Failed to fetch') ||
-                            error?.message?.includes('Network error');
-      
+      const isNetworkError = error?.isNetworkError ||
+        error?.message?.includes('Cannot connect to server') ||
+        error?.message?.includes('Failed to fetch') ||
+        error?.message?.includes('Network error');
+
       // Check if it's an actual authentication error
-      const isAuthError = error?.status === 401 || 
-                         error?.status === 403 ||
-                         error?.message?.includes('Session expired') ||
-                         error?.message?.includes('Unauthorized') ||
-                         error?.message?.includes('Not authenticated');
+      const isAuthError = error?.status === 401 ||
+        error?.status === 403 ||
+        error?.message?.includes('Session expired') ||
+        error?.message?.includes('Unauthorized') ||
+        error?.message?.includes('Not authenticated');
 
       if (isNetworkError) {
         // Backend unavailable - keep user logged in using cached data
         console.warn('⚠️ Backend server unavailable. Using cached session data.');
-        
+
         // Try to restore user from localStorage
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
@@ -110,7 +115,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             console.error('Failed to parse stored user:', e);
           }
         }
-        
+
         // If no stored user but we have a token, assume authenticated but mark as initialized
         // This prevents redirect loop while backend is down
         set({ isLoading: false, isInitialized: true, isAuthenticated: true });

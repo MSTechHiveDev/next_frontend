@@ -3,24 +3,24 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Users, 
-  FileText, 
-  User, 
-  Settings,
-  LogOut,
-  Menu,
-  Bell,
-  Search,
-  Activity,
-  Clock
+import {
+    LayoutDashboard,
+    Calendar,
+    Users,
+    FileText,
+    User,
+    Settings,
+    LogOut,
+    Menu,
+    Bell,
+    Search,
+    Activity,
+    Clock
 } from "lucide-react";
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const doctorMenu = [
-    { 
+    {
         group: "Main",
         items: [
             { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: "/doctor" },
@@ -52,7 +52,7 @@ const doctorMenu = [
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
+    const { user, logout, isAuthenticated, checkAuth, isLoading, isInitialized } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -62,17 +62,19 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     }, []);
 
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
+        // Only redirect AFTER initialization is complete and user is still not authenticated
+        if (isInitialized && !isAuthenticated) {
             router.push('/auth/login');
         }
-    }, [isAuthenticated, isLoading, router]);
+    }, [isAuthenticated, isInitialized, router]);
 
-    if (isLoading) {
+    // Show loading state while checking auth (isLoading) or before check starts (!isInitialized)
+    if (isLoading || !isInitialized) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">Loading Doctor Portal...</p>
+                    <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-600 dark:text-gray-400 font-medium">Loading Doctor Portal...</p>
                 </div>
             </div>
         );
@@ -115,8 +117,8 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                                             }}
                                             className={`
                                                 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all w-full group
-                                                ${isActive 
-                                                    ? 'bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none' 
+                                                ${isActive
+                                                    ? 'bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none'
                                                     : 'text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600'}
                                             `}
                                         >
@@ -138,7 +140,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
             {/* Main Content */}
             <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
                 <header className="h-16 bg-white dark:bg-[#111] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
-                    <button 
+                    <button
                         onClick={() => setIsSidebarOpen(true)}
                         className="lg:hidden p-2 text-gray-600 dark:text-gray-400"
                     >
@@ -148,7 +150,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                     <div className="flex-1 max-w-md mx-4 hidden md:block">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input 
+                            <input
                                 type="text"
                                 placeholder="Search records, patients..."
                                 className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
@@ -162,7 +164,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                             <Bell size={20} />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111]"></span>
                         </button>
-                        
+
                         <div className="h-8 w-px bg-gray-200 dark:border-gray-800 mx-2"></div>
 
                         <div className="relative">
@@ -224,7 +226,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
             {/* Mobile Overlay */}
             {isSidebarOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm"
                     onClick={() => setIsSidebarOpen(false)}
                 />

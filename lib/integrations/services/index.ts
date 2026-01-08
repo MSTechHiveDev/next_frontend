@@ -8,3 +8,4 @@ export * from './hospitalAdmin.service';
 export * from './helpdesk.service';
 export * from './doctor.service';
 export * from './staff.service';
+export * from './patient.service';
