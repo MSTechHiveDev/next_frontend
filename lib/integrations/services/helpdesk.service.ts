@@ -171,4 +171,23 @@ export const helpdeskService = {
    */
   getTransactions: () =>
     apiClient<any[]>(HELPDESK_ENDPOINTS.TRANSACTIONS),
+
+  // ==================== Transits ====================
+  /**
+   * Get all clinical transits for the hospital
+   * @returns List of transits
+   */
+  getTransits: () =>
+    apiClient<{ success: boolean; transits: any[] }>(TRANSIT_ENDPOINTS.LIST),
+
+  /**
+   * Mark transit documents as collected
+   * @param appointmentId Appointment ID
+   */
+  collectTransit: (appointmentId: string) =>
+    apiClient<any>(TRANSIT_ENDPOINTS.COLLECT(appointmentId), {
+      method: 'PATCH',
+    }),
 };
+
+import { TRANSIT_ENDPOINTS } from '../config';

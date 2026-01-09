@@ -144,7 +144,7 @@ export const BOOKING_ENDPOINTS = {
 };
 
 export const DOCTOR_ENDPOINTS = {
-  DASHBOARD: '/doctors/me',
+  DASHBOARD: '/doctors/dashboard',
   PROFILE: '/doctors/me',
   MY_PATIENTS: '/doctors/my-patients',
   CALENDAR_STATS: '/doctors/calendar/stats',
@@ -152,7 +152,23 @@ export const DOCTOR_ENDPOINTS = {
   QUICK_NOTES: '/doctors/quick-notes',
   START_NEXT: '/doctors/start-next',
   PATIENT_DETAILS: (id: string) => `/patient/${id}`,
+  // Consultation Workflow
+  START_CONSULTATION: (id: string) => `/doctor/appointments/${id}/start`,
+  END_CONSULTATION: (id: string) => `/doctor/appointments/${id}/end`,
+  CONSULTATION_SUMMARY: (id: string) => `/doctor/appointments/${id}/summary`,
+  CREATE_PRESCRIPTION: '/doctor/prescriptions',
+  CREATE_LAB_TOKEN: '/doctor/lab-tokens',
+  SEND_TO_HELPDESK: '/doctor/send-to-helpdesk',
+  GET_PRESCRIPTION: (id: string) => `/doctor/prescriptions/${id}`,
+  GET_LAB_TOKEN: (id: string) => `/doctor/lab-tokens/${id}`,
+  UPLOAD_PHOTO: '/doctors/upload-photo',
 };
+
+export const TRANSIT_ENDPOINTS = {
+  LIST: '/helpdesk/transits',
+  COLLECT: (id: string) => `/helpdesk/transits/${id}/collect`,
+};
+
 
 export const STAFF_ENDPOINTS = {
   DASHBOARD: '/staff/attendance/dashboard',

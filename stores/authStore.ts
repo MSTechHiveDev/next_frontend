@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { authService, type RegisterRequest } from '@/lib/integrations';
+import { loginAction } from '@/lib/integrations/actions/auth.actions';
 
 interface User {
   id: string;
@@ -39,7 +40,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       console.log('[Auth] Attempting login for:', identifier);
-      const response = await authService.loginClient({ identifier, password });
+      // Use loginAction (Server Action) to set cookies correctly
+      const response = await loginAction({ identifier, password });
+      console.log('[Auth] loginAction (Server Side) response received');
       const { tokens, user } = response;
 
       console.log('[Auth] Login successful:', {
@@ -54,6 +57,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.setItem('accessToken', tokens.accessToken);
       sessionStorage.setItem('refreshToken', tokens.refreshToken);
       sessionStorage.setItem('user', JSON.stringify(user));
+
+      // SERVER-SIDE COMPATIBILITY: Set cookies so Server Components/Actions can access tokens
+      if (typeof document !== 'undefined') {
+        document.cookie = `accessToken=${tokens.accessToken}; path=/; max-age=86400; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+        document.cookie = `refreshToken=${tokens.refreshToken}; path=/; max-age=604800; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+      }
 
       // PERSISTENT REGISTRY: Use localStorage for user data keyed by ID
       // This prevents account overlap when using multiple accounts in different tabs
@@ -84,6 +93,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('user');
+
+    // Clear cookies
+    if (typeof document !== 'undefined') {
+      document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
 
     set({ user: null, isAuthenticated: false });
   },
@@ -128,6 +143,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.setItem('lastUserId', user.id);
 
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
+
+      // Ensure cookies are set for server actions
+      if (typeof document !== 'undefined') {
+        const hasCookie = document.cookie.includes('accessToken=');
+        if (!hasCookie && token) {
+           document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+           if (refreshToken) {
+             document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+           }
+        }
+      }
     } catch (error: any) {
       console.log('[Auth] Error during auth check:', error.message);
 
