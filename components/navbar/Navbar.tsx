@@ -42,6 +42,10 @@ interface NavbarProps {
      */
     onSearch?: (query: string) => void;
     /**
+     * Callback for logout action
+     */
+    onLogout?: () => void;
+    /**
      * Additional class names
      */
     className?: string;
@@ -57,6 +61,7 @@ interface NavbarProps {
  * - Right-aligned controls: Theme Toggle, Notifications, Profile
  */
 import NotificationCenter from './NotificationCenter';
+import LogoutModal from '../auth/LogoutModal';
 
 export default function Navbar({
     title = "MScurechain",
@@ -66,6 +71,7 @@ export default function Navbar({
     user: propUser,
     actions,
     onSearch,
+    onLogout,
     className = ""
 }: NavbarProps) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -89,10 +95,12 @@ export default function Navbar({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleLogout = () => {
-        logout();
+    const handleLogoutClick = (e: React.MouseEvent) => {
+        e.preventDefault();
         setIsProfileOpen(false);
-        router.push('/login');
+        if (onLogout) {
+            onLogout();
+        }
     };
     return (
         <nav className={`w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50 ${className}`}>
@@ -152,7 +160,7 @@ export default function Navbar({
 
                 {/* Profile Dropdown Trigger */}
                 <div className="relative" ref={dropdownRef}>
-                    <button 
+                    <button
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className="flex items-center gap-3 pl-4 border-l border-gray-100 dark:border-gray-800 ml-2 group transition-all"
                     >
@@ -181,9 +189,9 @@ export default function Navbar({
                                 <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Authenticated Node</p>
                                 <p className="text-sm font-black text-gray-900 dark:text-white truncate uppercase">{user?.name}</p>
                             </div>
-                            
+
                             {user?.role?.toLowerCase() !== 'staff' && (
-                                <Link 
+                                <Link
                                     href={`/${user?.role?.toLowerCase()}/profile`}
                                     onClick={() => setIsProfileOpen(false)}
                                     className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all group"
@@ -193,7 +201,7 @@ export default function Navbar({
                                 </Link>
                             )}
 
-                            <Link 
+                            <Link
                                 href={`/${user?.role?.toLowerCase()}/settings`}
                                 onClick={() => setIsProfileOpen(false)}
                                 className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all group"
@@ -204,8 +212,8 @@ export default function Navbar({
 
                             <div className="my-2 border-t border-gray-50 dark:border-gray-800"></div>
 
-                            <button 
-                                onClick={handleLogout}
+                            <button
+                                onClick={handleLogoutClick}
                                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all group"
                             >
                                 <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -215,6 +223,7 @@ export default function Navbar({
                     )}
                 </div>
             </div>
+
         </nav>
     );
 }

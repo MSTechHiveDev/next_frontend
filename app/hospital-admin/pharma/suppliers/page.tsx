@@ -97,7 +97,7 @@ const SuppliersPage = () => {
                         placeholder="Search by vendor name, contact digits, or GSTIN taxonomy..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-11 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                        className="w-full pl-11 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                 </div>
                 <div className="px-6 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30">

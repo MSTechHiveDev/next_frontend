@@ -28,16 +28,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initEvents: () => {
     if (typeof window !== 'undefined') {
+      // Signal received from current tab's API client (e.g. 401 Unauthorized)
       window.addEventListener('auth-logout', () => {
-        get().logout(false); // Signal received, don't broadcast back
-      });
-
-      // Listen for cross-tab logout via localStorage
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'auth-global-logout-event') {
-          console.log('[Auth] Received global logout signal from another tab');
-          get().logout(false);
-        }
+        get().logout(false);
       });
     }
   },
@@ -57,12 +50,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hasRefreshToken: !!tokens.refreshToken
       });
 
-      // PER-TAB ISOLATION: Use sessionStorage for tokens
+      // PER-TAB ISOLATION: Use sessionStorage for tokens AND current user
       sessionStorage.setItem('accessToken', tokens.accessToken);
       sessionStorage.setItem('refreshToken', tokens.refreshToken);
+      sessionStorage.setItem('user', JSON.stringify(user));
 
-      // PERSISTENT REGISTRY: Use localStorage for user data
-      localStorage.setItem('user', JSON.stringify(user));
+      // PERSISTENT REGISTRY: Use localStorage for user data keyed by ID
+      // This prevents account overlap when using multiple accounts in different tabs
+      localStorage.setItem(`profile_${user.id}`, JSON.stringify(user));
       localStorage.setItem('lastUserId', user.id);
 
       console.log('[Auth] Tokens saved to sessionStorage, user data to localStorage');
@@ -88,18 +83,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: (broadcast = true) => {
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
-    // We keep 'user' in localStorage for profile persistence, but mark as unauthenticated
-    set({ user: null, isAuthenticated: false });
+    sessionStorage.removeItem('user');
 
-    if (broadcast && typeof window !== 'undefined') {
-      // Signal other tabs to logout as well
-      localStorage.setItem('auth-global-logout-event', Date.now().toString());
-    }
+    set({ user: null, isAuthenticated: false });
   },
 
   checkAuth: async () => {
     const token = sessionStorage.getItem('accessToken');
     const refreshToken = sessionStorage.getItem('refreshToken');
+    const sessionUser = sessionStorage.getItem('user');
+
+    // Try to restore user from session first
+    if (sessionUser && !get().user) {
+      try {
+        const user = JSON.parse(sessionUser);
+        set({ user, isAuthenticated: !!token });
+      } catch (e) { }
+    }
 
     console.log('[Auth] Checking authentication...', {
       hasToken: !!token,
@@ -115,15 +115,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     set({ isLoading: true });
     try {
-      console.log('[Auth] Fetching user profile with token...');
       const user = await authService.getMeClient();
       console.log('[Auth] ✅ Authentication successful:', {
         userId: user.id,
         userName: user.name,
         role: user.role
       });
-      // Store user in localStorage for offline recovery
-      localStorage.setItem('user', JSON.stringify(user));
+
+      // Keep session updated
+      sessionStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(`profile_${user.id}`, JSON.stringify(user));
+      localStorage.setItem('lastUserId', user.id);
+
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error: any) {
       console.log('[Auth] Error during auth check:', error.message);
@@ -146,7 +149,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.warn('[Auth] ⚠️ Backend server unavailable. Using cached session data.');
 
         // Try to restore user from localStorage
-        const storedUser = localStorage.getItem('user');
+        const lastUserId = localStorage.getItem('lastUserId');
+        const storedUser = sessionUser || (lastUserId ? localStorage.getItem(`profile_${lastUserId}`) : null);
+
         if (storedUser) {
           try {
             const user = JSON.parse(storedUser);
@@ -167,16 +172,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (isAuthError) {
         // Actual auth failure - log out
-        console.log('[Auth] ❌ Authentication failed. Logging out...');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        console.log('[Auth] ❌ Authentication failed. Logging out current tab...');
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('user');
         set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
       } else {
         // Other errors - keep user logged in but mark as initialized
         console.error('[Auth] Unexpected error during auth check:', error);
         // Try to use cached user if available
-        const storedUser = localStorage.getItem('user');
+        const lastUserId = localStorage.getItem('lastUserId');
+        const storedUser = sessionUser || (lastUserId ? localStorage.getItem(`profile_${lastUserId}`) : null);
+
         if (storedUser) {
           try {
             const user = JSON.parse(storedUser);

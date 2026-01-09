@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, User } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
 import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
+import LogoutModal from '@/components/auth/LogoutModal';
 
 const patientMenuItems: SidebarItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/patient' },
@@ -14,29 +15,79 @@ const patientMenuItems: SidebarItem[] = [
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false); // Local state for demo, ideally use a theme provider
-    const { user, logout } = useAuthStore();
+    const [isDarkMode, setIsDarkMode] = useState(false);
+    const { user, logout, isAuthenticated, isInitialized, isLoading, checkAuth } = useAuthStore();
     const router = useRouter();
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-    const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
-    const toggleTheme = () => {
-        setIsDarkMode(!isDarkMode);
-        document.documentElement.classList.toggle('dark');
-    };
+    useEffect(() => {
+        useAuthStore.getState().initEvents();
+        checkAuth();
+    }, []);
 
-    const handleLogout = () => {
-        logout();
+    useEffect(() => {
+        if (isInitialized) {
+            if (!isAuthenticated) {
+                router.push('/auth/login');
+            } else if (user?.role !== 'patient') {
+                const routeMap: Record<string, string> = {
+                    'staff': '/staff',
+                    'doctor': '/doctor',
+                    'hospital-admin': '/hospital-admin',
+                    'lab': '/lab/dashboard',
+                    'pharma-owner': '/pharmacy/dashboard',
+                    'pharmacy': '/pharmacy/dashboard',
+                    'super-admin': '/admin',
+                    'admin': '/admin',
+                    'helpdesk': '/helpdesk'
+                };
+                router.push(routeMap[user?.role || ''] || '/auth/login');
+            }
+        }
+    }, [isInitialized, isAuthenticated, user?.role, router]);
+
+    const handleConfirmLogout = async () => {
+        await logout();
         router.push('/auth/login');
     };
 
+    // Premium Loading UI
+    if (isLoading || !isInitialized) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative w-24 h-24">
+                        <div className="absolute inset-0 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-4 border-4 border-indigo-600/20 border-b-indigo-600 rounded-full animate-spin-reverse"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic text-center">Patient Portal</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Synchronizing Health Node</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || user?.role !== 'patient') return null;
+
     return (
         <div className={`min-h-screen bg-gray-50 dark:bg-[#0a0a0a] ${isDarkMode ? 'dark' : ''}`}>
+            <LogoutModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleConfirmLogout}
+                userName={user?.name}
+            />
             {/* Sidebar */}
             <Sidebar
                 isOpen={isSidebarOpen}
                 onClose={() => setSidebarOpen(false)}
                 items={patientMenuItems}
-                onLogout={handleLogout}
+                onLogout={() => setIsLogoutModalOpen(true)}
             />
 
             {/* Main Content Wrapper */}
@@ -44,13 +95,13 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
                 {/* Navbar */}
                 <Navbar
                     title="Patient Portal"
-                    onMenuClick={toggleSidebar}
+                    onMenuClick={() => setSidebarOpen(true)}
                     isDarkMode={isDarkMode}
-                    onThemeToggle={toggleTheme}
+                    onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+                    onLogout={() => setIsLogoutModalOpen(true)}
                     user={{
                         name: user?.name || 'Patient',
                         role: 'Patient',
-                        // image: user?.avatar // Assuming avatar exists or undefined
                     }}
                 />
 

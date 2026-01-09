@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Clock, 
-  Calendar, 
-  TrendingUp, 
-  ArrowUpRight, 
+import {
+  Users,
+  Clock,
+  Calendar,
+  TrendingUp,
+  ArrowUpRight,
   ArrowDownRight,
   CheckCircle2,
   XCircle,
@@ -18,19 +18,19 @@ import {
 } from 'lucide-react';
 import { hospitalAdminService } from '@/lib/integrations/services/hospitalAdmin.service';
 import { toast } from 'react-hot-toast';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  PieChart, 
-  Pie, 
-  Cell 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
 const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'];
@@ -39,6 +39,7 @@ export default function AttendanceOverview() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [recentAttendance, setRecentAttendance] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadData();
@@ -189,40 +190,40 @@ export default function AttendanceOverview() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
                   tick={{ fontSize: 12, fontWeight: 700, fill: '#94a3b8' }}
                   dy={10}
                 />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
                   tick={{ fontSize: 12, fontWeight: 700, fill: '#94a3b8' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1e293b', 
-                    border: 'none', 
-                    borderRadius: '16px', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1e293b',
+                    border: 'none',
+                    borderRadius: '16px',
                     color: '#fff',
                     boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
                   }}
                   itemStyle={{ fontWeight: 800, fontSize: '12px' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="present" 
-                  stroke="#4f46e5" 
+                <Area
+                  type="monotone"
+                  dataKey="present"
+                  stroke="#4f46e5"
                   strokeWidth={4}
-                  fillOpacity={1} 
-                  fill="url(#colorPresent)" 
+                  fillOpacity={1}
+                  fill="url(#colorPresent)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -231,45 +232,45 @@ export default function AttendanceOverview() {
 
         {/* Today's Distribution */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700">
-           <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">Presence Ratio</h3>
-           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8">Daily status breakdown</p>
-           
-           <div className="h-[250px] w-full relative">
-             <ResponsiveContainer width="100%" height="100%">
-               <PieChart>
-                 <Pie
-                   data={pieData}
-                   cx="50%"
-                   cy="50%"
-                   innerRadius={60}
-                   outerRadius={80}
-                   paddingAngle={5}
-                   dataKey="value"
-                 >
-                   {pieData.map((entry, index) => (
-                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                   ))}
-                 </Pie>
-                 <Tooltip />
-               </PieChart>
-             </ResponsiveContainer>
-             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-               <span className="text-2xl font-black text-gray-900 dark:text-white">{stats?.today?.present || 0}</span>
-               <span className="text-[10px] font-black text-gray-400 uppercase">On Duty</span>
-             </div>
-           </div>
+          <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">Presence Ratio</h3>
+          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8">Daily status breakdown</p>
 
-           <div className="space-y-3 mt-8">
-             {pieData.map((item, index) => (
-               <div key={item.name} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-gray-700/30">
-                 <div className="flex items-center gap-3">
-                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                   <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{item.name}</span>
-                 </div>
-                 <span className="text-xs font-black text-gray-900 dark:text-white">{item.value}</span>
-               </div>
-             ))}
-           </div>
+          <div className="h-[250px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-2xl font-black text-gray-900 dark:text-white">{stats?.today?.present || 0}</span>
+              <span className="text-[10px] font-black text-gray-400 uppercase">On Duty</span>
+            </div>
+          </div>
+
+          <div className="space-y-3 mt-8">
+            {pieData.map((item, index) => (
+              <div key={item.name} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-gray-700/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{item.name}</span>
+                </div>
+                <span className="text-xs font-black text-gray-900 dark:text-white">{item.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -283,9 +284,11 @@ export default function AttendanceOverview() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input 
-                type="text" 
-                placeholder="Search staff..." 
+              <input
+                type="text"
+                placeholder="Search staff..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none w-48 md:w-64"
               />
             </div>
@@ -307,55 +310,75 @@ export default function AttendanceOverview() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {recentAttendance.map((record) => (
-                <tr key={record._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/10 transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm">
-                        {record.staff?.user?.name?.charAt(0)}
+              {recentAttendance
+                .filter(record => {
+                  const matchesStatus = record.status !== 'on-leave';
+                  const name = (record.staff?.user?.name || record.staff?.name || '').toLowerCase();
+                  const designation = (record.staff?.designation || '').toLowerCase();
+                  const search = searchTerm.toLowerCase();
+
+                  const matchesSearch = !searchTerm || name.includes(search) || designation.includes(search);
+
+                  return matchesStatus && matchesSearch;
+                })
+                .map((record) => (
+                  <tr key={record._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/10 transition-colors group">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-sm">
+                          {record.staff?.user?.name?.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-gray-900 dark:text-white leading-none">{record.staff?.user?.name}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">{record.staff?.designation || 'Staff'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-black text-gray-900 dark:text-white leading-none">{record.staff?.user?.name}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">{record.staff?.designation || 'Staff'}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
-                      record.status === 'present' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                      record.status === 'late' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                      record.status === 'absent' ? 'bg-red-50 text-red-700 border-red-100' :
-                      'bg-gray-50 text-gray-700 border-gray-100'
-                    }`}>
-                      {record.status === 'present' ? <CheckCircle2 className="w-3 h-3" /> :
-                       record.status === 'late' ? <Clock className="w-3 h-3" /> :
-                       <XCircle className="w-3 h-3" />}
-                      {record.status}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {record.checkIn?.time ? new Date(record.checkIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    </td>
+                    <td className="px-8 py-5">
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${record.status === 'present' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                        record.status === 'late' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                          record.status === 'absent' ? 'bg-red-50 text-red-700 border-red-100' :
+                            record.status === 'on-leave' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                              'bg-gray-50 text-gray-700 border-gray-100'
+                        }`}>
+                        {record.status === 'present' ? <CheckCircle2 className="w-3 h-3" /> :
+                          record.status === 'late' ? <Clock className="w-3 h-3" /> :
+                            record.status === 'on-leave' ? <Calendar className="w-3 h-3" /> :
+                              <XCircle className="w-3 h-3" />}
+                        {record.status}
                       </span>
-                      <span className="text-[10px] font-bold text-gray-400 mt-0.5">{record.checkIn?.method || 'Portal'}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {record.checkOut?.time ? new Date(record.checkOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                      </span>
-                      <span className="text-[10px] font-bold text-gray-400 mt-0.5">{record.checkOut?.time ? 'Portal' : 'N/A'}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <button className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-xl text-gray-400 hover:text-blue-500 transition-all">
-                      <MoreHorizontal className="w-5 h-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-8 py-5">
+                      {record.status !== 'on-leave' ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">
+                            {record.checkIn?.time ? new Date(record.checkIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400 mt-0.5">{record.checkIn?.method || 'Portal'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-bold text-gray-400">N/A</span>
+                      )}
+                    </td>
+                    <td className="px-8 py-5">
+                      {record.status !== 'on-leave' ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">
+                            {record.checkOut?.time ? new Date(record.checkOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400 mt-0.5">{record.checkOut?.time ? 'Portal' : 'N/A'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-bold text-gray-400">N/A</span>
+                      )}
+                    </td>
+                    <td className="px-8 py-5">
+                      <button className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-xl text-gray-400 hover:text-blue-500 transition-all">
+                        <MoreHorizontal className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               {recentAttendance.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-8 py-10 text-center">
