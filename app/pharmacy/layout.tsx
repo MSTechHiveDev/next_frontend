@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
 import Navbar from '@/components/navbar/Navbar';
+import LogoutConfirmationModal from '@/components/common/LogoutConfirmationModal';
 import {
     LayoutDashboard,
     Package,
@@ -27,6 +28,7 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     const { user, logout, isAuthenticated, checkAuth, isInitialized } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     const isPharma = user?.role === 'pharma-owner' || user?.role === 'pharmacy';
 
@@ -81,7 +83,13 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 items={pharmacyMenu}
-                onLogout={handleLogout}
+                onLogout={() => setIsLogoutModalOpen(true)}
+            />
+
+            <LogoutConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleLogout}
             />
 
             <div className="flex-1 flex flex-col lg:ml-64 min-h-screen transition-all duration-300">

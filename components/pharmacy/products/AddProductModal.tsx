@@ -49,7 +49,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
                 currentStock: initialData.currentStock || 0,
                 minStockLevel: initialData.minStockLevel || 10,
                 unitsPerPack: initialData.unitsPerPack || 1,
-                supplier: initialData.supplier || '',
+                supplier: typeof initialData.supplier === 'object' && initialData.supplier !== null
+                    ? (initialData.supplier as any)._id
+                    : (initialData.supplier || ''),
                 hsnCode: initialData.hsnCode || '',
                 batchNumber: initialData.batchNumber || '',
                 expiryDate: initialData.expiryDate ? new Date(initialData.expiryDate).toISOString().split('T')[0] : '',
