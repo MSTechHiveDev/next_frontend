@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import { adminService } from "@/lib/integrations";
 import { Headphones, Building2, UserPlus, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
-import { 
-  PageHeader, 
-  Card, 
-  FormInput, 
-  FormSelect, 
-  Button 
+import {
+  PageHeader,
+  Card,
+  FormInput,
+  FormSelect,
+  Button
 } from "@/components/admin";
 import type { Hospital, CreateHelpdeskRequest } from "@/lib/integrations";
 
@@ -18,7 +18,7 @@ export default function CreateHelpdesk() {
   const [loading, setLoading] = useState(false);
   const [fetchingHospitals, setFetchingHospitals] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -50,6 +50,15 @@ export default function CreateHelpdesk() {
       }
       return;
     }
+
+    if (name === "name") {
+      // Validate Full Name: characters and special characters only (no numbers)
+      if (/^[^0-9]*$/.test(value)) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -58,6 +67,11 @@ export default function CreateHelpdesk() {
 
     if (formData.mobile.length !== 10) {
       toast.error("Mobile number must be exactly 10 digits.");
+      return;
+    }
+
+    if (!formData.email.includes("@") || !formData.email.includes(".com")) {
+      toast.error("Email must contain '@' and '.com'");
       return;
     }
 
@@ -91,77 +105,77 @@ export default function CreateHelpdesk() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card title="Staff Assignment" padding="p-8">
-            <div className="space-y-6">
-                <FormSelect
-                    label="Assign to Hospital Location"
-                    name="hospitalId"
-                    required
-                    value={formData.hospitalId}
-                    onChange={handleChange}
-                    options={[
-                        { label: fetchingHospitals ? "Loading..." : "Select Hospital", value: "" },
-                        ...hospitals.map(h => ({ label: h.name, value: h._id }))
-                    ]}
-                />
+          <div className="space-y-6">
+            <FormSelect
+              label="Assign to Hospital Location"
+              name="hospitalId"
+              required
+              value={formData.hospitalId}
+              onChange={handleChange}
+              options={[
+                { label: fetchingHospitals ? "Loading..." : "Select Hospital", value: "" },
+                ...hospitals.map(h => ({ label: h.name, value: h._id }))
+              ]}
+            />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormInput
-                        label="Full Name of Staff Member"
-                        name="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="e.g. HelpDesk - Sunrise West"
-                    />
-                    <FormInput
-                        label="Official Email Address"
-                        name="email"
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="helpdesk@sunrise.com"
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormInput
-                        label="Mobile Number (10 Digits)"
-                        name="mobile"
-                        required
-                        value={formData.mobile}
-                        onChange={handleChange}
-                        placeholder="9876543210"
-                    />
-                    <div className="relative">
-                        <FormInput
-                            label="Temporary Password"
-                            name="password"
-                            type={showPassword ? "text" : "password"}
-                            required
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Set initial password"
-                        />
-                         <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-10 text-gray-400 hover:text-purple-500 transition-colors"
-                        >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/10 flex items-start gap-4">
-                   <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
-                      <Building2 size={20} />
-                   </div>
-                   <div className="text-xs text-purple-400 leading-relaxed pt-1">
-                      This account will have exclusive access to manage patient queues and appointment check-ins for the selected hospital branch.
-                   </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormInput
+                label="Full Name of Staff Member"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. HelpDesk - Sunrise West"
+              />
+              <FormInput
+                label="Official Email Address"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="helpdesk@sunrise.com"
+              />
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormInput
+                label="Mobile Number (10 Digits)"
+                name="mobile"
+                required
+                value={formData.mobile}
+                onChange={handleChange}
+                placeholder="9876543210"
+              />
+              <div className="relative">
+                <FormInput
+                  label="Temporary Password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Set initial password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-10 text-gray-400 hover:text-purple-500 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/10 flex items-start gap-4">
+              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+                <Building2 size={20} />
+              </div>
+              <div className="text-xs text-purple-400 leading-relaxed pt-1">
+                This account will have exclusive access to manage patient queues and appointment check-ins for the selected hospital branch.
+              </div>
+            </div>
+          </div>
         </Card>
 
         <div className="flex justify-end pt-4">

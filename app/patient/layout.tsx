@@ -42,6 +42,10 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
                     'helpdesk': '/helpdesk'
                 };
                 router.push(routeMap[user?.role || ''] || '/auth/login');
+            } else {
+                // If authenticated as patient, refresh to ensure Server Components 
+                // get the latest cookies synced by checkAuth
+                router.refresh();
             }
         }
     }, [isInitialized, isAuthenticated, user?.role, router]);

@@ -46,12 +46,41 @@ export default function CreateHospital() {
             return;
         }
 
+        if (name === "name") {
+            // Assume "Hospital Name" should be characters/spaces only as requested
+            // Note: Hospital names often have numbers, but user strictly requested "characters only"
+            if (/^[a-zA-Z\s]*$/.test(value)) {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            }
+            return;
+        }
+
+        if (name === "pincode") {
+            // "only it take 6 digits" - restricting input to numbers and max 6
+            if (/^\d{0,6}$/.test(value)) {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            }
+            return;
+        }
+
         if (name.includes(".")) {
             const parts = name.split(".");
-            setFormData(prev => ({
-                ...prev,
-                [parts[0]]: { ...((prev as any)[parts[0]] || {}), [parts[1]]: value }
-            }));
+            const field = parts[1]; // lat or lng
+
+            if (field === 'lat' || field === 'lng') {
+                // "take number and . special chara ctes only"
+                if (/^[0-9.]*$/.test(value)) {
+                    setFormData(prev => ({
+                        ...prev,
+                        [parts[0]]: { ...((prev as any)[parts[0]] || {}), [parts[1]]: value }
+                    }));
+                }
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    [parts[0]]: { ...((prev as any)[parts[0]] || {}), [parts[1]]: value }
+                }));
+            }
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -76,6 +105,11 @@ export default function CreateHospital() {
 
         if (formData.phone.length !== 10) {
             toast.error("Phone number must be exactly 10 digits.");
+            return;
+        }
+
+        if (formData.pincode.length !== 6) {
+            toast.error("Pincode must be exactly 6 digits.");
             return;
         }
 

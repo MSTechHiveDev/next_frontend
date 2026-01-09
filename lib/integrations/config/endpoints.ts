@@ -9,6 +9,15 @@ export const AUTH_ENDPOINTS = {
   CHECK_EXISTENCE: '/auth/check-existence',
 };
 
+export const DISCHARGE_ENDPOINTS = {
+  LOGIN: '/discharge/auth/login',
+  LOGOUT: '/discharge/auth/logout',
+  RECORDS: {
+    BASE: '/discharge/records',
+    BY_ID: (id: string) => `/discharge/records/${id}`,
+  },
+};
+
 export const USER_ENDPOINTS = {
   PROFILE: '/auth/me', // Unified profile endpoint in new backend
   PATCH_PROFILE: '/auth/me',
@@ -219,6 +228,14 @@ export const endpoints = {
     me: AUTH_ENDPOINTS.ME,
     logout: AUTH_ENDPOINTS.LOGOUT,
     refresh: AUTH_ENDPOINTS.REFRESH,
+  },
+  discharge: {
+    login: DISCHARGE_ENDPOINTS.LOGIN,
+    logout: DISCHARGE_ENDPOINTS.LOGOUT,
+    records: {
+      base: DISCHARGE_ENDPOINTS.RECORDS.BASE,
+      byId: DISCHARGE_ENDPOINTS.RECORDS.BY_ID,
+    },
   },
   users: '/super-admin/users',
   admin: {

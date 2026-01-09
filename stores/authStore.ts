@@ -55,12 +55,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.setItem('refreshToken', tokens.refreshToken);
       sessionStorage.setItem('user', JSON.stringify(user));
 
+      // SYNC TO COOKIES: Enable Server Actions (Next.js server-side fetching)
+      // to access the tokens. This fixes components using apiServer.
+      document.cookie = `accessToken=${tokens.accessToken}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `refreshToken=${tokens.refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+
       // PERSISTENT REGISTRY: Use localStorage for user data keyed by ID
       // This prevents account overlap when using multiple accounts in different tabs
       localStorage.setItem(`profile_${user.id}`, JSON.stringify(user));
       localStorage.setItem('lastUserId', user.id);
 
-      console.log('[Auth] Tokens saved to sessionStorage, user data to localStorage');
+      console.log('[Auth] Tokens saved to sessionStorage & cookies, user data to localStorage');
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error) {
       console.error('[Auth] Login failed:', error);
@@ -85,6 +90,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('user');
 
+    // Clear cookies as well
+    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+
     set({ user: null, isAuthenticated: false });
   },
 
@@ -98,6 +107,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         const user = JSON.parse(sessionUser);
         set({ user, isAuthenticated: !!token });
+
+        // SYNC TO COOKIES: Ensure Server Actions have access if sessionStorage exists
+        // This is critical for initial page loads after a refresh
+        if (token && typeof document !== 'undefined' && !document.cookie.includes('accessToken')) {
+          document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax`;
+          const rfToken = refreshToken || sessionStorage.getItem('refreshToken');
+          if (rfToken) {
+            document.cookie = `refreshToken=${rfToken}; path=/; max-age=604800; SameSite=Lax`;
+          }
+        }
       } catch (e) { }
     }
 
@@ -126,6 +145,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem(`profile_${user.id}`, JSON.stringify(user));
       localStorage.setItem('lastUserId', user.id);
+
+      // SYNC TO COOKIES: Ensure tokens are always in cookies after successful check
+      if (typeof document !== 'undefined') {
+        const currentToken = token || sessionStorage.getItem('accessToken');
+        if (currentToken) {
+          document.cookie = `accessToken=${currentToken}; path=/; max-age=86400; SameSite=Lax`;
+        }
+        const currentRefresh = refreshToken || sessionStorage.getItem('refreshToken');
+        if (currentRefresh) {
+          document.cookie = `refreshToken=${currentRefresh}; path=/; max-age=604800; SameSite=Lax`;
+        }
+      }
 
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error: any) {
