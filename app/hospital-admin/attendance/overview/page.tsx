@@ -69,14 +69,14 @@ export default function AttendanceOverview() {
     );
   }
 
-  const chartData = [
-    { name: 'Mon', present: 45, late: 5 },
-    { name: 'Tue', present: 52, late: 2 },
-    { name: 'Wed', present: 48, late: 8 },
-    { name: 'Thu', present: 61, late: 4 },
-    { name: 'Fri', present: 55, late: 6 },
-    { name: 'Sat', present: 30, late: 2 },
-    { name: 'Sun', present: 25, late: 1 },
+  const chartData = stats?.trend || [
+    { name: 'Mon', present: 0, late: 0 },
+    { name: 'Tue', present: 0, late: 0 },
+    { name: 'Wed', present: 0, late: 0 },
+    { name: 'Thu', present: 0, late: 0 },
+    { name: 'Fri', present: 0, late: 0 },
+    { name: 'Sat', present: 0, late: 0 },
+    { name: 'Sun', present: 0, late: 0 },
   ];
 
   const pieData = [

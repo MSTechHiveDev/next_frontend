@@ -17,13 +17,16 @@ import {
   X,
   Bell,
   Search,
-  User
+  User,
+  Users
 } from "lucide-react";
 import { ThemeToggle } from '@/components/ThemeToggle';
+import NotificationCenter from "@/components/navbar/NotificationCenter";
 
 const helpdeskMenu = [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", path: "/helpdesk" },
     { icon: <UserPlus size={20} />, label: "Patient Registration", path: "/helpdesk/patient-registration" },
+    { icon: <Users size={20} />, label: "Patients", path: "/helpdesk/patients" },
     { icon: <CalendarCheck size={20} />, label: "Appointment Booking", path: "/helpdesk/appointment-booking" },
     { icon: <Stethoscope size={20} />, label: "Doctors", path: "/helpdesk/doctors" },
     { icon: <Truck size={20} />, label: "Transits", path: "/helpdesk/transits" },
@@ -34,7 +37,7 @@ const helpdeskMenu = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout, isAuthenticated, checkAuth, isLoading } = useAuthStore();
+    const { user, logout, isAuthenticated, checkAuth, isLoading, isInitialized } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -42,18 +45,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useEffect(() => {
         useAuthStore.getState().initEvents();
         checkAuth();
-    }, []);
+    }, [checkAuth]);
 
     useEffect(() => {
+        // Only redirect if initialization is complete
+        if (!isInitialized) return;
+        
         if (!isLoading && !isAuthenticated) {
             router.push('/auth/login');
         } else if (!isLoading && isAuthenticated && user?.role === 'hospital-admin') {
             // Redirect hospital-admin to their own dashboard
             router.push('/hospital-admin');
         }
-    }, [isAuthenticated, isLoading, user?.role, router]);
+    }, [isAuthenticated, isLoading, isInitialized, user?.role, router]);
 
-    if (isLoading) {
+    // Show loading while auth is initializing
+    if (!isInitialized || isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="flex flex-col items-center gap-4">
@@ -95,7 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text">
+                    <h1 className="text-xl font-bold bg-linear-to-r from-blue-600 to-indigo-500 text-transparent bg-clip-text">
                         HelpDesk Portal
                     </h1>
                 </div>
@@ -151,10 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     <div className="flex items-center gap-4">
                         <ThemeToggle />
-                        <button className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all relative">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111]"></span>
-                        </button>
+                        <NotificationCenter />
                         
                         <div className="h-8 w-px bg-gray-200 dark:border-gray-800 mx-2"></div>
 

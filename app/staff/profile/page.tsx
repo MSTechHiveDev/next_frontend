@@ -66,12 +66,16 @@ export default function ProfilePage() {
         <div className="px-8 -mt-24 relative z-10 flex flex-col md:flex-row items-end gap-6">
           <div className="relative group">
             <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-3xl p-1.5 shadow-xl">
-               <div className="w-full h-full bg-gray-100 rounded-2xl flex items-center justify-center overflow-hidden relative">
-                  <User className="w-16 h-16 text-gray-400" />
+                <div className="w-full h-full bg-gray-100 rounded-2xl flex items-center justify-center overflow-hidden relative">
+                  {(profile.user as any).image ? (
+                    <img src={(profile.user as any).image} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-16 h-16 text-gray-400" />
+                  )}
                   <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                     <Camera className="w-6 h-6" />
                   </button>
-               </div>
+                </div>
             </div>
             <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 border-4 border-white rounded-full"></div>
           </div>
@@ -143,10 +147,12 @@ export default function ProfilePage() {
                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Blood Group</p>
                    <p className="font-bold text-gray-900 mt-1">B+ Positive</p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-2xl">
-                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Joined On</p>
-                   <p className="font-bold text-gray-900 mt-1">{new Date(profile.joiningDate).toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}</p>
-                </div>
+                 <div className="p-4 bg-gray-50 rounded-2xl">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Joined On</p>
+                    <p className="font-bold text-gray-900 mt-1">
+                      {profile.joiningDate ? new Date(profile.joiningDate).toLocaleDateString('en-US', {month: 'short', year: 'numeric'}) : 'N/A'}
+                    </p>
+                 </div>
              </div>
              <div className="mt-4 p-4 bg-gray-50 rounded-2xl">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Languages</p>

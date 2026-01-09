@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import { Settings, LogOut, X, User } from "lucide-react";
 import { ThemeToggle } from '@/components/ThemeToggle';
+import NotificationCenter from "@/components/navbar/NotificationCenter";
 
 const adminMenu = [
     { icon: "/dashboard.png", label: "Dashboard", path: "/admin" },
@@ -198,6 +199,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                         />
                     </div>
                     <div className="flex items-center gap-3">
+                        <NotificationCenter />
                         <ThemeToggle />
                         <div className="h-6 w-px" style={{ backgroundColor: 'var(--border-color)' }}></div>
                         <div className="relative">

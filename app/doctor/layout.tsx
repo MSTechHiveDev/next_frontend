@@ -18,6 +18,7 @@ import {
   Clock
 } from "lucide-react";
 import { ThemeToggle } from '@/components/ThemeToggle';
+import NotificationCenter from "@/components/navbar/NotificationCenter";
 
 const doctorMenu = [
     { 
@@ -158,10 +159,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
                     <div className="flex items-center gap-4">
                         <ThemeToggle />
-                        <button className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all relative">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111]"></span>
-                        </button>
+                        <NotificationCenter />
                         
                         <div className="h-8 w-px bg-gray-200 dark:border-gray-800 mx-2"></div>
 

@@ -31,6 +31,7 @@ export interface AuthResponse {
     id: string;
     name: string;
     role: string;
+    image?: string;
   };
 }
 
@@ -40,4 +41,5 @@ export interface MeResponse {
   role: string;
   email?: string;
   mobile?: string;
+  image?: string;
 }

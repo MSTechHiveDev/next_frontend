@@ -51,8 +51,30 @@ export const hospitalAdminService = {
   getDoctors: () =>
     apiClient<{ doctors: Doctor[] }>(HOSPITAL_ADMIN_ENDPOINTS.DOCTORS),
 
-  getDoctorById: (id: string) =>
-    apiClient<{ doctor: Doctor }>(HOSPITAL_ADMIN_ENDPOINTS.DOCTOR_DETAIL(id)),
+  getDoctorById: async (id: string) => {
+    const profile: any = await apiClient(HOSPITAL_ADMIN_ENDPOINTS.DOCTOR_DETAIL(id));
+    const user = profile.user || {};
+    
+    // Flatten structure: profile fields first, then user fields override where needed
+    const doctor = {
+      ...profile,        // All profile fields (specialties, department, address, permissions, etc.)
+      ...user,           // User fields
+      _id: user._id,     // User ID serves as main ID for updates
+      doctorProfileId: profile._id, // Keep profile ID reference
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      gender: user.gender,
+      dateOfBirth: user.dateOfBirth,
+      status: user.status,
+      doctorId: user.doctorId,
+      role: 'doctor',
+      user: undefined,   // Remove nested user object
+      hospital: profile.hospital // Keep hospital reference from profile
+    };
+
+    return { doctor };
+  },
 
   createDoctor: async (data: CreateDoctorRequest) => {
     // Ensure doctor is created for the hospital admin's hospital
@@ -143,8 +165,29 @@ export const hospitalAdminService = {
   getStaff: () =>
     apiClient<{ staff: any[] }>(HOSPITAL_ADMIN_ENDPOINTS.STAFF),
 
-  getStaffById: (id: string) =>
-    apiClient<{ staff: any }>(HOSPITAL_ADMIN_ENDPOINTS.STAFF_DETAIL(id)),
+  getStaffById: async (id: string) => {
+    const profile: any = await apiClient(HOSPITAL_ADMIN_ENDPOINTS.STAFF_DETAIL(id));
+    const user = profile.user || {};
+    
+    // Flatten structure: profile fields first, then user fields override where needed
+    const staff = {
+      ...profile,        // All profile fields (department, designation, skills, etc.)
+      ...user,           // User fields override (but we'll manually set the important ones)
+      _id: user._id,     // User ID serves as main ID for updates
+      staffProfileId: profile._id, // Keep profile ID reference
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      gender: user.gender,
+      dateOfBirth: user.dateOfBirth,
+      status: user.status,
+      role: 'staff',
+      user: undefined,   // Remove nested user object to avoid confusion
+      hospital: profile.hospital // Keep hospital reference from profile
+    };
+
+    return { staff };
+  },
 
   createStaff: (data: any) =>
     apiClient<any>(HOSPITAL_ADMIN_ENDPOINTS.CREATE_STAFF, {
@@ -162,9 +205,6 @@ export const hospitalAdminService = {
     apiClient<{ message: string }>(HOSPITAL_ADMIN_ENDPOINTS.DELETE_STAFF(id), {
       method: 'DELETE',
     }),
-
-  getPayroll: () =>
-    apiClient<{ payroll: any[] }>(HOSPITAL_ADMIN_ENDPOINTS.PAYROLL),
 
   // Attendance Management
   getAttendance: (params?: { date?: string; status?: string; staffId?: string }) => {
@@ -211,6 +251,40 @@ export const hospitalAdminService = {
   deleteAnnouncement: (id: string) =>
     apiClient<{ message: string }>(`/announcements/${id}`, {
       method: 'DELETE',
+    }),
+
+  // Transactions
+  getTransactions: () =>
+    apiClient<any[]>(HOSPITAL_ADMIN_ENDPOINTS.TRANSACTIONS),
+
+  // Shifts
+  getShifts: () =>
+    apiClient<any[]>('/hospital/shifts'),
+
+  createShift: (data: any) =>
+    apiClient<any>('/hospital/shifts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateShift: (id: string, data: any) =>
+    apiClient<any>(`/hospital/shifts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  deleteShift: (id: string) =>
+    apiClient<any>(`/hospital/shifts/${id}`, {
+      method: 'DELETE',
+    }),
+
+  getShiftStaff: (id: string) =>
+    apiClient<any[]>(`/hospital/shifts/${id}/staff`),
+
+  assignStaffToShift: (id: string, staffIds: string[]) =>
+    apiClient<any>(`/hospital/shifts/${id}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ staffIds }),
     }),
 };
 

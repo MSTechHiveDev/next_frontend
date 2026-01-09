@@ -64,6 +64,10 @@ interface FormData {
   bloodGroup: string;
   languages: string[];
   notes: string;
+
+  // Leave Policy
+  sickLeaveQuota: string;
+  emergencyLeaveQuota: string;
 }
 
 const DAYS_OF_WEEK = [
@@ -76,6 +80,9 @@ const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 export default function CreateStaff() {
   const router = useRouter();
 
+  const [shifts, setShifts] = useState<any[]>([]);
+  const [loadingShifts, setLoadingShifts] = useState(true);
+
   const [formData, setFormData] = useState<FormData>({
     name: "", email: "", mobile: "", password: "", gender: "",
     dateOfBirth: "",
@@ -83,9 +90,10 @@ export default function CreateStaff() {
     department: "", designation: "", employeeId: "", employmentType: "full-time",
     experienceYears: "", joiningDate: "",
     emergencyContactName: "", emergencyContactMobile: "", emergencyContactRelationship: "",
-    shift: "morning", startTime: "09:00", endTime: "17:00", weeklyOff: ["Saturday", "Sunday"],
+    shift: "", startTime: "09:00", endTime: "17:00", weeklyOff: ["Saturday", "Sunday"],
     qualifications: [], certifications: [], skills: [],
-    bloodGroup: "", languages: [], notes: ""
+    bloodGroup: "", languages: [], notes: "",
+    sickLeaveQuota: "1", emergencyLeaveQuota: "1"
   });
 
   const [tempQualification, setTempQualification] = useState("");
@@ -95,13 +103,51 @@ export default function CreateStaff() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  React.useEffect(() => {
+    fetchShifts();
+  }, []);
+
+  const fetchShifts = async () => {
+    try {
+      const data = await hospitalAdminService.getShifts();
+      setShifts(data);
+      if (data.length > 0) {
+        setFormData(prev => ({ 
+          ...prev, 
+          shift: data[0]._id,
+          startTime: data[0].startTime,
+          endTime: data[0].endTime
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch shifts:", error);
+      toast.error("Failed to load shift configurations");
+    } finally {
+      setLoadingShifts(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
 
     // Validation for specific fields
     if (name === "mobile" && !/^\d{0,10}$/.test(value)) return;
+    if (["sickLeaveQuota", "emergencyLeaveQuota"].includes(name) && !/^\d*$/.test(value)) return;
     if (name === "pincode" && !/^\d{0,6}$/.test(value)) return;
     if (name === "experienceYears" && !/^\d*$/.test(value)) return;
+
+    if (name === 'shift') {
+      const selectedShift = shifts.find(s => s._id === value);
+      if (selectedShift) {
+        setFormData(prev => ({ 
+          ...prev, 
+          shift: value, 
+          startTime: selectedShift.startTime, 
+          endTime: selectedShift.endTime 
+        }));
+        return;
+      }
+    }
 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -207,7 +253,12 @@ export default function CreateStaff() {
 
         bloodGroup: formData.bloodGroup || undefined,
         languages: formData.languages,
-        notes: formData.notes.trim() || undefined
+        notes: formData.notes.trim() || undefined,
+
+        sickLeaveQuota: parseInt(formData.sickLeaveQuota) || 1,
+        emergencyLeaveQuota: parseInt(formData.emergencyLeaveQuota) || 1,
+        
+        role: 'staff' // Explicitly set role for backend validation
       };
 
       await hospitalAdminService.createStaff(staffData);
@@ -345,41 +396,56 @@ export default function CreateStaff() {
           </div>
         </Card>
 
+        {/* Leave Policy */}
+        <Card title="Leave Policy (Monthly Quota)" icon={<Calendar className="text-pink-500" />} padding="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormInput label="Sick Leave Quota" type="text" name="sickLeaveQuota"
+              value={formData.sickLeaveQuota} onChange={handleChange} placeholder="1" />
+            <FormInput label="Emergency Leave Quota" type="text" name="emergencyLeaveQuota"
+              value={formData.emergencyLeaveQuota} onChange={handleChange} placeholder="1" />
+            <div className="flex flex-col justify-center">
+              <p className="text-xs text-gray-500 italic mt-6">Total monthly allowance: {parseInt(formData.sickLeaveQuota || "0") + parseInt(formData.emergencyLeaveQuota || "0")} days</p>
+            </div>
+          </div>
+        </Card>
+
         {/* 5. Work Schedule */}
         <Card title="Work Schedule" icon={<Clock className="text-orange-500" />} padding="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-color)' }}>
-                Shift
+                Select Shift
               </label>
-              <select name="shift" value={formData.shift} onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}>
-                <option value="morning">Morning</option>
-                <option value="evening">Evening</option>
-                <option value="night">Night</option>
-                <option value="rotating">Rotating</option>
-              </select>
+              {loadingShifts ? (
+                <div className="animate-pulse h-12 bg-gray-100 dark:bg-gray-800 rounded-xl"></div>
+              ) : (
+                <select name="shift" value={formData.shift} onChange={handleChange} required
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }}>
+                  <option value="">Select Shift</option>
+                  {shifts.map((s: any) => (
+                    <option key={s._id} value={s._id}>{s.name} ({s.startTime} - {s.endTime})</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-color)' }}>
                 Start Time
               </label>
-              <input type="time" name="startTime" value={formData.startTime}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }} />
+              <input type="time" value={formData.startTime} readOnly
+                className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-70"
+                style={{ color: 'var(--text-color)', borderColor: 'var(--border-color)' }} />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-color)' }}>
                 End Time
               </label>
-              <input type="time" name="endTime" value={formData.endTime}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-color)', borderColor: 'var(--border-color)' }} />
+              <input type="time" value={formData.endTime} readOnly
+                className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-800 cursor-not-allowed opacity-70"
+                style={{ color: 'var(--text-color)', borderColor: 'var(--border-color)' }} />
             </div>
           </div>
 

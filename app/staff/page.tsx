@@ -145,11 +145,38 @@ export default function StaffDashboardPage() {
         );
     }
 
-    if (!dashboard) return null;
+    if (!dashboard || !dashboard.staff) return null;
 
     const { staff, stats, todayAttendance } = dashboard;
     const hasCheckedIn = !!todayAttendance?.checkIn;
     const hasCheckedOut = !!todayAttendance?.checkOut;
+
+    // Shift Enforcement Logic from Resolved Backend data
+    const shiftStartTime = staff.resolvedShift?.startTime || '09:00';
+    const shiftEndTime = staff.resolvedShift?.endTime || '17:00';
+    const shiftName = staff.resolvedShift?.name || 'General';
+    
+    const now = new Date();
+    const [startH, startM] = shiftStartTime.split(':').map(Number);
+    const [endH, endM] = shiftEndTime.split(':').map(Number);
+    
+    const shiftStart = new Date();
+    shiftStart.setHours(startH, startM, 0, 0);
+    const shiftEnd = new Date();
+    shiftEnd.setHours(endH, endM, 0, 0);
+    if (shiftEnd < shiftStart) shiftEnd.setDate(shiftEnd.getDate() + 1);
+
+    const earlyBuffer = new Date(shiftStart.getTime() - 30 * 60000); // 30 mins before
+    const isShiftTime = now >= earlyBuffer && now <= shiftEnd;
+    const isShiftEnded = now > shiftEnd;
+    const isTooEarly = now < earlyBuffer;
+
+    const formatTime = (timeStr: string) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(h, m, 0, 0);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
 
     return (
         <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -223,7 +250,7 @@ export default function StaffDashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-                        Hello, {staff.user.name.split(' ')[0]}!
+                        Hello, {(staff.user?.name || (staff as any).name || 'Staff').split(' ')[0]}!
                     </h1>
                     <p className="text-gray-500 font-bold flex items-center gap-2">
                       <Zap className="w-4 h-4 text-indigo-600" />
@@ -234,12 +261,6 @@ export default function StaffDashboardPage() {
                   <div className="hidden lg:flex flex-col items-end mr-2">
                     <span className="text-sm font-black text-gray-900">{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</span>
                     <span className="text-xs font-bold text-gray-400">{new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                  </div>
-                  <button className="p-3 bg-white border border-gray-200 rounded-2xl shadow-sm text-gray-600 hover:text-indigo-600 hover:border-indigo-100 transition-all active:scale-95">
-                    <Bell className="w-5 h-5" />
-                  </button>
-                  <div className="w-12 h-12 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center text-white font-black hover:scale-105 transition-transform cursor-pointer overflow-hidden border-2 border-white">
-                      {staff.user.name.charAt(0)}
                   </div>
                 </div>
             </div>
@@ -273,20 +294,24 @@ export default function StaffDashboardPage() {
                                      <div className="text-center">
                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">In Time</p>
                                        <p className="text-2xl font-black text-gray-900 mt-1">
-                                          {new Date(todayAttendance?.checkIn?.time!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                          {new Date(todayAttendance?.checkIn?.time!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                                        </p>
                                      </div>
                                      <div className="h-10 w-px bg-gray-100 mx-4"></div>
                                      <div className="text-center">
                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shift</p>
-                                       <p className="text-2xl font-black text-gray-600 mt-1 uppercase italic">{staff.shift || 'Morning'}</p>
+                                       <p className="text-2xl font-black text-gray-600 mt-1 uppercase italic">
+                                           {shiftName}
+                                        </p>
                                      </div>
                                   </div>
                                 </div>
                               ) : (
                                 <div className="space-y-2">
-                                  <p className="text-3xl font-black text-gray-900">Not Clocked In</p>
-                                  <p className="text-gray-400 font-bold">Your shift starts at {staff.workingHours?.start || '09:00'} AM</p>
+                                  <p className="text-3xl font-black text-gray-900">{isShiftEnded ? 'Shift Ended' : isTooEarly ? 'Shift Not Started' : 'Ready to Work'}</p>
+                                  <p className="text-gray-400 font-bold">
+                                    {isShiftEnded ? `Shift ended at ${formatTime(shiftEndTime)}` : `Your shift: ${formatTime(shiftStartTime)} - ${formatTime(shiftEndTime)}`}
+                                  </p>
                                 </div>
                               )}
                            </div>
@@ -295,13 +320,13 @@ export default function StaffDashboardPage() {
                               {!hasCheckedIn ? (
                                   <button
                                       onClick={handleCheckIn}
-                                      disabled={checkingIn}
-                                      className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black py-5 rounded-3xl shadow-2xl shadow-indigo-200 transition-all transform active:scale-95 flex items-center justify-center gap-3 group"
+                                      disabled={checkingIn || !isShiftTime}
+                                      className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-black py-5 rounded-3xl shadow-2xl shadow-indigo-200 transition-all transform active:scale-95 flex items-center justify-center gap-3 group"
                                   >
                                       {checkingIn ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                                         <>
                                           <LogIn className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                                          <span className="text-lg">Clock In Now</span>
+                                          <span className="text-lg">{isShiftEnded ? 'Shift Over' : isTooEarly ? 'Wait for Shift' : 'Clock In Now'}</span>
                                         </>
                                       )}
                                   </button>
@@ -339,81 +364,79 @@ export default function StaffDashboardPage() {
                          
                          <div>
                             <div className="flex items-center justify-between">
-                               <h3 className="text-xl font-black">Monthly Performance</h3>
+                               <h3 className="text-xl font-black italic tracking-tight uppercase">Productivity Metrics</h3>
                                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/5">
                                   <TrendingUp className="w-5 h-5 text-indigo-300" />
-                               </div>
+                                </div>
                             </div>
                             <div className="mt-8 flex items-baseline gap-4">
                                <span className="text-6xl font-black tracking-tighter">{stats.onTimePercentage}%</span>
-                               <span className="flex items-center text-emerald-400 text-sm font-black">
-                                  <ArrowUpRight className="w-4 h-4 mr-1" /> On Time
+                               <span className="flex items-center text-emerald-400 text-sm font-bold uppercase tracking-widest">
+                                  <ArrowUpRight className="w-4 h-4 mr-1" /> Precision
                                </span>
                             </div>
                          </div>
 
-                         <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-white/10">
-                            <div>
-                               <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Present Days</p>
-                               <p className="text-2xl font-black mt-1">{stats.presentDays} <small className="text-gray-500 text-xs font-bold">/ {stats.totalDays}</small></p>
+                         <div className="grid grid-cols-2 gap-6 mt-8 pt-8 border-t border-white/10">
+                            <div className="group/stat">
+                               <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest group-hover:text-indigo-400 transition-colors">Present Protocol</p>
+                               <p className="text-3xl font-black mt-1 text-white">{stats.presentDays} <small className="text-gray-500 text-[10px] font-black tracking-widest">DAYS</small></p>
                             </div>
-                            <div>
-                               <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Avg. Hours</p>
-                               <p className="text-2xl font-black mt-1">{stats.averageHours}</p>
+                            <div className="group/stat">
+                               <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest group-hover:text-rose-400 transition-colors">Absent Ledger</p>
+                               <p className="text-3xl font-black mt-1 text-rose-500">{stats.absentDays} <small className="text-gray-500 text-[10px] font-black tracking-widest">DAYS</small></p>
                             </div>
                          </div>
                       </div>
 
-                      {/* Leaves & Balance */}
-                      <div className="bg-indigo-50 rounded-[2.5rem] p-8 border border-indigo-100 flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute bottom-0 right-0 -mb-10 -mr-10 w-40 h-40 bg-white/50 rounded-full blur-2xl"></div>
-                         <div>
+                      {/* Leaves & Registry */}
+                      <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 flex flex-col justify-between relative overflow-hidden group shadow-sm hover:border-indigo-200 transition-all">
+                        <div className="absolute bottom-0 right-0 -mb-10 -mr-10 w-40 h-40 bg-indigo-50/50 rounded-full blur-2xl"></div>
+                         <div className="relative z-10">
                             <div className="flex items-center justify-between mb-8">
-                               <h3 className="text-xl font-black text-indigo-950">Quick Links</h3>
-                               <Zap className="w-6 h-6 text-indigo-600" />
+                               <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter italic">Leave Ledger</h3>
+                               <div className="flex flex-col items-end">
+                                  <span className="text-4xl font-black text-indigo-600 tracking-tighter">{stats.pendingLeaves || 0}</span>
+                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Pending</span>
+                               </div>
                             </div>
-                            <div className="space-y-3">
-                               <button 
-                                 onClick={() => router.push('/staff/leaves')}
-                                 className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-indigo-100 hover:shadow-lg hover:shadow-indigo-100 transition-all active:scale-95 cursor-pointer group/btn"
-                               >
-                                  <div className="flex items-center gap-3">
-                                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 transition-all group-hover/btn:bg-indigo-600 group-hover/btn:text-white">
-                                        <Calendar className="w-5 h-5" />
-                                     </div>
-                                     <span className="font-black text-indigo-950">Request Leave</span>
-                                  </div>
-                                  <ChevronRight className="w-5 h-5 text-indigo-300 group-hover/btn:translate-x-1 transition-transform" />
-                               </button>
-                               <button 
-                                 onClick={() => router.push('/staff/schedule')}
-                                 className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-indigo-100 hover:shadow-lg hover:shadow-indigo-100 transition-all active:scale-95 cursor-pointer group/btn"
-                               >
-                                  <div className="flex items-center gap-3">
-                                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 transition-all group-hover/btn:bg-indigo-600 group-hover/btn:text-white">
-                                        <BookOpenCheck className="w-5 h-5" />
-                                     </div>
-                                     <span className="font-black text-indigo-950">Work Schedule</span>
-                                  </div>
-                                  <ChevronRight className="w-5 h-5 text-indigo-300 group-hover/btn:translate-x-1 transition-transform" />
-                               </button>
-                               <button 
-                                 onClick={() => router.push('/staff/payroll')}
-                                 className="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-indigo-100 hover:shadow-lg hover:shadow-indigo-100 transition-all active:scale-95 cursor-pointer group/btn"
-                                >
-                                  <div className="flex items-center gap-3">
-                                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 transition-all group-hover/btn:bg-indigo-600 group-hover/btn:text-white">
-                                        <ReceiptText className="w-5 h-5" />
-                                     </div>
-                                     <span className="font-black text-indigo-950">My Payslips</span>
-                                  </div>
-                                  <ChevronRight className="w-5 h-5 text-indigo-300 group-hover/btn:translate-x-1 transition-transform" />
-                               </button>
+                            
+                            <div className="space-y-4">
+                               {stats.leaveTypeBreakdown && Object.keys(stats.leaveTypeBreakdown).length > 0 ? (
+                                 <div className="flex flex-wrap gap-2">
+                                    {Object.entries(stats.leaveTypeBreakdown).map(([type, count]) => (
+                                      <span key={type} className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-100 flex items-center gap-2">
+                                         <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                                         {type}: {count}
+                                      </span>
+                                    ))}
+                                 </div>
+                               ) : (
+                                 <p className="text-xs font-bold text-gray-400 italic">No active leave protocols pending.</p>
+                               )}
+
+                               <div className="pt-6 border-t border-gray-50 space-y-3">
+                                  <button 
+                                    onClick={() => router.push('/staff/leaves')}
+                                    className="w-full flex items-center justify-between p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all active:scale-95 cursor-pointer shadow-lg shadow-indigo-100 group/btn"
+                                  >
+                                     <span className="text-xs font-black uppercase tracking-widest">Request Leave</span>
+                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                  </button>
+                                  <button 
+                                    onClick={() => router.push('/staff/schedule')}
+                                    className="w-full flex items-center justify-between p-4 bg-gray-50 text-gray-600 rounded-2xl border border-gray-100 hover:border-indigo-100 transition-all active:scale-95 cursor-pointer group/btn"
+                                  >
+                                     <span className="text-xs font-black uppercase tracking-widest text-[9px]">View Schedule</span>
+                                     <BookOpenCheck className="w-4 h-4 text-gray-400" />
+                                  </button>
+                               </div>
                             </div>
                          </div>
                       </div>
                    </div>
                 </div>
+
             </div>
 
             {/* Bottom Section: History & Announcements */}
@@ -422,12 +445,6 @@ export default function StaffDashboardPage() {
                <div className="xl:col-span-8 bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 overflow-hidden relative group">
                   <div className="flex items-center justify-between mb-8">
                      <h3 className="text-2xl font-black text-gray-900">Recent Activity</h3>
-                     <button 
-                       onClick={() => router.push('/staff/attendance')}
-                       className="text-indigo-600 font-black text-sm flex items-center gap-1 hover:underline underline-offset-4"
-                     >
-                       Full History <ChevronRight className="w-4 h-4" />
-                     </button>
                   </div>
                   
                   <div className="overflow-x-auto">
@@ -445,9 +462,9 @@ export default function StaffDashboardPage() {
                           {attendanceHistory.map((entry) => (
                              <tr key={entry._id} className="group/row hover:bg-gray-50 transition-colors">
                                 <td className="py-5 font-black text-gray-900">{new Date(entry.date).toLocaleDateString('en-US', {day: '2-digit', month: 'short'})}</td>
-                                <td className="py-5 text-gray-500 font-bold">{new Date(entry.checkIn.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
-                                <td className="py-5 text-gray-500 font-bold">{entry.checkOut ? new Date(entry.checkOut.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '--:--'}</td>
-                                <td className="py-5 text-gray-500 font-bold">{Math.floor(entry.workingHours / 60)}h {entry.workingHours % 60}m</td>
+                                <td className="py-5 text-gray-500 font-bold">{entry.checkIn?.time ? new Date(entry.checkIn.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hour12: true}) : '--:--'}</td>
+                                <td className="py-5 text-gray-500 font-bold">{entry.checkOut?.time ? new Date(entry.checkOut.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hour12: true}) : '--:--'}</td>
+                                <td className="py-5 text-gray-500 font-bold">{entry.workingHours ? `${Math.floor(entry.workingHours / 60)}h ${entry.workingHours % 60}m` : '0h 0m'}</td>
                                 <td className="py-5 text-right">
                                    <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full border ${
                                       entry.status === 'present' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
