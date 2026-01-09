@@ -4,13 +4,13 @@ import React, { useState, useEffect } from "react";
 import { adminService } from "@/lib/integrations";
 import { Stethoscope, Building2, UserPlus, Image as ImageIcon, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
-import { 
-  PageHeader, 
-  Card, 
-  FormInput, 
-  FormSelect, 
-  FormTextarea, 
-  Button 
+import {
+  PageHeader,
+  Card,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  Button
 } from "@/components/admin";
 import type { Hospital, CreateDoctorRequest } from "@/lib/integrations";
 
@@ -20,7 +20,7 @@ export default function CreateDoctor() {
   const [fetchingHospitals, setFetchingHospitals] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [imageSource, setImageSource] = useState<"url" | "upload">("url");
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -53,9 +53,17 @@ export default function CreateDoctor() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === "mobile") {
       if (/^\d{0,10}$/.test(value)) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+      return;
+    }
+
+    // Validate Full Name, Specialties, Qualification: characters and special characters only (no numbers)
+    if (name === "name" || name === "specialties" || name === "qualification") {
+      if (/^[^0-9]*$/.test(value)) {
         setFormData(prev => ({ ...prev, [name]: value }));
       }
       return;
@@ -78,6 +86,11 @@ export default function CreateDoctor() {
 
     if (formData.mobile.length !== 10) {
       toast.error("Mobile number must be exactly 10 digits.");
+      return;
+    }
+
+    if (!formData.email.includes("@") || !formData.email.includes(".com")) {
+      toast.error("Email must contain '@' and '.com'");
       return;
     }
 
@@ -198,11 +211,11 @@ export default function CreateDoctor() {
                   placeholder="Secure password"
                 />
                 <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-10 text-gray-400 hover:text-blue-500 transition-colors"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-10 text-gray-400 hover:text-blue-500 transition-colors"
                 >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
@@ -262,75 +275,75 @@ export default function CreateDoctor() {
         </div>
 
         <Card title="Doctor Bio & Image" padding="p-6">
-            <div className="space-y-6">
-                <FormTextarea
-                    label="Professional Bio"
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder="Tell us about your medical background and expertise..."
-                    rows={4}
+          <div className="space-y-6">
+            <FormTextarea
+              label="Professional Bio"
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              placeholder="Tell us about your medical background and expertise..."
+              rows={4}
+            />
+
+            <div className="border-t pt-4" style={{ borderColor: 'var(--border-color)' }}>
+              <div className="flex gap-6 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="radio"
+                    checked={imageSource === "url"}
+                    onChange={() => setImageSource("url")}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                  <span className="text-sm font-medium group-hover:text-blue-500 transition-colors">Image URL</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="radio"
+                    checked={imageSource === "upload"}
+                    onChange={() => setImageSource("upload")}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                  <span className="text-sm font-medium group-hover:text-blue-500 transition-colors">Upload File</span>
+                </label>
+              </div>
+
+              {imageSource === "url" ? (
+                <FormInput
+                  label="Profile Photo URL"
+                  name="profilePic"
+                  value={formData.profilePic}
+                  onChange={handleChange}
+                  placeholder="https://example.com/doctor-avatar.jpg"
+                  icon={<ImageIcon size={18} className="text-gray-400" />}
                 />
-
-                <div className="border-t pt-4" style={{ borderColor: 'var(--border-color)' }}>
-                    <div className="flex gap-6 mb-4">
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                            <input
-                                type="radio"
-                                checked={imageSource === "url"}
-                                onChange={() => setImageSource("url")}
-                                className="w-4 h-4 accent-blue-600"
-                            />
-                            <span className="text-sm font-medium group-hover:text-blue-500 transition-colors">Image URL</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                            <input
-                                type="radio"
-                                checked={imageSource === "upload"}
-                                onChange={() => setImageSource("upload")}
-                                className="w-4 h-4 accent-blue-600"
-                            />
-                            <span className="text-sm font-medium group-hover:text-blue-500 transition-colors">Upload File</span>
-                        </label>
-                    </div>
-
-                    {imageSource === "url" ? (
-                        <FormInput
-                            label="Profile Photo URL"
-                            name="profilePic"
-                            value={formData.profilePic}
-                            onChange={handleChange}
-                            placeholder="https://example.com/doctor-avatar.jpg"
-                            icon={<ImageIcon size={18} className="text-gray-400" />}
-                        />
-                    ) : (
-                        <div>
-                            <label className="block mb-2 text-sm" style={{ color: 'var(--secondary-color)' }}>Select Profile Photo</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileUpload}
-                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-all"
-                            />
-                        </div>
-                    )}
-
-                    {formData.profilePic && (
-                        <div className="mt-4 flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                            <img
-                                src={formData.profilePic}
-                                alt="Preview"
-                                className="w-20 h-20 rounded-2xl object-cover ring-4 ring-blue-500/10"
-                                onError={(e) => { (e.target as HTMLImageElement).src = "/avatar.png"; }}
-                            />
-                            <div>
-                                <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Live Preview</p>
-                                <p className="text-sm opacity-70">This is how the doctor's profile image will appear to patients.</p>
-                            </div>
-                        </div>
-                    )}
+              ) : (
+                <div>
+                  <label className="block mb-2 text-sm" style={{ color: 'var(--secondary-color)' }}>Select Profile Photo</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-all"
+                  />
                 </div>
+              )}
+
+              {formData.profilePic && (
+                <div className="mt-4 flex items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                  <img
+                    src={formData.profilePic}
+                    alt="Preview"
+                    className="w-20 h-20 rounded-2xl object-cover ring-4 ring-blue-500/10"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/avatar.png"; }}
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Live Preview</p>
+                    <p className="text-sm opacity-70">This is how the doctor's profile image will appear to patients.</p>
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
         </Card>
 
         <div className="flex justify-end pt-4">

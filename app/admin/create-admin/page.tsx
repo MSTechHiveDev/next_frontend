@@ -22,6 +22,11 @@ export default function CreateAdmin() {
       if (/^\d{0,10}$/.test(value)) {
         setFormData({ ...formData, [name]: value });
       }
+    } else if (name === "name") {
+      // Allow only characters and spaces
+      if (/^[a-zA-Z\s]*$/.test(value)) {
+        setFormData({ ...formData, [name]: value });
+      }
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -32,6 +37,11 @@ export default function CreateAdmin() {
 
     if (formData.mobile.length !== 10) {
       toast.error("Mobile number must be exactly 10 digits.");
+      return;
+    }
+
+    if (!formData.email.includes("@") || !formData.email.includes(".com")) {
+      toast.error("Email must contain '@' and '.com'");
       return;
     }
 

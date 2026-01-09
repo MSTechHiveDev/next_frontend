@@ -169,35 +169,48 @@ export default function PatientProfile({ profile }: PatientProfileProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {infoGroups.map((group, idx) => (
-          <Card key={idx} className="p-6">
-            <h3 className="font-bold mb-4 flex items-center gap-2">
+          <Card key={idx} className="p-6 h-full hover:shadow-md transition-shadow">
+            <h3 className="font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
               {group.icon}
               {group.title}
             </h3>
-            {group.items.map((item, i) => (
-              <p key={i} className="text-sm">
-                <strong>{item.label}:</strong> {item.value || '---'}
-              </p>
-            ))}
+            <div className="space-y-3">
+              {group.items.map((item, i) => (
+                <div key={i} className="flex justify-between items-start text-sm gap-3">
+                  <span className="text-gray-500 dark:text-gray-400 font-medium shrink-0">{item.label}:</span>
+                  <span className={`text-gray-900 dark:text-white font-semibold text-right flex-1 ${item.label === 'Address' ? 'text-xs md:text-sm break-words' : 'truncate'}`}>
+                    {item.value || '---'}
+                  </span>
+                </div>
+              ))}
+            </div>
           </Card>
         ))}
+
+        {/* Clinical Summary moved into grid for 2-2 structure */}
+        <Card className="p-6 h-full hover:shadow-md transition-shadow">
+          <h3 className="font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
+            <Activity size={18} className="text-amber-600" />
+            Clinical Summary
+          </h3>
+          <div className="space-y-3">
+            {clinicalDetails.map((d, i) => (
+              <div key={i} className="flex justify-between items-center text-sm">
+                <span className="text-gray-500 dark:text-gray-400 font-medium">{d.label}:</span>
+                <span className="text-gray-900 dark:text-white font-semibold">{d.value || 'None'}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
 
-      <Card className="p-6">
-        <h3 className="font-bold mb-4">Clinical Summary</h3>
-        {clinicalDetails.map((d, i) => (
-          <p key={i}>
-            <strong>{d.label}:</strong> {d.value || 'None'}
-          </p>
-        ))}
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="font-bold mb-4 flex items-center gap-2">
-          <Activity size={20} className="text-indigo-600" />
+      {/* Medical History remains full width (the '1' in 2-2-1) */}
+      <Card className="p-6 hover:shadow-md transition-shadow border-l-4 border-indigo-600">
+        <h3 className="font-bold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
+          <HeartPulse size={20} className="text-indigo-600" />
           Medical History
         </h3>
-        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
           {profile.medicalHistory || 'No medical history records available.'}
         </p>
       </Card>
