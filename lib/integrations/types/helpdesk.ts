@@ -81,6 +81,7 @@ export interface PatientRegistrationRequest {
 }
 
 export interface PatientRegistrationResponse {
+  success: boolean;
   message: string;
   patient: {
     id: string;

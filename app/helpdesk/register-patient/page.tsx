@@ -40,13 +40,13 @@ export default function RegisterPatientPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
-      setFormData((prev) => ({
+      setFormData((prev: any) => ({
         ...prev,
         [parent]: {
-          ...(prev[parent as keyof typeof prev] as any),
+          ...prev[parent],
           [child]: value,
         },
       }));
@@ -57,7 +57,7 @@ export default function RegisterPatientPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.mobile || !formData.dateOfBirth || !formData.gender) {
       toast.error('Please fill in all required fields');
       return;
@@ -65,8 +65,29 @@ export default function RegisterPatientPage() {
 
     try {
       setLoading(true);
-      const response = await helpdeskService.registerPatient(formData);
-      
+
+      // Calculate age from dateOfBirth
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+
+      // Transform structure for API
+      const registrationData = {
+        name: formData.name,
+        mobile: formData.mobile,
+        age: age,
+        gender: formData.gender.toLowerCase() as 'male' | 'female' | 'other',
+        dob: formData.dateOfBirth,
+        address: `${formData.address.street}, ${formData.address.city}, ${formData.address.state} - ${formData.address.pincode}`,
+        emergencyContact: `${formData.emergencyContact.name} (${formData.emergencyContact.relationship}): ${formData.emergencyContact.mobile}`,
+      };
+
+      const response = await helpdeskService.registerPatient(registrationData);
+
       if (response.success) {
         toast.success(response.message || 'Patient registered successfully!');
         router.push('/helpdesk');

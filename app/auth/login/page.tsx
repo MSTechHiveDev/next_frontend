@@ -118,6 +118,8 @@ const LoginPage = () => {
         router.push('/helpdesk');
       } else if (user?.role === 'staff') {
         router.push('/staff');
+      } else if (user?.role === 'patient') {
+        router.push('/patient');
       } else {
         router.push('/hospital-admin'); // Default fallback
       }

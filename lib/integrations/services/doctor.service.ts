@@ -40,6 +40,9 @@ export const doctorService = {
   getMyPatients: () =>
     apiClient<DoctorPatient[]>(DOCTOR_ENDPOINTS.MY_PATIENTS),
 
+  getPatientDetails: (id: string) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.PATIENT_DETAILS(id)),
+
   // Calendar
   getCalendarStats: (params?: { month?: number; year?: number; view?: string; startDate?: string }) => {
     const queryParams = new URLSearchParams();

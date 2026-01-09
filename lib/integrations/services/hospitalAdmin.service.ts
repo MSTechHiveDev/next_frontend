@@ -9,28 +9,12 @@ import type {
   CreateHospitalRequest,
   CreateHospitalHelpdeskRequest,
   AttendanceRecord,
-  AttendanceStats
+  AttendanceStats,
+  HospitalAdminDashboard,
+  HospitalAdminPatient
 } from '../types';
 
-export interface HospitalAdminDashboard {
-  hospital: Hospital;
-  stats: {
-    totalDoctors: number;
-    totalHelpdesk: number;
-    totalPatients: number;
-    totalAppointments: number;
-    todayAppointments: number;
-  };
-}
 
-export interface HospitalAdminPatient {
-  _id: string;
-  name: string;
-  email?: string;
-  mobile?: string;
-  lastAppointment: Date;
-  totalAppointments: number;
-}
 
 export const hospitalAdminService = {
   // Dashboard

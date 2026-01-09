@@ -6,3 +6,4 @@ export * from './doctor';
 export * from './hospitalAdmin';
 export * from './staff';
 export * from './helpdesk';
+export * from './patient';

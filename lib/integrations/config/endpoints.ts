@@ -150,6 +150,7 @@ export const DOCTOR_ENDPOINTS = {
   CALENDAR_APPOINTMENTS: '/doctors/calendar/appointments',
   QUICK_NOTES: '/doctors/quick-notes',
   START_NEXT: '/doctors/start-next',
+  PATIENT_DETAILS: (id: string) => `/patient/${id}`,
 };
 
 export const STAFF_ENDPOINTS = {
@@ -186,6 +187,20 @@ export const NOTIFICATION_ENDPOINTS = {
   BASE: '/notifications',
   READ: (id: string) => `/notifications/${id}/read`,
   READ_ALL: '/notifications/read-all',
+};
+
+export const PATIENT_ENDPOINTS = {
+  PROFILE: '/patients/profile',
+  PROFILE_BY_ID: (id: string) => `/patients/profile/${id}`,
+  UPDATE_PROFILE: '/patients/profile',
+};
+
+export const SUPPORT_ENDPOINTS = {
+  CREATE: '/support',
+  MY_TICKETS: '/support/my-tickets',
+  LIST: '/support',
+  DETAILS: (id: string) => `/support/${id}`,
+  REPLY: (id: string) => `/support/${id}/reply`,
 };
 
 export const COMMON_ENDPOINTS = {

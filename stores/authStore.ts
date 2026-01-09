@@ -113,17 +113,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.log('[Auth] Error during auth check:', error.message);
       
       // Check if it's a network error (backend unavailable)
-      const isNetworkError = error?.isNetworkError || 
-                            error?.message?.includes('Cannot connect to server') || 
-                            error?.message?.includes('Failed to fetch') ||
-                            error?.message?.includes('Network error');
-      
+      const isNetworkError = error?.isNetworkError ||
+        error?.message?.includes('Cannot connect to server') ||
+        error?.message?.includes('Failed to fetch') ||
+        error?.message?.includes('Network error');
+
       // Check if it's an actual authentication error
-      const isAuthError = error?.status === 401 || 
-                         error?.status === 403 ||
-                         error?.message?.includes('Session expired') ||
-                         error?.message?.includes('Unauthorized') ||
-                         error?.message?.includes('Not authenticated');
+      const isAuthError = error?.status === 401 ||
+        error?.status === 403 ||
+        error?.message?.includes('Session expired') ||
+        error?.message?.includes('Unauthorized') ||
+        error?.message?.includes('Not authenticated');
 
       if (isNetworkError) {
         // Backend unavailable - keep user logged in using cached data
@@ -141,7 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             console.error('[Auth] Failed to parse stored user:', e);
           }
         }
-        
+
         // If no stored user but we have a token, assume authenticated but mark as initialized
         // This prevents redirect loop while backend is down
         console.log('[Auth] Keeping session active despite network error');

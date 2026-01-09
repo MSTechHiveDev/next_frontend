@@ -5,15 +5,21 @@ export async function apiServer<T>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('accessToken')?.value;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options?.headers,
+  };
+
+  if (accessToken) {
+    (headers as any)['Authorization'] = `Bearer ${accessToken}`;
+  }
 
   const res = await fetch(`${API_CONFIG.BASE_URL}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Cookie: cookieStore.toString(),
-      ...options?.headers,
-    },
+    headers,
     cache: 'no-store',
   });
 
