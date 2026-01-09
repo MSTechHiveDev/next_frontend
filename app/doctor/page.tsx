@@ -23,9 +23,7 @@ import {
 } from 'lucide-react';
 import { getDoctorDashboardAction, getMyAnnouncementsAction } from '@/lib/integrations';
 import { getMeAction as getAuthMeAction } from '@/lib/integrations/actions/auth.actions';
-import dynamic from 'next/dynamic';
-
-const DashboardCharts = dynamic(() => import('@/components/doctor/DashboardCharts'), { ssr: false });
+import DoctorDashboardCharts from '@/components/doctor/DoctorDashboardCharts';
 
 export default async function DoctorDashboard() {
   // Parallel data fetching
@@ -128,7 +126,7 @@ export default async function DoctorDashboard() {
                  </div>
               </div>
               <div className="h-[300px]">
-                 <DashboardCharts type="area" />
+                 <DoctorDashboardCharts type="area" />
               </div>
            </div>
 

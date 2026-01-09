@@ -234,7 +234,7 @@ export const adminService = {
     }),
 
   getLeavesClient: () =>
-    apiClient<{ leaves: any[] }>('/leaves'),
+    apiClient<{ leaves: any[] }>('/leaves?all=true'),
 
   updateLeaveStatusClient: (id: string, data: any) =>
     apiClient<any>(`/leaves/${id}/status`, {

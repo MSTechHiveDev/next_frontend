@@ -99,37 +99,38 @@ export const HOSPITAL_ADMIN_ENDPOINTS = {
   CREATE_DOCTOR: '/hospital/create-doctor',
   DOCTOR_DETAIL: (id: string) => `/doctors/${id}`,
   UPDATE_DOCTOR: (id: string) => `/hospital/users/${id}`,
-  DELETE_DOCTOR: (id: string) => `/super-admin/users/${id}`,
+  DELETE_DOCTOR: (id: string) => `/hospital/users/${id}`,
   HELPDESKS: '/hospital/users?role=helpdesk',
   CREATE_HELPDESK: '/hospital/create-helpdesk',
-  HELPDESK_DETAIL: (id: string) => `/helpdesk/${id}`,
+  HELPDESK_DETAIL: (id: string) => `/hospital/helpdesks/${id}`,
   PATIENTS: '/hospital/users?role=patient',
   PHARMA: '/hospital/users?role=pharma-owner',
   LABS: '/hospital/users?role=lab',
   STAFF: '/hospital/users?role=staff',
-  STAFF_DETAIL: (id: string) => `/hospital/users/${id}`,
+  STAFF_DETAIL: (id: string) => `/hospital/staff/${id}`,
   CREATE_STAFF: '/hospital/users',
   UPDATE_STAFF: (id: string) => `/hospital/users/${id}`,
-  DELETE_STAFF: (id: string) => `/super-admin/users/${id}`,
-  ATTENDANCE: '/hospital/attendance/report',
+  DELETE_STAFF: (id: string) => `/hospital/users/${id}`,
+  ATTENDANCE: '/hospital/attendance',
   ATTENDANCE_STATS: '/hospital/attendance/report',
   ATTENDANCE_DETAIL: (id: string) => `/hospital/attendance/${id}`,
   UPDATE_ATTENDANCE: (id: string) => `/hospital/attendance/${id}`,
   DELETE_ATTENDANCE: (id: string) => `/hospital/attendance/${id}`,
-  PAYROLL: '/staff/attendance/payroll',
   ANNOUNCEMENTS: '/notifications',
+  TRANSACTIONS: '/hospital/transactions',
 };
 
 export const HELPDESK_ENDPOINTS = {
   DASHBOARD: '/helpdesk/dashboard',
   ME: '/helpdesk/me',
-  DOCTORS: '/doctors',
-  CREATE_DOCTOR: '/hospital/create-doctor',
-  PATIENTS_SEARCH: '/frontdesk/patients',
-  PATIENT_DETAILS: (id: string) => `/frontdesk/patients/${id}`,
-  REGISTER_PATIENT: '/frontdesk/patients/register',
-  APPOINTMENTS: '/bookings/my-appointments',
-  APPOINTMENT_STATUS: (id: string) => `/bookings/${id}/status`,
+  DOCTORS: '/helpdesk/doctors',
+  CREATE_DOCTOR: '/helpdesk/doctor',
+  PATIENTS_SEARCH: '/helpdesk/patients/search',
+  PATIENT_DETAILS: (id: string) => `/helpdesk/patients/${id}`,
+  REGISTER_PATIENT: '/helpdesk/patients/register',
+  APPOINTMENTS: '/helpdesk/appointments',
+  APPOINTMENT_STATUS: (id: string) => `/helpdesk/appointments/${id}/status`,
+  TRANSACTIONS: '/helpdesk/transactions',
 };
 
 export const BOOKING_ENDPOINTS = {
@@ -150,14 +151,13 @@ export const DOCTOR_ENDPOINTS = {
 };
 
 export const STAFF_ENDPOINTS = {
-  DASHBOARD: '/staff/attendance/me',
-  PROFILE: '/auth/me',
+  DASHBOARD: '/staff/attendance/dashboard',
+  PROFILE: '/staff/attendance/profile',
 
-  
   // Attendance
   ATTENDANCE: '/staff/attendance/me',
   ATTENDANCE_HISTORY: '/staff/attendance/me',
-  TODAY_STATUS: '/staff/attendance/me',
+  TODAY_STATUS: '/staff/attendance/today-status',
   CHECK_IN: '/staff/attendance/check-in',
   CHECK_OUT: '/staff/attendance/check-out',
 
@@ -165,19 +165,25 @@ export const STAFF_ENDPOINTS = {
   // Leave Management
   LEAVES: '/leaves',
   LEAVE_DETAIL: (id: string) => `/leaves/${id}`,
-  CREATE_LEAVE: '/leaves',
+  CREATE_LEAVE: '/leaves/request',
   UPDATE_LEAVE: (id: string) => `/leaves/${id}`,
   DELETE_LEAVE: (id: string) => `/leaves/${id}`,
   LEAVE_BALANCE: '/leaves/balance',
 
   // Schedules
-  SCHEDULE: '/staff/schedule',
+  SCHEDULE: '/staff/attendance/schedule',
 
   // Payroll
-  PAYROLL: '/staff/attendance/payroll',
+  PAYROLL: '/staff/attendance/self-payroll',
 
   // Announcements
-  ANNOUNCEMENTS: '/notifications',
+  ANNOUNCEMENTS: '/announcements/hospital',
+};
+
+export const NOTIFICATION_ENDPOINTS = {
+  BASE: '/notifications',
+  READ: (id: string) => `/notifications/${id}/read`,
+  READ_ALL: '/notifications/read-all',
 };
 
 export const COMMON_ENDPOINTS = {

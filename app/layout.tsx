@@ -26,6 +26,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var storage = localStorage.getItem('theme-storage');
+                  var theme = 'light';
+                  if (storage) {
+                    var parsed = JSON.parse(storage);
+                    if (parsed && parsed.state && parsed.state.theme) {
+                      theme = parsed.state.theme;
+                    }
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning

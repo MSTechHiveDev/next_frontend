@@ -126,5 +126,19 @@ export const helpdeskService = {
    */
   getAvailability: (doctorId: string, hospitalId: string, date: string) =>
     apiClient<any>(`${BOOKING_ENDPOINTS.AVAILABILITY}?doctorId=${doctorId}&hospitalId=${hospitalId}&date=${date}`),
+
+  /**
+   * Get all appointments for the helpdesk
+   * @returns List of appointments
+   */
+  getAppointments: () =>
+    apiClient<any[]>(HELPDESK_ENDPOINTS.APPOINTMENTS),
+
+  /**
+   * Get all transactions/payments
+   * @returns List of transactions
+   */
+  getTransactions: () =>
+    apiClient<any[]>(HELPDESK_ENDPOINTS.TRANSACTIONS),
 };
 

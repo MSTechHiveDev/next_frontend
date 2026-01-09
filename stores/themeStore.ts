@@ -7,6 +7,18 @@ interface ThemeState {
   setTheme: (theme: 'light' | 'dark') => void;
 }
 
+const applyTheme = (theme: 'light' | 'dark') => {
+  if (typeof document !== 'undefined') {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }
+};
+
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
@@ -14,26 +26,20 @@ export const useThemeStore = create<ThemeState>()(
       toggleTheme: () =>
         set((state) => {
           const newTheme = state.theme === 'light' ? 'dark' : 'light';
-          // Update the document data-theme attribute
-          if (typeof document !== 'undefined') {
-            document.documentElement.setAttribute('data-theme', newTheme);
-          }
+          applyTheme(newTheme);
           return { theme: newTheme };
         }),
       setTheme: (theme) => {
-        // Update the document data-theme attribute
-        if (typeof document !== 'undefined') {
-          document.documentElement.setAttribute('data-theme', theme);
-        }
+        applyTheme(theme);
         set({ theme });
       },
     }),
     {
       name: 'theme-storage',
       onRehydrateStorage: () => (state) => {
-        // Apply theme when rehydrated
-        if (state && typeof document !== 'undefined') {
-          document.documentElement.setAttribute('data-theme', state.theme);
+        // Apply theme when rehydrated to avoid mismatch
+        if (state) {
+          applyTheme(state.theme);
         }
       },
     }

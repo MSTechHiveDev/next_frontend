@@ -44,9 +44,13 @@ export default function HelpdeskDashboard() {
     try {
       setLoading(true);
       const data = await helpdeskService.getDashboard();
+      console.log('[Dashboard] Received data from backend:', data);
+      console.log('[Dashboard] Stats:', data.stats);
+      console.log('[Dashboard] Recent patients:', data.recentPatients?.length || 0);
+      console.log('[Dashboard] Appointments:', data.appointments?.length || 0);
       setDashboardData(data);
     } catch (error: any) {
-      console.error("Failed to fetch dashboard data:", error);
+      console.error("[Dashboard] Failed to fetch dashboard data:", error);
       toast.error(error.message || "Failed to load dashboard statistics");
       setDashboardData({
         stats: {

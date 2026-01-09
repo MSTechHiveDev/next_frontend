@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 
   /* Light Theme - MSCureChain */
   --bg-color: #f8fafc;
@@ -23,10 +25,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+.dark,
 [data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #ededed;
-  
+
   /* Dark Theme - MSCureChain */
   --bg-color: #0a0a0a;
   --card-bg: #111111;
@@ -37,13 +40,6 @@
   --sidebar-bg: #111111;
   --hover-bg: #1e293b;
   --accent-color: #60a5fa;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -66,7 +62,8 @@ body {
     border: none !important;
   }
   /* Make the ticket and its children visible */
-  .bg-white, .bg-white * {
+  .bg-white,
+  .bg-white * {
     visibility: visible;
   }
   .bg-white {
