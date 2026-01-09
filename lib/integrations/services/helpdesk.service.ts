@@ -1,5 +1,6 @@
-import { HELPDESK_ENDPOINTS, BOOKING_ENDPOINTS } from '../config';
+import { HELPDESK_ENDPOINTS, BOOKING_ENDPOINTS, DOCTOR_ENDPOINTS } from '../config';
 import { apiClient } from '../api';
+import { calculateEffectiveSlot } from '../../utils/time-slots';
 import type {
   HelpdeskDashboard,
   HelpdeskProfile,
@@ -124,8 +125,38 @@ export const helpdeskService = {
    * @param hospitalId Hospital ID
    * @param date Date string (YYYY-MM-DD)
    */
-  getAvailability: (doctorId: string, hospitalId: string, date: string) =>
-    apiClient<any>(`${BOOKING_ENDPOINTS.AVAILABILITY}?doctorId=${doctorId}&hospitalId=${hospitalId}&date=${date}`),
+  getAvailability: async (doctorId: string, hospitalId: string, date: string) => {
+    // Reusing the centralized calendar stats endpoint as per requirements
+    // Fetch weekly view to get slot details for the specific date
+    const response = await apiClient<any>(`${DOCTOR_ENDPOINTS.CALENDAR_STATS}?view=weekly&startDate=${date}&doctorId=${doctorId}`);
+
+    // Transform response to match Helpdesk UI expectations
+    // Response format: { timeSlots: [], days: [{ date, slots: {} }] }
+    // Expected format: { slots: [{ timeSlot, isFull, availableCount, totalCapacity, effectiveStart, effectiveEnd }] }
+
+    const targetDateStr = new Date(date).toDateString();
+    const dayData = response.days?.find((d: any) => new Date(d.date).toDateString() === targetDateStr);
+
+    const slots = response.timeSlots?.map((slot: string) => {
+      const slotInfo = dayData?.slots?.[slot] || { count: 0, isFull: false };
+      const HOURLY_LIMIT = 12; // Matching backend constant
+      const count = slotInfo.count || 0;
+
+      // Calculate the specific 5-minute increment for the NEXT booking
+      const { startTime, endTime } = calculateEffectiveSlot(slot, count, 5);
+
+      return {
+        timeSlot: slot, // Display Label (e.g., "9:00 AM - 10:00 AM")
+        isFull: slotInfo.isFull || count >= HOURLY_LIMIT,
+        availableCount: Math.max(0, HOURLY_LIMIT - count),
+        totalCapacity: HOURLY_LIMIT,
+        effectiveStart: startTime, // Specific 5-min start (e.g., "9:10 AM")
+        effectiveEnd: endTime      // Specific 5-min end (e.g., "9:15 AM")
+      };
+    }) || [];
+
+    return { slots };
+  },
 
   /**
    * Get all appointments for the helpdesk
@@ -141,4 +172,3 @@ export const helpdeskService = {
   getTransactions: () =>
     apiClient<any[]>(HELPDESK_ENDPOINTS.TRANSACTIONS),
 };
-

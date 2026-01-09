@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, User, Phone, Mail, Calendar, MapPin, Activity, FileText, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { getDoctorPatientDetailsAction } from '@/lib/integrations/actions/doctor.actions';
+import { getDoctorPatientDetailsAction, getDoctorProfileAction } from '@/lib/integrations/actions/doctor.actions';
 import toast from 'react-hot-toast';
 
 export default function PatientDetailsPage() {
@@ -12,8 +12,19 @@ export default function PatientDetailsPage() {
     const router = useRouter();
     const [patient, setPatient] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
 
     useEffect(() => {
+        const fetchDoctorId = async () => {
+            const res = await getDoctorProfileAction();
+            if (res.success && res.data) {
+                // Determine if ID is _id or id and if it's the profile ID or user ID. 
+                // Appointments usually link to Doctor Profile ID.
+                setCurrentDoctorId(res.data._id || res.data.id);
+            }
+        };
+        fetchDoctorId();
+
         if (params.id) {
             loadPatient(params.id as string);
         }
@@ -151,32 +162,40 @@ export default function PatientDetailsPage() {
                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6">Consultation History</h3>
                         <div className="space-y-6">
                             {patient.visits && patient.visits.length > 0 ? (
-                                patient.visits.map((visit: any, idx: number) => (
-                                    <div key={idx} className="flex gap-4 relative">
-                                        {/* Timeline Line */}
-                                        {idx !== patient.visits.length - 1 && (
-                                            <div className="absolute left-[19px] top-10 bottom-[-24px] w-0.5 bg-gray-200"></div>
-                                        )}
-                                        <div className="w-10 h-10 rounded-full bg-blue-50 border-4 border-white shadow-sm flex items-center justify-center text-blue-600 shrink-0 z-10">
-                                            <FileText size={18} />
-                                        </div>
-                                        <div className="flex-1 bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900">{visit.reason || 'General Consultation'}</h4>
-                                                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                                                        <Clock size={12} /> {new Date(visit.date).toLocaleDateString()}
-                                                    </p>
+                                patient.visits
+                                    .filter((visit: any) => {
+                                        // If filtering is required by doctor, check currentDoctorId
+                                        if (!currentDoctorId) return true; // Show all if doctor ID not loaded yet (or safeguard)
+                                        // Check if visit.doctor is populated object or string ID
+                                        const visitDoctorId = typeof visit.doctor === 'object' ? visit.doctor._id : visit.doctor;
+                                        return visitDoctorId === currentDoctorId;
+                                    })
+                                    .map((visit: any, idx: number, arr: any[]) => (
+                                        <div key={idx} className="flex gap-4 relative">
+                                            {/* Timeline Line */}
+                                            {idx !== arr.length - 1 && (
+                                                <div className="absolute left-[19px] top-10 bottom-[-24px] w-0.5 bg-gray-200"></div>
+                                            )}
+                                            <div className="w-10 h-10 rounded-full bg-blue-50 border-4 border-white shadow-sm flex items-center justify-center text-blue-600 shrink-0 z-10">
+                                                <FileText size={18} />
+                                            </div>
+                                            <div className="flex-1 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-900">{visit.reason || 'General Consultation'}</h4>
+                                                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                                                            <Clock size={12} /> {new Date(visit.date).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                    <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded-lg">Completed</span>
                                                 </div>
-                                                <span className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded-lg">Completed</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 mb-3">{visit.notes || 'No notes recorded.'}</p>
-                                            <div className="flex gap-2">
-                                                <button className="text-xs font-bold text-blue-600 hover:underline">View Prescription</button>
+                                                <p className="text-sm text-gray-600 mb-3">{visit.notes || 'No notes recorded.'}</p>
+                                                <div className="flex gap-2">
+                                                    <button className="text-xs font-bold text-blue-600 hover:underline">View Prescription</button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    ))
                             ) : (
                                 <div className="text-center py-8">
                                     <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />

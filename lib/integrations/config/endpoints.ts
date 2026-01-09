@@ -140,6 +140,7 @@ export const BOOKING_ENDPOINTS = {
   BOOK: '/bookings/book',
   STATS: '/bookings/hospital/stats',
   MY_APPOINTMENTS: '/bookings/my-appointments',
+  DETAILS: (id: string) => `/bookings/${id}`,
 };
 
 export const DOCTOR_ENDPOINTS = {
