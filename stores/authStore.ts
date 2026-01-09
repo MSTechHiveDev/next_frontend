@@ -15,7 +15,7 @@ interface AuthState {
   isInitialized: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
-  logout: () => void;
+  logout: (broadcast?: boolean) => void;
   checkAuth: () => Promise<void>;
   initEvents: () => void;
 }
@@ -29,7 +29,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initEvents: () => {
     if (typeof window !== 'undefined') {
       window.addEventListener('auth-logout', () => {
-        get().logout();
+        get().logout(false); // Signal received, don't broadcast back
+      });
+
+      // Listen for cross-tab logout via localStorage
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'auth-global-logout-event') {
+          console.log('[Auth] Received global logout signal from another tab');
+          get().logout(false);
+        }
       });
     }
   },
@@ -40,7 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.log('[Auth] Attempting login for:', identifier);
       const response = await authService.loginClient({ identifier, password });
       const { tokens, user } = response;
-      
+
       console.log('[Auth] Login successful:', {
         userId: user.id,
         userName: user.name,
@@ -48,13 +56,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hasAccessToken: !!tokens.accessToken,
         hasRefreshToken: !!tokens.refreshToken
       });
-      
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
-      // Store user in localStorage for offline recovery
+
+      // PER-TAB ISOLATION: Use sessionStorage for tokens
+      sessionStorage.setItem('accessToken', tokens.accessToken);
+      sessionStorage.setItem('refreshToken', tokens.refreshToken);
+
+      // PERSISTENT REGISTRY: Use localStorage for user data
       localStorage.setItem('user', JSON.stringify(user));
-      
-      console.log('[Auth] Tokens and user data saved to localStorage');
+      localStorage.setItem('lastUserId', user.id);
+
+      console.log('[Auth] Tokens saved to sessionStorage, user data to localStorage');
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error) {
       console.error('[Auth] Login failed:', error);
@@ -74,23 +85,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  logout: () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  logout: (broadcast = true) => {
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    // We keep 'user' in localStorage for profile persistence, but mark as unauthenticated
     set({ user: null, isAuthenticated: false });
+
+    if (broadcast && typeof window !== 'undefined') {
+      // Signal other tabs to logout as well
+      localStorage.setItem('auth-global-logout-event', Date.now().toString());
+    }
   },
 
   checkAuth: async () => {
-    const token = localStorage.getItem('accessToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-    
-    console.log('[Auth] Checking authentication...', { 
-      hasToken: !!token, 
+    const token = sessionStorage.getItem('accessToken');
+    const refreshToken = sessionStorage.getItem('refreshToken');
+
+    console.log('[Auth] Checking authentication...', {
+      hasToken: !!token,
       hasRefreshToken: !!refreshToken,
       tokenPreview: token ? `${token.substring(0, 20)}...` : 'none'
     });
-    
+
     if (!token) {
       console.log('[Auth] No access token found, user is not authenticated');
       set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
@@ -101,17 +117,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       console.log('[Auth] Fetching user profile with token...');
       const user = await authService.getMeClient();
-      console.log('[Auth] ✅ Authentication successful:', { 
-        userId: user.id, 
-        userName: user.name, 
-        role: user.role 
+      console.log('[Auth] ✅ Authentication successful:', {
+        userId: user.id,
+        userName: user.name,
+        role: user.role
       });
       // Store user in localStorage for offline recovery
       localStorage.setItem('user', JSON.stringify(user));
       set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch (error: any) {
       console.log('[Auth] Error during auth check:', error.message);
-      
+
       // Check if it's a network error (backend unavailable)
       const isNetworkError = error?.isNetworkError ||
         error?.message?.includes('Cannot connect to server') ||
@@ -128,7 +144,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (isNetworkError) {
         // Backend unavailable - keep user logged in using cached data
         console.warn('[Auth] ⚠️ Backend server unavailable. Using cached session data.');
-        
+
         // Try to restore user from localStorage
         const storedUser = localStorage.getItem('user');
         if (storedUser) {

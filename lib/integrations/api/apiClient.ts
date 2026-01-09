@@ -17,7 +17,7 @@ export async function apiClient<T>(
   options?: RequestInit
 ): Promise<T> {
   const isClient = typeof window !== 'undefined';
-  let token = isClient ? localStorage.getItem('accessToken') : null;
+  let token = isClient ? sessionStorage.getItem('accessToken') : null;
 
   // Construct headers more robustly
   const headers = new Headers();
@@ -48,7 +48,7 @@ export async function apiClient<T>(
       // Handle network errors (server not running, CORS, etc.)
       const isAuthCheck = path.includes('/auth/me') || path.includes('/auth/refresh');
       const isLogin = path.includes('/auth/login');
-      
+
       // Only log warnings (not errors) for network issues to reduce noise
       // These are expected when backend is not running
       if (!isAuthCheck && isLogin) {
@@ -56,9 +56,9 @@ export async function apiClient<T>(
         console.warn(`   URL: ${API_CONFIG.BASE_URL}`);
         console.warn(`   Please start the backend server to login.`);
       }
-      
+
       const networkError = new Error(
-        fetchError.message === 'Failed to fetch' 
+        fetchError.message === 'Failed to fetch'
           ? `Cannot connect to server. Please ensure the backend is running at ${API_CONFIG.BASE_URL}`
           : `Network error: ${fetchError.message}`
       );
@@ -69,7 +69,7 @@ export async function apiClient<T>(
 
     // Handle 401 Unauthorized
     if (res.status === 401 && isClient && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
-      const refreshToken = localStorage.getItem('refreshToken');
+      const refreshToken = sessionStorage.getItem('refreshToken');
 
       if (refreshToken) {
         if (!isRefreshing) {
@@ -87,8 +87,8 @@ export async function apiClient<T>(
               const newAccessToken = data.tokens.accessToken;
               const newRefreshToken = data.tokens.refreshToken;
 
-              localStorage.setItem('accessToken', newAccessToken);
-              localStorage.setItem('refreshToken', newRefreshToken);
+              sessionStorage.setItem('accessToken', newAccessToken);
+              sessionStorage.setItem('refreshToken', newRefreshToken);
 
               isRefreshing = false;
               onTokenRefreshed(newAccessToken);
@@ -97,8 +97,8 @@ export async function apiClient<T>(
             }
           } catch (error) {
             isRefreshing = false;
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
             window.dispatchEvent(new Event('auth-logout'));
             throw new Error('Session expired');
           }
@@ -144,7 +144,7 @@ export async function apiClient<T>(
     const isAuthEndpoint = path.includes('/auth/me') || path.includes('/auth/refresh');
     const isLogin = path.includes('/auth/login');
     const isNetworkError = error?.isNetworkError || error?.message?.includes('Cannot connect to server');
-    
+
     // Suppress error logging for network errors on auth endpoints (except login which we handle above)
     if (error?.status !== 404 && !error?.message?.includes('404') && !error?.message?.toLowerCase().includes('not found')) {
       if (!isAuthEndpoint || (!isNetworkError && isLogin)) {
