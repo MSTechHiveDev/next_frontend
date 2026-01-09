@@ -12,9 +12,10 @@ export const LabBillingService = {
     },
 
     // Get bills history
-    getBills: async (page = 1, limit = 10, all = false): Promise<{ bills: BillResponse[]; totalPages: number; currentPage: number }> => {
-        return apiClient<{ bills: BillResponse[]; totalPages: number; currentPage: number }>(
-            `${LAB_ENDPOINTS.BILLING.BASE}?page=${page}&limit=${limit}${all ? '&all=true' : ''}`
-        );
+    getBills: async (page = 1, limit = 10, all = false, startDate?: string, endDate?: string): Promise<{ bills: BillResponse[]; totalPages: number; currentPage: number }> => {
+        let url = `${LAB_ENDPOINTS.BILLING.BASE}?page=${page}&limit=${limit}${all ? '&all=true' : ''}`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+        return apiClient<{ bills: BillResponse[]; totalPages: number; currentPage: number }>(url);
     },
 };

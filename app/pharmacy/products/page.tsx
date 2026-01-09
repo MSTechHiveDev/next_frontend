@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-    Search, 
-    Plus, 
-    Filter, 
-    Download, 
-    FileSpreadsheet, 
-    ChevronDown, 
-    RefreshCcw 
+import {
+    Search,
+    Plus,
+    Filter,
+    Download,
+    FileSpreadsheet,
+    ChevronDown,
+    RefreshCcw
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { ProductService } from '@/lib/integrations/services/product.service';
@@ -27,10 +27,10 @@ const ProductsPage = () => {
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<PharmacyProduct | null>(null);
-    
+
     // Filter states
     const searchParams = useSearchParams();
-    
+
     // Filter states - initialized with URL params if available
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Stock');
@@ -42,9 +42,9 @@ const ProductsPage = () => {
         try {
             const data = await ProductService.getProducts({
                 search: searchTerm,
-                status: statusFilter,
+                status: statusFilter === 'All Stock' ? undefined : statusFilter,
                 supplier: supplierFilter === 'All Suppliers' ? undefined : supplierFilter,
-                expiryStatus: expiryStatusFilter
+                expiryStatus: expiryStatusFilter === 'All' ? undefined : expiryStatusFilter
             });
             setProducts(data);
         } catch (error) {
@@ -199,7 +199,12 @@ const ProductsPage = () => {
     };
 
     // Get unique suppliers for filter dropdown
-    const suppliers = ['All Suppliers', ...Array.from(new Set(products.map(p => p.supplier))).filter(Boolean)];
+    const suppliers = ['All Suppliers', ...Array.from(new Set(products.map(p => {
+        if (typeof p.supplier === 'object' && p.supplier !== null) {
+            return (p.supplier as any).name;
+        }
+        return p.supplier;
+    }))).filter(Boolean)];
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -210,28 +215,28 @@ const ProductsPage = () => {
                     <p className="text-gray-500 dark:text-gray-400">Manage your inventory</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${isFilterOpen ? 'bg-indigo-600 text-white border-transparent' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'}`}
                     >
                         <Filter size={18} />
                         Filters
                     </button>
-                    <button 
+                    <button
                         onClick={() => setIsBulkModalOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold transition-all hover:bg-emerald-700 shadow-sm shadow-emerald-200 dark:shadow-none hover:translate-y-[-1px]"
                     >
                         <FileSpreadsheet size={18} />
                         Bulk Import
                     </button>
-                    <button 
+                    <button
                         onClick={handleExportExcel}
                         className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold transition-all hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-none hover:translate-y-[-1px]"
                     >
                         <Download size={18} />
                         Excel
                     </button>
-                    <button 
+                    <button
                         onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold transition-all hover:bg-indigo-700 shadow-lg shadow-indigo-200/50 dark:shadow-none hover:scale-[1.02] active:scale-95"
                     >
@@ -245,15 +250,15 @@ const ProductsPage = () => {
             <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border dark:border-gray-800 shadow-sm flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-1 group w-full">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                    <input 
-                        type="search" 
-                        placeholder="Search products by name, brand, generic, or SKU..." 
+                    <input
+                        type="search"
+                        placeholder="Search products by name, brand, generic, or SKU..."
                         className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-transparent focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none text-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <button 
+                <button
                     onClick={fetchProducts}
                     className="p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all text-gray-500"
                     title="Refresh List"
@@ -276,7 +281,7 @@ const ProductsPage = () => {
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stock Status</label>
                             <div className="relative">
-                                <select 
+                                <select
                                     className="w-full appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
@@ -292,7 +297,7 @@ const ProductsPage = () => {
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Supplier</label>
                             <div className="relative">
-                                <select 
+                                <select
                                     className="w-full appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
                                     value={supplierFilter}
                                     onChange={(e) => setSupplierFilter(e.target.value)}
@@ -305,7 +310,7 @@ const ProductsPage = () => {
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Expiry Status</label>
                             <div className="relative">
-                                <select 
+                                <select
                                     className="w-full appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
                                     value={expiryStatusFilter}
                                     onChange={(e) => setExpiryStatusFilter(e.target.value)}
@@ -328,7 +333,7 @@ const ProductsPage = () => {
             </div>
 
             {/* Product Table */}
-            <ProductTable 
+            <ProductTable
                 products={products}
                 onEdit={handleEditProduct}
                 onDelete={handleDeleteProduct}
@@ -336,7 +341,7 @@ const ProductsPage = () => {
             />
 
             {/* Add Product Modal */}
-            <AddProductModal 
+            <AddProductModal
                 isOpen={isModalOpen}
                 onClose={() => {
                     setIsModalOpen(false);
@@ -347,7 +352,7 @@ const ProductsPage = () => {
             />
 
             {/* Bulk Upload Modal */}
-            <BulkProductUploadModal 
+            <BulkProductUploadModal
                 isOpen={isBulkModalOpen}
                 onClose={() => setIsBulkModalOpen(false)}
                 onSuccess={fetchProducts}

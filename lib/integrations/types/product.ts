@@ -12,7 +12,7 @@ export interface PharmacyProduct {
     currentStock: number;
     minStockLevel: number;
     unitsPerPack: number;
-    supplier: string;
+    supplier: string | { _id: string; name: string };
     hsnCode?: string;
     batchNumber?: string;
     expiryDate?: string;

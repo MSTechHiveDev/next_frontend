@@ -35,4 +35,9 @@ export const LabTestService = {
             method: 'DELETE',
         });
     },
+
+    // Get Meta Options
+    getMetaOptions: async (): Promise<any> => {
+        return apiClient<any>(LAB_ENDPOINTS.META);
+    }
 };

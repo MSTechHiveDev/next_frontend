@@ -67,23 +67,28 @@ const PharmacyDashboard = () => {
                     <h1 className="text-3xl font-bold" style={{ color: 'var(--text-color)' }}>Dashboard</h1>
                     <p className="text-sm mt-1" style={{ color: 'var(--secondary-color)' }}>
                         Real-time overview of your pharmacy performance
-                    </p>
+                    </p> a
                 </div>
                 <div className="flex items-center gap-3">
-                    
-                    <button 
+
+                    <button
                         onClick={() => setIsExpiryModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 text-sm font-medium transition-all hover:bg-red-100 dark:bg-red-950/20 dark:border-red-900/30"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 bg-red-50 text-sm font-medium transition-all hover:bg-red-100 dark:bg-red-950/20 dark:border-red-900/30 relative"
                     >
                         <AlertTriangle size={16} />
                         Expiry Alerts
+                        {stats?.inventoryStats.expiringSoonCount ? (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white">
+                                {stats.inventoryStats.expiringSoonCount}
+                            </span>
+                        ) : null}
                     </button>
                 </div>
             </div>
 
-            <ExpiryAlertsModal 
-                isOpen={isExpiryModalOpen} 
-                onClose={() => setIsExpiryModalOpen(false)} 
+            <ExpiryAlertsModal
+                isOpen={isExpiryModalOpen}
+                onClose={() => setIsExpiryModalOpen(false)}
             />
 
             {/* Top 4 Stats Cards */}
@@ -92,7 +97,7 @@ const PharmacyDashboard = () => {
                     { label: "TODAY'S SALES", value: formatCurrency(stats?.todayStats.revenue || 0), sub: `${stats?.todayStats.billCount || 0} invoices`, icon: DollarSign, color: "emerald" },
                     { label: "TOTAL PRODUCTS", value: stats?.inventoryStats.totalProducts.toString() || "0", sub: "Active products", icon: Package, color: "purple" },
                     { label: "LOW STOCK ITEMS", value: stats?.inventoryStats.lowStockCount.toString() || "0", sub: stats?.inventoryStats.outOfStockCount ? `${stats.inventoryStats.outOfStockCount} Out of Stock` : "Need attention", icon: AlertTriangle, color: "red" },
-                    { label: "TODAY'S BILLS", value: stats?.todayStats.billCount.toString() || "0", sub: "Bills generated", icon: FileText, color: "indigo" },
+                    { label: "TODAY'S BILLS", value: stats?.todayStats.billCount.toString() || "0", sub: "Bills generated today", icon: FileText, color: "indigo" },
                 ].map((stat, idx) => (
                     <div key={idx} className="p-6 rounded-2xl shadow-sm border flex justify-between items-start transition-transform hover:scale-[1.02]"
                         style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
@@ -195,6 +200,7 @@ const PharmacyDashboard = () => {
                             { label: "Cash", value: formatCurrency(stats?.paymentBreakdown.Cash || 0), color: "emerald-500" },
                             { label: "Card", value: formatCurrency(stats?.paymentBreakdown.Card || 0), color: "blue-500" },
                             { label: "UPI", value: formatCurrency(stats?.paymentBreakdown.UPI || 0), color: "purple-500" },
+                            { label: "Mixed", value: formatCurrency(stats?.paymentBreakdown.Mixed || 0), color: "indigo-500" },
                             { label: "Credit", value: formatCurrency(stats?.paymentBreakdown.Credit || 0), color: "orange-500" },
                         ].map((method, idx) => (
                             <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border dark:bg-gray-800/40 transition-all hover:bg-white" style={{ borderColor: 'var(--border-color)' }}>
@@ -238,7 +244,7 @@ const PharmacyDashboard = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

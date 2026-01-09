@@ -13,11 +13,13 @@ export default function TransactionsPage() {
     const [exporting, setExporting] = useState(false);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     const fetchBills = async (pageNum: number) => {
         setLoading(true);
         try {
-            const res = await LabBillingService.getBills(pageNum);
+            const res = await LabBillingService.getBills(pageNum, 10, false, startDate, endDate);
             setBills(res.bills);
             setTotalPages(res.totalPages);
             setPage(res.currentPage);
@@ -29,14 +31,18 @@ export default function TransactionsPage() {
     };
 
     useEffect(() => {
+        fetchBills(1); // Reset to page 1 on date filter change
+    }, [startDate, endDate]);
+
+    useEffect(() => {
         fetchBills(page);
     }, [page]);
 
     const handleExport = async () => {
         setExporting(true);
         try {
-            // Fetch all transactions
-            const res = await LabBillingService.getBills(1, 1000, true);
+            // Fetch all transactions with current filters
+            const res = await LabBillingService.getBills(1, 2000, true, startDate, endDate);
             const allBills = res.bills;
 
             if (allBills.length === 0) {
@@ -48,7 +54,7 @@ export default function TransactionsPage() {
             const worksheet = workbook.addWorksheet('Transactions');
 
             // 1. Title & Center Name
-            worksheet.mergeCells('B2:H2');                            
+            worksheet.mergeCells('B2:H2');
             const titleCell = worksheet.getCell('B2');
             titleCell.value = 'Transaction Report';
             titleCell.font = { name: 'Arial Black', size: 16, bold: true };
@@ -136,9 +142,9 @@ export default function TransactionsPage() {
             });
 
             // Set column widths
-            worksheet.columns.forEach((col, i) => {
-                col.width = i === 1 ? 25 : 15;
-            });
+            for (let i = 1; i <= 8; i++) {
+                worksheet.getColumn(i).width = i === 2 ? 25 : 15;
+            }
 
             // Generate and save
             const buffer = await workbook.xlsx.writeBuffer();
@@ -166,6 +172,35 @@ export default function TransactionsPage() {
                 >
                     <Download className="w-4 h-4" />
                     {exporting ? 'Exporting...' : 'Export Excel'}
+                </button>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6 flex flex-wrap gap-4 items-end">
+                <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1 tracking-widest">Start Date</label>
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    />
+                </div>
+                <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1 tracking-widest">End Date</label>
+                    <input
+                        type="date"
+                        value={endDate}
+                        min={startDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                    />
+                </div>
+                <button
+                    onClick={() => { setStartDate(''); setEndDate(''); }}
+                    className="px-4 py-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors"
+                >
+                    Clear Filters
                 </button>
             </div>
 
@@ -239,6 +274,6 @@ export default function TransactionsPage() {
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

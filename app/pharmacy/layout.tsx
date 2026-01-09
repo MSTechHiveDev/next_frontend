@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
 import Navbar from '@/components/navbar/Navbar';
+import LogoutConfirmationModal from '@/components/common/LogoutConfirmationModal';
 import {
     LayoutDashboard,
     Package,
@@ -27,6 +28,9 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     const { user, logout, isAuthenticated, checkAuth, isInitialized } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+    const isPharma = user?.role === 'pharma-owner' || user?.role === 'pharmacy';
 
     const pharmacyUser = user || {
         name: "Pharmacy User",
@@ -43,17 +47,17 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         if (isInitialized && !isAuthenticated) {
             router.push('/auth/login');
-        } else if (isInitialized && isAuthenticated && user?.role !== 'pharmacy') {
+        } else if (isInitialized && isAuthenticated && !isPharma) {
             // Redirect non-pharmacy users
             if (user?.role === 'admin' || user?.role === 'super-admin') {
                 router.push('/admin');
             } else if (user?.role === 'lab') {
                 router.push('/lab/dashboard');
             } else {
-                router.push('/dashboard');
+                router.push('/hospital-admin');
             }
         }
-    }, [isAuthenticated, isInitialized, router, user]);
+    }, [isAuthenticated, isInitialized, router, user, isPharma]);
 
     // Handle logout
     const handleLogout = async () => {
@@ -69,17 +73,23 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
         );
     }
 
-    if (!isAuthenticated || user?.role !== 'pharmacy') {
-        return null; 
+    if (!isAuthenticated || !isPharma) {
+        return null;
     }
 
     return (
         <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-            <Sidebar 
-                isOpen={isSidebarOpen} 
+            <Sidebar
+                isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
                 items={pharmacyMenu}
-                onLogout={handleLogout}
+                onLogout={() => setIsLogoutModalOpen(true)}
+            />
+
+            <LogoutConfirmationModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleLogout}
             />
 
             <div className="flex-1 flex flex-col lg:ml-64 min-h-screen transition-all duration-300">

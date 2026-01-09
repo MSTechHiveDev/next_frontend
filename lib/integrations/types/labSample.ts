@@ -12,6 +12,11 @@ export interface SampleTestResult {
     resultValue?: string;
     unit?: string;
     normalRange?: string;
+    normalRanges?: {
+        male?: { min?: number; max?: number };
+        female?: { min?: number; max?: number };
+        child?: { min?: number; max?: number };
+    };
     remarks?: string;
     isAbnormal: boolean;
     status: 'Pending' | 'Completed';

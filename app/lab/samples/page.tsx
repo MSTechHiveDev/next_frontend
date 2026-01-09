@@ -7,6 +7,7 @@ import { LabSampleService } from '@/lib/integrations/services/labSample.service'
 import { FlaskConical, Filter, Download, Eye, FileText } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import ResultPrintView from '@/components/lab/ResultPrintView';
+import { toast } from 'react-hot-toast';
 
 export default function SampleCollectionPage() {
     const [samples, setSamples] = useState<LabSample[]>([]);
@@ -21,9 +22,16 @@ export default function SampleCollectionPage() {
     });
 
     useEffect(() => {
+        let timer: NodeJS.Timeout;
         if (printingSample && printRef.current) {
-            handlePrint();
+            // Give the browser a moment to render the hidden component and load the print iframe
+            timer = setTimeout(() => {
+                handlePrint();
+            }, 150);
         }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }, [printingSample, handlePrint]);
 
     useEffect(() => {
@@ -39,6 +47,29 @@ export default function SampleCollectionPage() {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCollect = async (id: string) => {
+        try {
+            await LabSampleService.collectSample(id);
+            toast.success('Sample collected successfully');
+            fetchSamples();
+        } catch (error) {
+            toast.error('Failed to collect sample');
+        }
+    };
+
+    const handleDownload = async (sample: LabSample) => {
+        setPrintingSample(sample);
+        // Mark as completed if it's currently In Processing
+        if (sample.status === 'In Processing') {
+            try {
+                await LabSampleService.updateResults(sample._id, { status: 'Completed' });
+                fetchSamples();
+            } catch (error) {
+                console.error("Failed to mark as completed", error);
+            }
         }
     };
 
@@ -141,38 +172,45 @@ export default function SampleCollectionPage() {
                                     </td>
                                     <td className="p-4 text-center">
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${sample.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                                            sample.status === 'In Processing' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-yellow-100 text-yellow-700'
+                                            sample.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-blue-100 text-blue-700'
                                             }`}>
                                             {sample.status}
                                         </span>
                                     </td>
                                     <td className="p-4 text-right px-8">
                                         <div className="flex justify-end gap-2 opacity-100 transition-opacity">
-                                            {sample.status === 'Completed' ? (
+                                            {sample.status === 'Pending' ? (
+                                                <button
+                                                    onClick={() => handleCollect(sample._id)}
+                                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95"
+                                                >
+                                                    Collect
+                                                </button>
+                                            ) : sample.status === 'In Processing' ? (
+                                                <Link
+                                                    href={`/lab/samples/${sample._id}`}
+                                                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95 whitespace-nowrap"
+                                                >
+                                                    Enter Sample Results
+                                                </Link>
+                                            ) : (
                                                 <>
                                                     <Link
                                                         href={`/lab/samples/${sample._id}`}
-                                                        className="p-2 text-blue-600 bg-blue-50/0 rounded-lg"
+                                                        className="p-2 text-indigo-600 bg-indigo-50 rounded-lg"
                                                         title="View Results"
                                                     >
                                                         <Eye className="w-5 h-5" />
                                                     </Link>
                                                     <button
-                                                        onClick={() => setPrintingSample(sample)}
-                                                        className="p-2 text-green-600 bg-green-50/0 rounded-lg"
+                                                        onClick={() => handleDownload(sample)}
+                                                        className="p-2 text-green-600 bg-green-50 rounded-lg"
                                                         title="Download Report"
                                                     >
                                                         <Download className="w-5 h-5" />
                                                     </button>
                                                 </>
-                                            ) : (
-                                                <Link
-                                                    href={`/lab/samples/${sample._id}`}
-                                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95"
-                                                >
-                                                    Collect
-                                                </Link>
                                             )}
                                         </div>
                                     </td>

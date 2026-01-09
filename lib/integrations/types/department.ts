@@ -1,8 +1,10 @@
 export interface Department {
     _id: string;
-    labId: string;
     name: string;
     description?: string;
+    isActive: boolean;
+    tests?: { testName: string, price: number }[];
+    testCount?: number;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -10,4 +12,5 @@ export interface Department {
 export interface DepartmentPayload {
     name: string;
     description?: string;
+    isActive?: boolean;
 }

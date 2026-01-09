@@ -5,9 +5,16 @@ import { PHARMACY_ENDPOINTS } from "../config/endpoints";
 
 export const SupplierService = {
     getSuppliers: async (): Promise<Supplier[]> => {
-        return apiClient<Supplier[]>(PHARMACY_ENDPOINTS.SUPPLIERS.BASE, {
+        const response: any = await apiClient<any>(PHARMACY_ENDPOINTS.SUPPLIERS.BASE, {
             method: 'GET'
         });
+        const suppliers = response.data || [];
+        return suppliers.map((s: any) => ({
+            ...s,
+            address: s.address && typeof s.address === 'object'
+                ? `${s.address.street || ''}, ${s.address.city || ''}, ${s.address.state || ''} - ${s.address.pincode || ''}`.replace(/^, |, , /g, '').trim()
+                : s.address
+        }));
     },
 
     getSupplierById: async (id: string): Promise<Supplier> => {
@@ -37,8 +44,16 @@ export const SupplierService = {
     },
 
     getSupplierProducts: async (id: string): Promise<PharmacyProduct[]> => {
-        return apiClient<PharmacyProduct[]>(PHARMACY_ENDPOINTS.SUPPLIERS.PRODUCTS(id), {
+        const response: any = await apiClient<any>(PHARMACY_ENDPOINTS.SUPPLIERS.PRODUCTS(id), {
             method: 'GET'
         });
+        const products = response.data || [];
+        return products.map((p: any) => ({
+            ...p,
+            brandName: p.brand,
+            genericName: p.generic,
+            currentStock: p.stock,
+            minStockLevel: p.minStock
+        }));
     }
 };
