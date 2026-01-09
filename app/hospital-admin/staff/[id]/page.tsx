@@ -37,6 +37,7 @@ export default function StaffDetailPage() {
   const [staff, setStaff] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -75,8 +76,29 @@ export default function StaffDetailPage() {
     }
   };
 
+  const handleToggleStatus = async () => {
+    const newStatus = staff.status === 'active' ? 'inactive' : 'active';
+    const action = newStatus === 'inactive' ? 'deactivate' : 'activate';
+    
+    if (!confirm(`Are you sure you want to ${action} ${staff?.name}?`)) {
+      return;
+    }
+
+    setStatusLoading(true);
+    try {
+      await hospitalAdminService.updateStaff(id, { status: newStatus });
+      toast.success(`${staff?.name} has been ${action}d successfully`);
+      setStaff({ ...staff, status: newStatus });
+    } catch (error: any) {
+      console.error(`Failed to ${action} staff:`, error);
+      toast.error(error.message || `Failed to ${action} staff`);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to retract ${staff?.name} from the active registry?`)) {
+    if (!confirm(`Are you sure you want to permanently delete ${staff?.name} from the system?`)) {
       return;
     }
 
@@ -127,11 +149,26 @@ export default function StaffDetailPage() {
             <Edit size={18} /> Modify Entry
           </button>
           <button 
+            onClick={handleToggleStatus}
+            disabled={statusLoading}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-black transition-all ${
+              staff.status === 'active' 
+                ? 'bg-orange-50 text-orange-600 hover:bg-orange-100' 
+                : 'bg-green-50 text-green-600 hover:bg-green-100'
+            }`}
+          >
+            {statusLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+            ) : (
+              staff.status === 'active' ? 'Deactivate' : 'Activate'
+            )}
+          </button>
+          <button 
             onClick={handleDelete}
             disabled={deleteLoading}
             className="flex items-center gap-2 px-6 py-3 bg-rose-50 text-rose-600 rounded-2xl text-sm font-black hover:bg-rose-100 transition-all"
           >
-            {deleteLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-rose-600"></div> : <Trash2 size={18} />} Retract Profile
+            {deleteLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-rose-600"></div> : <Trash2 size={18} />} Delete
           </button>
         </div>
       </div>
@@ -157,17 +194,24 @@ export default function StaffDetailPage() {
               <div className="w-full space-y-4">
                  <div className="flex items-center justify-between text-left p-4 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100/50 dark:border-gray-600/30">
                     <div>
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Onboarding</p>
-                       <p className="text-sm font-black text-gray-900 dark:text-white">{staff.joiningDate ? new Date(staff.joiningDate).toLocaleDateString() : 'Pending'}</p>
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Department</p>
+                       <p className="text-sm font-black text-gray-900 dark:text-white">{staff.department || 'Not Assigned'}</p>
+                    </div>
+                    <Building className="text-gray-300 w-5 h-5" />
+                 </div>
+                 <div className="flex items-center justify-between text-left p-4 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100/50 dark:border-gray-600/30">
+                    <div>
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Joining Date</p>
+                       <p className="text-sm font-black text-gray-900 dark:text-white">{staff.joiningDate ? new Date(staff.joiningDate).toLocaleDateString() : 'Not Set'}</p>
                     </div>
                     <Calendar className="text-gray-300 w-5 h-5" />
                  </div>
                  <div className="flex items-center justify-between text-left p-4 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100/50 dark:border-gray-600/30">
                     <div>
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Remuneration</p>
-                       <p className="text-sm font-black text-emerald-600">₹{staff.basicSalary?.toLocaleString() || '0'} / Mo</p>
+                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Employment Type</p>
+                       <p className="text-sm font-black text-blue-600 uppercase">{staff.employmentType || 'Full-Time'}</p>
                     </div>
-                    <CreditCard className="text-gray-300 w-5 h-5" />
+                    <Briefcase className="text-gray-300 w-5 h-5" />
                  </div>
               </div>
            </div>
@@ -234,7 +278,7 @@ export default function StaffDetailPage() {
                  <div className="p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-amber-600">
                     <CircleUser size={20} />
                  </div>
-                 <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Personnel Metadata</h3>
+                 <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Contact Information</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div className="space-y-6">
@@ -243,7 +287,7 @@ export default function StaffDetailPage() {
                           <Mail size={18} />
                        </div>
                        <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Inbox Link</p>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Email Address</p>
                           <p className="text-sm font-bold text-gray-900 dark:text-white">{staff.email || 'N/A'}</p>
                        </div>
                     </div>
@@ -252,7 +296,7 @@ export default function StaffDetailPage() {
                           <Phone size={18} />
                        </div>
                        <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Mobile Link</p>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Phone Number</p>
                           <p className="text-sm font-bold text-gray-900 dark:text-white">{staff.mobile || 'N/A'}</p>
                        </div>
                     </div>
@@ -263,31 +307,51 @@ export default function StaffDetailPage() {
                           <MapPin size={18} />
                        </div>
                        <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Coordinates</p>
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Address</p>
                           <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                             {staff.address ? `${staff.address.city}, ${staff.address.state}` : 'N/A'}
+                             {staff.address && (staff.address.city || staff.address.street) 
+                                ? `${staff.address.street ? staff.address.street + ', ' : ''}${staff.address.city}, ${staff.address.state}` 
+                                : 'Location not set'}
                           </p>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400">
-                          <Activity size={18} />
-                       </div>
-                       <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Physiological Data</p>
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">{staff.gender || 'N/A'} | {staff.bloodGroup || 'O+'}</p>
                        </div>
                     </div>
                  </div>
               </div>
+              
+              {/* Emergency Contact Section */}
+              {staff.emergencyContact && (
+                 <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700">
+                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-4">Emergency Contact</p>
+                     <div className="flex items-center justify-between">
+                         <div>
+                             <p className="text-sm font-bold text-gray-900 dark:text-white">{staff.emergencyContact.name}</p>
+                             <p className="text-xs text-blue-500 font-medium uppercase tracking-wide">{staff.emergencyContact.relationship}</p>
+                         </div>
+                         <div className="text-right">
+                             <p className="text-sm font-bold text-gray-900 dark:text-white">{staff.emergencyContact.mobile}</p>
+                         </div>
+                     </div>
+                 </div>
+              )}
            </div>
 
-           {/* Skills & Accolades */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {/* Qualifications, Skills & Certifications */}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
+                 <div className="flex items-center gap-3 mb-6">
+                    <FileText size={20} className="text-purple-500" />
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Qualifications</h3>
+                 </div>
+                 <div className="flex flex-wrap gap-2">
+                    {staff.qualifications?.length > 0 ? staff.qualifications.map((qual: string, idx: number) => (
+                      <span key={idx} className="px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg text-[10px] font-black uppercase tracking-widest">{qual}</span>
+                    )) : <p className="text-xs text-gray-400 font-bold italic">No qualifications added</p>}
+                 </div>
+              </div>
               <div className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
                  <div className="flex items-center gap-3 mb-6">
                     <Award size={20} className="text-blue-500" />
-                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Skill Inventory</h3>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Skills</h3>
                  </div>
                  <div className="flex flex-wrap gap-2">
                     {staff.skills?.length > 0 ? staff.skills.map((skill: string, idx: number) => (

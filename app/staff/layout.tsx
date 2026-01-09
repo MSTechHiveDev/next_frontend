@@ -8,12 +8,9 @@ import { useAuthStore } from '@/stores/authStore';
 
 const staffMenuItems: SidebarItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/staff' },
-    { icon: Clock, label: 'Attendance', href: '/staff/attendance' },
     { icon: CalendarCheck, label: 'Leave & Absence', href: '/staff/leaves' },
     { icon: BookOpenCheck, label: 'My Schedule', href: '/staff/schedule' },
     { icon: Bell, label: 'Announcements', href: '/staff/announcements' },
-    { icon: ReceiptText, label: 'Payroll & Salary', href: '/staff/payroll' },
-    { icon: User, label: 'My Profile', href: '/staff/profile' },
 ];
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {

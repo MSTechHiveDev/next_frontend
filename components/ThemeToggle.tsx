@@ -7,12 +7,9 @@ import { useThemeStore } from '@/stores/themeStore';
 export const ThemeToggle = () => {
   const { theme, toggleTheme, setTheme } = useThemeStore();
 
-  // Initialize theme on mount
+  // Theme is handled by themeStore and root layout script
   useEffect(() => {
-    // Set initial theme attribute
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
+    // Sync theme on mount if needed
   }, []);
 
   return (

@@ -49,19 +49,67 @@ export default function AppointmentBooking() {
     const init = async () => {
       try {
         setLoading(true);
-        const [me, docs] = await Promise.all([
-          helpdeskService.getMe(),
-          helpdeskService.getDoctors()
-        ]);
+        console.log('[Booking Init] Starting initialization...');
+        
+        // Fetch profile
+        console.log('[Booking Init] Fetching helpdesk profile...');
+        const me = await helpdeskService.getMe();
+        console.log('[Booking Init] Profile fetched:', me);
         setProfile(me);
-        setDoctors(docs);
+        
+        // Fetch doctors
+        console.log('[Booking Init] Fetching doctors...');
+        const docs = await helpdeskService.getDoctors();
+        console.log('[Booking Init] Doctors fetched:', docs.length);
+        
+        // Filter out doctors without valid names
+        const validDoctors = docs.filter((doc: any) => {
+          const hasValidName = (doc.user?.name && doc.user.name !== 'Unknown') || 
+                              (doc.name && doc.name !== 'Unknown');
+          return hasValidName;
+        });
+        
+        console.log('[Booking] Total doctors from API:', docs.length);
+        console.log('[Booking] Valid doctors with names:', validDoctors.length);
+        setDoctors(validDoctors);
 
+        // Fetch patient if ID provided
         if (patientIdFromQuery) {
-          const patient = await helpdeskService.getPatientById(patientIdFromQuery);
-          setSelectedPatient(patient);
+          console.log('[Booking Init] Fetching patient with ID:', patientIdFromQuery);
+          try {
+            const patientData = await helpdeskService.getPatientById(patientIdFromQuery);
+            console.log('[Booking Init] Patient data received:', patientData);
+            
+            // Transform backend format {user, profile} to flat format expected by UI
+            const transformedPatient = {
+              _id: patientData.user?._id || patientData._id,
+              id: patientData.user?._id || patientData._id,
+              name: patientData.user?.name || patientData.name,
+              mobile: patientData.user?.mobile || patientData.mobile,
+              email: patientData.user?.email || patientData.email,
+              mrn: patientData.profile?.mrn,
+              gender: patientData.profile?.gender,
+              age: patientData.profile?.age,
+              ...patientData.profile
+            };
+            
+            console.log('[Booking Init] Transformed patient:', transformedPatient);
+            setSelectedPatient(transformedPatient);
+          } catch (patientError: any) {
+            console.error('[Booking Init] Failed to fetch patient:', patientError);
+            toast.error(`Failed to load patient: ${patientError.message || 'Unknown error'}`);
+          }
         }
+        
+        console.log('[Booking Init] Initialization complete');
       } catch (error: any) {
-        toast.error("Failed to initialize booking session");
+        console.error('[Booking Init] Initialization error:', error);
+        console.error('[Booking Init] Error details:', {
+          message: error.message,
+          status: error.status,
+          stack: error.stack
+        });
+        toast.error(`Failed to initialize: ${error.message || 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
@@ -78,10 +126,18 @@ export default function AppointmentBooking() {
     const timer = setTimeout(async () => {
       try {
         setSearchingPatients(true);
+        console.log('[Patient Search] Searching for:', patientSearch);
         const results = await helpdeskService.searchPatients(patientSearch);
-        setSearchResults(results);
-      } catch (error) {
-        console.error("Search error:", error);
+        console.log('[Patient Search] Raw results:', results);
+        
+        // Handle both direct array and {data: [...]} format
+        const patientList = Array.isArray(results) ? results : (results.data || []);
+        console.log('[Patient Search] Patient list:', patientList.length, 'patients');
+        
+        setSearchResults(patientList);
+      } catch (error: any) {
+        console.error("[Patient Search] Error:", error);
+        toast.error(error.message || "Failed to search patients");
       } finally {
         setSearchingPatients(false);
       }
@@ -96,9 +152,12 @@ export default function AppointmentBooking() {
       setLoadingSlots(true);
       setSelectedSlot(null);
       const res = await helpdeskService.getAvailability(selectedDoctor._id, profile.hospital._id, selectedDate);
-      setAvailableSlots(res.availableSlots || []);
-    } catch (error) {
-      toast.error("Failed to fetch doctor availability");
+      console.log('Availability response:', res);
+      // Backend returns { slots: [...hourly blocks], bookedCountByHour }
+      setAvailableSlots(res.slots || []);
+    } catch (error: any) {
+      console.error('Failed to fetch availability:', error);
+      toast.error(error.message || "Failed to fetch doctor availability");
     } finally {
       setLoadingSlots(false);
     }
@@ -116,12 +175,17 @@ export default function AppointmentBooking() {
 
     try {
       setSubmitting(true);
+      // selectedSlot is now a timeSlot string like "10:00 AM - 11:00 AM"
+      // We need to extract startTime and endTime
+      const [startTime, endTime] = selectedSlot.timeSlot ? selectedSlot.timeSlot.split(' - ') : [selectedSlot, ''];
+      
       await helpdeskService.createAppointment({
         patientId: selectedPatient._id || selectedPatient.id,
         doctorId: selectedDoctor._id,
         date: selectedDate,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
+        timeSlot: selectedSlot.timeSlot || selectedSlot,
+        startTime: startTime,
+        endTime: endTime || startTime,
         type: appointmentType,
         notes: notes
       });
@@ -317,18 +381,41 @@ export default function AppointmentBooking() {
                           <p className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Calculating Availability...</p>
                        </div>
                     ) : availableSlots.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-3">
-                         {availableSlots.map((slot, i) => (
+                      <div className="space-y-3">
+                         {availableSlots.map((hourBlock: any, i) => (
                            <button
                              key={i}
-                             onClick={() => setSelectedSlot(slot)}
-                             className={`py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
-                               selectedSlot?.startTime === slot.startTime 
+                             onClick={() => !hourBlock.isFull && setSelectedSlot(hourBlock)}
+                             disabled={hourBlock.isFull}
+                             className={`w-full p-4 rounded-2xl text-left transition-all ${
+                               selectedSlot?.timeSlot === hourBlock.timeSlot 
                                  ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 ring-2 ring-white/20"
-                                 : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5"
+                                 : hourBlock.isFull
+                                 ? "bg-white/5 text-gray-600 cursor-not-allowed opacity-50 border border-white/5"
+                                 : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5 cursor-pointer"
                              }`}
                            >
-                             {slot.startTime}
+                             <div className="flex items-center justify-between">
+                               <div className="flex-1">
+                                 <p className="text-sm font-black uppercase tracking-wider">
+                                   {hourBlock.timeSlot}
+                                 </p>
+                                 <p className="text-[8px] font-bold uppercase tracking-widest mt-1 opacity-70">
+                                   {hourBlock.isFull ? 'FULLY BOOKED' : `${hourBlock.availableCount} of ${hourBlock.totalCapacity} available`}
+                                 </p>
+                               </div>
+                               {!hourBlock.isFull && (
+                                 <div className="ml-2">
+                                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${
+                                     selectedSlot?.timeSlot === hourBlock.timeSlot 
+                                       ? "bg-white text-blue-600" 
+                                       : "bg-blue-600 text-white"
+                                   }`}>
+                                     {hourBlock.availableCount}
+                                   </div>
+                                 </div>
+                               )}
+                             </div>
                            </button>
                          ))}
                       </div>

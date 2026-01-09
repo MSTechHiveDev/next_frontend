@@ -15,6 +15,25 @@ const ResultPrintView: React.FC<ResultPrintViewProps> = ({ sample }) => {
     // The reference image shows "Lipid Profile" under Biochemistry.
 
     // Let's just list them nicely for now.
+    const getDisplayRange = (test: any) => {
+        if (!test.normalRanges) return test.normalRange || '-';
+        const { age, gender } = sample.patientDetails;
+
+        let range;
+        if (age < 12) {
+            range = test.normalRanges.child;
+        } else if (gender?.toLowerCase() === 'male') {
+            range = test.normalRanges.male;
+        } else if (gender?.toLowerCase() === 'female') {
+            range = test.normalRanges.female;
+        }
+
+        if (range && (range.min !== undefined || range.max !== undefined)) {
+            return `${range.min ?? 0} - ${range.max ?? 0}`;
+        }
+
+        return test.normalRange || '-';
+    };
 
     return (
         <div className="p-8 bg-white text-black font-sans max-w-4xl mx-auto border border-gray-300" id="printable-result">
@@ -97,7 +116,7 @@ const ResultPrintView: React.FC<ResultPrintViewProps> = ({ sample }) => {
                                     {test.isAbnormal && <span className="text-red-600 ml-1 text-[10px] bg-red-50 border border-red-200 px-1 rounded">▲ Abnormal</span>}
                                 </td>
                                 <td className="py-3 px-2">{test.unit || '-'}</td>
-                                <td className="py-3 px-2 text-xs">{test.normalRange || '-'}</td>
+                                <td className="py-3 px-2 text-xs">{getDisplayRange(test)}</td>
                             </tr>
 
                             {/* Sub Tests */}

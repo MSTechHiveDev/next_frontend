@@ -1,11 +1,18 @@
 export interface BillItem {
-    productId?: string;
-    itemName: string;
+    drug?: string; // Align with backend 'drug' field
+    productId?: string; // Keep for frontend legacy
+    productName: string;
+    itemName?: string; // Alias for productName
     qty: number;
-    rate: number;
+    freeQty?: number;
+    unitRate: number;
+    rate?: number; // Alias for unitRate
+    mrp?: number;
     hsn?: string;
-    gst: number;
-    total: number;
+    gstPct: number;
+    gst?: number; // Alias for gstPct
+    amount: number;
+    total?: number; // Alias for amount
 }
 
 export interface PaymentSummary {
@@ -16,15 +23,18 @@ export interface PaymentSummary {
     grandTotal: number;
     paidAmount: number;
     balanceDue: number;
-    paymentMode: 'Cash' | 'UPI' | 'Card';
+    paymentMode: 'Cash' | 'UPI' | 'Card' | 'Mixed' | 'Credit';
     status: 'Paid' | 'Partial' | 'Due';
+    paymentDetails?: {
+        cash: number;
+        card: number;
+        upi: number;
+    };
 }
 
 export interface PharmacyBillPayload {
-    patientDetails: {
-        name: string;
-        mobile: string;
-    };
+    patientName: string;
+    customerPhone: string;
     items: BillItem[];
     paymentSummary: PaymentSummary;
 }

@@ -8,8 +8,6 @@ export * from './hospitalAdmin.service';
 export * from './helpdesk.service';
 export * from './doctor.service';
 export * from './staff.service';
-<<<<<<< HEAD
 export * from './patient.service';
-=======
-export * from './staff.service';
->>>>>>> d2c9d2ccd28be153ca9c488b96f8c763083385f7
+export * from './notification.service';
+

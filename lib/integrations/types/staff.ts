@@ -24,7 +24,7 @@ export interface StaffProfile {
   employeeId?: string;
   joiningDate: string;
   isActive: boolean;
-  shift?: string;
+  shift?: any;
   workingHours?: {
     start: string;
     end: string;
@@ -32,6 +32,12 @@ export interface StaffProfile {
   weeklyOff?: string[];
   employmentType?: string;
   status?: string;
+  resolvedShift?: {
+    name: string;
+    startTime: string;
+    endTime: string;
+    shiftId: string;
+  };
 }
 
 export interface StaffStats {
@@ -45,6 +51,8 @@ export interface StaffStats {
   averageCheckIn: string;
   averageCheckOut: string;
   onTimePercentage: number;
+  pendingLeaves: number;
+  leaveTypeBreakdown: Record<string, number>;
 }
 
 export interface TodayAttendance {
@@ -131,7 +139,7 @@ export interface LeaveBalance {
   totalCasual: number;
   sick: number;
   totalSick: number;
-  earned: number;
-  totalEarned: number;
+  emergency: number;
+  totalEmergency: number;
   other: number;
 }

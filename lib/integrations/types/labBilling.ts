@@ -21,7 +21,12 @@ export interface BillPayload {
     finalAmount: number;
     paidAmount: number;
     balance: number;
-    paymentMode: 'Cash' | 'UPI' | 'Card';
+    paymentMode: 'Cash' | 'UPI' | 'Card' | 'Mixed';
+    paymentDetails?: {
+        cash?: number;
+        upi?: number;
+        card?: number;
+    };
 }
 
 export interface BillResponse extends BillPayload {

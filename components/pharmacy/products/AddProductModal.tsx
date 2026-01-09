@@ -20,8 +20,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
         genericName: '',
         brandName: '',
         strength: '',
-        form: 'Tablet',
-        schedule: 'OTC - Over the Counter',
+        form: 'TABLET',
+        schedule: 'OTC',
         mrp: 0,
         gst: 12,
         currentStock: 0,
@@ -49,7 +49,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
                 currentStock: initialData.currentStock || 0,
                 minStockLevel: initialData.minStockLevel || 10,
                 unitsPerPack: initialData.unitsPerPack || 1,
-                supplier: initialData.supplier || '',
+                supplier: typeof initialData.supplier === 'object' && initialData.supplier !== null
+                    ? (initialData.supplier as any)._id
+                    : (initialData.supplier || ''),
                 hsnCode: initialData.hsnCode || '',
                 batchNumber: initialData.batchNumber || '',
                 expiryDate: initialData.expiryDate ? new Date(initialData.expiryDate).toISOString().split('T')[0] : '',
@@ -92,9 +94,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
         try {
             await onSubmit(formData);
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert('Failed to add product');
+            alert(error.message || 'Failed to save product. Please check your inputs.');
         } finally {
             setLoading(false);
         }
@@ -112,7 +114,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
-                    
+
                     {/* Basic Information */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-semibold border-b pb-2">
@@ -139,20 +141,20 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Form <span className="text-red-500">*</span></label>
                                 <select name="form" value={formData.form} onChange={handleChange} required className="w-full px-4 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <option value="Tablet">TAB - Tablet</option>
-                                    <option value="Capsule">CAP - Capsule</option>
-                                    <option value="Syrup">SYR - Syrup</option>
-                                    <option value="Injection">INJ - Injection</option>
-                                    <option value="Cream">CRM - Cream</option>
-                                    <option value="Drops">DRP - Drops</option>
-                                    <option value="Other">Other</option>
+                                    <option value="TABLET">TAB - Tablet</option>
+                                    <option value="CAPSULE">CAP - Capsule</option>
+                                    <option value="SYRUP">SYR - Syrup</option>
+                                    <option value="INJECTION">INJ - Injection</option>
+                                    <option value="CREAM">CRM - Cream</option>
+                                    <option value="DROPS">DRP - Drops</option>
+                                    <option value="SUSPENSION">SUSP - Suspension</option>
                                 </select>
                             </div>
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Schedule <span className="text-red-500">*</span></label>
                                 <select name="schedule" value={formData.schedule} onChange={handleChange} required className="w-full px-4 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <option value="OTC - Over the Counter">OTC - Over the Counter</option>
-                                    <option value="H - Prescription Required">H - Prescription Required</option>
+                                    <option value="OTC">OTC - Over the Counter</option>
+                                    <option value="H">H - Prescription Required</option>
                                     <option value="H1">H1</option>
                                     <option value="X">X</option>
                                 </select>
@@ -210,18 +212,18 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
                                         <Plus className="w-2.5 h-2.5" /> Manage
                                     </Link>
                                 </div>
-                                <select 
-                                    name="supplier" 
-                                    value={formData.supplier} 
-                                    onChange={handleChange} 
-                                    required 
+                                <select
+                                    name="supplier"
+                                    value={formData.supplier}
+                                    onChange={handleChange}
+                                    required
                                     className="w-full px-4 py-2 rounded-lg border dark:border-gray-700 dark:bg-gray-800 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
                                 >
                                     <option value="">Select Supplier</option>
                                     {suppliers.map(s => (
-                                        <option key={s._id} value={s.name}>{s.name}</option>
+                                        <option key={s._id} value={s._id}>{s.name}</option>
                                     ))}
-                                    {formData.supplier && !suppliers.find(s => s.name === formData.supplier) && (
+                                    {formData.supplier && !suppliers.find(s => s._id === formData.supplier || s.name === formData.supplier) && (
                                         <option value={formData.supplier}>{formData.supplier}</option>
                                     )}
                                 </select>

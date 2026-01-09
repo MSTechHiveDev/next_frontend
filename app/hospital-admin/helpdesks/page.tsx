@@ -84,8 +84,12 @@ export default function HospitalAdminHelpdesks() {
     for (let i = 0; i < 8; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    
+    // Generate HELP-XXXX login ID
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    
     return {
-      loginId: mobile,
+      loginId: `HELP-${randomId}`,
       password: password
     };
   };
@@ -269,7 +273,7 @@ export default function HospitalAdminHelpdesks() {
                     Hospital Help Desk
                   </h2>
                   <p style={{ color: 'var(--secondary-color)' }}>
-                    Managed by {helpdesk.assignedStaff?.name || 'Unknown Staff'}
+                    Managed by {helpdesk.assignedStaff?.user?.name || 'Unknown Staff'}
                   </p>
                 </div>
               </div>
@@ -304,7 +308,7 @@ export default function HospitalAdminHelpdesks() {
                   <div className="flex items-center gap-3 mt-1">
                     <User size={16} style={{ color: 'var(--secondary-color)' }} />
                     <span style={{ color: 'var(--text-color)' }}>
-                      {helpdesk.assignedStaff?.name || 'N/A'}
+                      {helpdesk.assignedStaff?.user?.name || 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -390,7 +394,7 @@ export default function HospitalAdminHelpdesks() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                        Login ID (Phone Number)
+                        Login ID
                       </label>
                       <div className="flex items-center gap-2 mt-1">
                         <code className="bg-yellow-100 dark:bg-yellow-800 px-3 py-1 rounded text-sm font-mono">
@@ -472,7 +476,7 @@ export default function HospitalAdminHelpdesks() {
                     Auto-Generated Credentials
                   </h4>
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    Login ID will be the staff member's phone number, and password will be a unique 8-character code.
+                    Login ID will be in format HELP-XXXX, and password will be a unique 8-character code.
                   </p>
                 </div>
               </div>
@@ -592,7 +596,7 @@ export default function HospitalAdminHelpdesks() {
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-semibold text-green-900 dark:text-green-100 uppercase">
-                        Login ID (Mobile)
+                        Login ID
                       </label>
                       <div className="flex items-center gap-2 mt-1">
                         <code className="flex-1 bg-white dark:bg-gray-800 px-4 py-3 rounded-lg text-lg font-mono font-bold border-2 border-green-300">

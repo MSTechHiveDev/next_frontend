@@ -108,7 +108,7 @@ const LoginPage = () => {
         router.push('/admin');
       } else if (user?.role === 'lab') {
         router.push('/lab/dashboard');
-      } else if (user?.role === 'pharmacy') {
+      } else if (user?.role === 'pharma-owner' || user?.role === 'pharmacy') {
         router.push('/pharmacy/dashboard');
       } else if (user?.role === 'doctor') {
         router.push('/doctor');
@@ -121,7 +121,7 @@ const LoginPage = () => {
       } else if (user?.role === 'patient') {
         router.push('/patient');
       } else {
-        router.push('/helpdesk'); // Default fallback
+        router.push('/hospital-admin'); // Default fallback
       }
     } catch (err: any) {
       // Extract error message

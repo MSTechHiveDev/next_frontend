@@ -1,3 +1,5 @@
+import { Department } from './department';
+
 export interface NormalRange {
     min: string;
     max: string;
@@ -11,28 +13,39 @@ export interface NormalRanges {
 
 export interface LabTest {
     _id: string;
-    labId: string;
-    name: string;
-    departmentId: string | { _id: string; name: string }; // Can be populated
-    sampleType?: string;
+    testName: string;
+    testCode?: string;
+    name?: string; // Compatibility
+    departmentId?: Department | string;
+    departmentIds?: (Department | string)[];
+    departments?: Department[]; // Populated version
+    sampleType: string;
     price: number;
     unit?: string;
     method?: string;
     turnaroundTime?: string;
     normalRanges?: NormalRanges;
+    fastingRequired?: boolean;
+    sampleVolume?: string;
+    reportType?: 'numeric' | 'text' | 'both';
     isActive: boolean;
     createdAt?: string;
     updatedAt?: string;
 }
 
 export interface LabTestPayload {
-    name: string;
-    departmentId: string;
-    sampleType?: string;
+    testName: string;
+    testCode?: string;
+    departmentId?: string;
+    departmentIds?: string[];
+    sampleType: string;
     price: number;
     unit?: string;
     method?: string;
     turnaroundTime?: string;
     normalRanges?: NormalRanges;
+    fastingRequired?: boolean;
+    sampleVolume?: string;
+    reportType?: 'numeric' | 'text' | 'both';
     isActive?: boolean;
 }

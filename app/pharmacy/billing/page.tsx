@@ -20,14 +20,15 @@ const BillingPage = () => {
     const [quantity, setQuantity] = useState(1);
     const [price, setPrice] = useState(0); // Editable price
     const [cart, setCart] = useState<BillItem[]>([]);
-    
+
     // Payment State
-    const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card'>('Cash');
+    const [paymentMode, setPaymentMode] = useState<'Cash' | 'UPI' | 'Card' | 'Mixed'>('Cash');
+    const [mixedPayments, setMixedPayments] = useState({ cash: 0, card: 0, upi: 0 });
     const [status, setStatus] = useState<'Paid' | 'Partial' | 'Due'>('Paid');
     const [discount, setDiscount] = useState(0);
     const [discountType, setDiscountType] = useState<'%' | '₹'>('%');
     const [paidAmount, setPaidAmount] = useState(0);
-    
+
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedBill, setGeneratedBill] = useState<PharmacyBill | null>(null);
 
@@ -37,6 +38,34 @@ const BillingPage = () => {
         contentRef: printRef,
         documentTitle: generatedBill ? `Invoice_${generatedBill.invoiceId}` : 'Invoice',
     });
+
+    // Calculations (BEFORE Effects using them)
+    // Inclusive GST: subtotal is sum of MRPs
+    const subtotal = cart.reduce((sum, item: any) => sum + (item.total || 0), 0);
+    const totalDiscount = discountType === '%' ? (subtotal * discount / 100) : discount;
+    const grandTotal = Math.max(0, subtotal - totalDiscount);
+
+    // Tax is derived FROM the discounted total (MRP is inclusive)
+    const taxGST = cart.reduce((sum, item: any) => {
+        const itemTotal = item.total || 0;
+        const itemWeight = itemTotal / (subtotal || 1);
+        const itemDiscount = totalDiscount * itemWeight;
+        const itemNetMRP = itemTotal - itemDiscount;
+        const gst = item.gstPct || item.gst || 0;
+        const itemTax = itemNetMRP - (itemNetMRP / (1 + (gst / 100)));
+        return sum + itemTax;
+    }, 0);
+
+    const taxableAmount = Math.max(0, grandTotal - taxGST);
+
+    // Auto-update paid amount
+    useEffect(() => {
+        const roundedTotal = Math.round(grandTotal);
+        setPaidAmount(roundedTotal);
+        if (paymentMode === 'Mixed') {
+            setMixedPayments({ cash: roundedTotal, card: 0, upi: 0 });
+        }
+    }, [grandTotal, paymentMode]);
 
     // Search logic
     useEffect(() => {
@@ -48,9 +77,8 @@ const BillingPage = () => {
         const delayDebounceFn = setTimeout(async () => {
             try {
                 const results = await ProductService.getProducts({ search: searchTerm });
-                // Subtract quantities already in cart from search results
                 const adjustedResults = results.map(p => {
-                    const cartItem = cart.find(item => item.productId === p._id);
+                    const cartItem = cart.find((item: any) => item.drug === p._id || item.productId === p._id);
                     return cartItem ? { ...p, currentStock: p.currentStock - cartItem.qty } : p;
                 });
                 setSearchResults(adjustedResults || []);
@@ -61,12 +89,12 @@ const BillingPage = () => {
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+    }, [searchTerm, cart]);
 
     const handleSelectProduct = (product: PharmacyProduct) => {
         setSelectedProduct(product);
         setSearchTerm(product.brandName);
-        setPrice(product.mrp); // Set initial price to MRP
+        setPrice(product.mrp);
         setSearchResults([]);
     };
 
@@ -90,21 +118,20 @@ const BillingPage = () => {
         }
 
         const total = safeQty * safePrice;
-        const newItem: BillItem = {
+        const newItem: any = {
+            drug: selectedProduct._id,
             productId: selectedProduct._id,
+            productName: `${selectedProduct.brandName} ${selectedProduct.strength} ${selectedProduct.form}`,
             itemName: `${selectedProduct.brandName} ${selectedProduct.strength} ${selectedProduct.form}`,
             qty: safeQty,
+            unitRate: safePrice,
             rate: safePrice,
             hsn: selectedProduct.hsnCode,
+            gstPct: selectedProduct.gst || 0,
             gst: selectedProduct.gst || 0,
+            amount: total,
             total: total
         };
-
-        // Decrease local stock level for the selected product
-        const updatedSearchResults = searchResults.map(p => 
-            p._id === selectedProduct._id ? { ...p, currentStock: p.currentStock - safeQty } : p
-        );
-        setSearchResults(updatedSearchResults);
 
         setCart([...cart, newItem]);
         setSelectedProduct(null);
@@ -115,35 +142,14 @@ const BillingPage = () => {
 
     const removeItem = (index: number) => {
         const itemToRemove = cart[index];
-        
-        // Restore local stock level
-        const updatedSearchResults = searchResults.map(p => 
-            p._id === itemToRemove.productId ? { ...p, currentStock: p.currentStock + itemToRemove.qty } : p
+        const updatedSearchResults = searchResults.map(p =>
+            p._id === itemToRemove.productId || p._id === itemToRemove.drug ? { ...p, currentStock: p.currentStock + itemToRemove.qty } : p
         );
         setSearchResults(updatedSearchResults);
-
         const newCart = [...cart];
         newCart.splice(index, 1);
         setCart(newCart);
     };
-
-    // Calculations
-    const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-    const totalDiscount = discountType === '%' ? (subtotal * discount / 100) : discount;
-    const grandTotal = Math.max(0, subtotal - totalDiscount);
-    
-    // Calculate total GST from items (assuming MRP is inclusive of GST)
-    const taxGST = cart.reduce((sum, item) => {
-        const itemGSTAmount = item.total - (item.total / (1 + (item.gst || 0) / 100));
-        return sum + itemGSTAmount;
-    }, 0);
-
-    const taxableAmount = Math.max(0, grandTotal - taxGST);
-    
-    // Auto-update paid amount to match grand total
-    useEffect(() => {
-        setPaidAmount(Math.round(grandTotal));
-    }, [grandTotal]);
 
     const handleSaveAndPrint = async () => {
         if (cart.length === 0) {
@@ -156,21 +162,31 @@ const BillingPage = () => {
             return;
         }
 
+        if (paymentMode === 'Mixed') {
+            const totalMixed = Number(mixedPayments.cash) + Number(mixedPayments.card) + Number(mixedPayments.upi);
+            if (Math.abs(totalMixed - Math.round(grandTotal)) > 1) {
+                toast.error(`Mixed payments (₹${totalMixed}) must match Grand Total (₹${Math.round(grandTotal)})`);
+                return;
+            }
+        }
+
         setIsGenerating(true);
         try {
             const payload: PharmacyBillPayload = {
-                patientDetails: { name: patientName, mobile: mobileNumber },
+                patientName,
+                customerPhone: mobileNumber,
                 items: cart,
                 paymentSummary: {
                     subtotal: Number(subtotal) || 0,
                     taxableAmount: Number(taxableAmount) || 0,
                     taxGST: Number(taxGST) || 0,
                     discount: Number(totalDiscount) || 0,
-                    grandTotal: Number(grandTotal) || 0,
-                    paidAmount: Number(Math.round(grandTotal)) || 0,
-                    balanceDue: 0,
-                    paymentMode,
-                    status
+                    grandTotal: Number(Math.round(grandTotal)) || 0,
+                    paidAmount: Number(paidAmount) || 0,
+                    balanceDue: status === 'Paid' ? 0 : Math.round(grandTotal) - paidAmount,
+                    paymentMode: paymentMode.toUpperCase() as any,
+                    status: status.toUpperCase() as any,
+                    paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined
                 }
             };
 
@@ -178,7 +194,6 @@ const BillingPage = () => {
             setGeneratedBill(res.bill);
             toast.success('Invoice generated successfully');
 
-            // Trigger print
             setTimeout(() => {
                 handlePrint();
             }, 300);
@@ -210,7 +225,7 @@ const BillingPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-500 uppercase tracking-wider">Patient Name</label>
-                                <input 
+                                <input
                                     className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                     value={patientName}
                                     onChange={e => {
@@ -224,7 +239,7 @@ const BillingPage = () => {
                             </div>
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-500 uppercase tracking-wider">Mobile Number</label>
-                                <input 
+                                <input
                                     className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                     value={mobileNumber}
                                     onChange={e => {
@@ -248,20 +263,19 @@ const BillingPage = () => {
                                 <label className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1 block">Search Product</label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input 
+                                    <input
                                         className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                         placeholder="Type to search..."
                                         value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
                                     />
                                 </div>
-                                
-                                {/* Search Results Dropdown */}
+
                                 {searchResults && searchResults.length > 0 && (
                                     <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
                                         {searchResults.map(product => (
-                                            <div 
-                                                key={product._id} 
+                                            <div
+                                                key={product._id}
                                                 className="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center"
                                                 onClick={() => handleSelectProduct(product)}
                                             >
@@ -282,7 +296,7 @@ const BillingPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium text-gray-500 uppercase tracking-wider">Quantity</label>
-                                    <input 
+                                    <input
                                         type="number"
                                         className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                                         value={quantity}
@@ -294,7 +308,7 @@ const BillingPage = () => {
                                     <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Price</label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
-                                        <input 
+                                        <input
                                             type="number"
                                             className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl pl-8 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold"
                                             value={price || ''}
@@ -304,7 +318,7 @@ const BillingPage = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-end">
-                                    <button 
+                                    <button
                                         className="w-full bg-indigo-600 text-white rounded-xl py-2.5 font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 dark:shadow-none"
                                         onClick={handleAddItem}
                                     >
@@ -345,22 +359,22 @@ const BillingPage = () => {
                                             <td className="px-6 py-4 font-medium text-gray-500">{index + 1}</td>
                                             <td className="px-6 py-4 font-bold text-gray-800 dark:text-gray-100">{item.itemName}</td>
                                             <td className="px-6 py-4 text-center">
-                                                <input 
-                                                    type="number" 
+                                                <input
+                                                    type="number"
                                                     className="w-16 bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-lg px-2 py-1 text-center font-black outline-none focus:ring-1 focus:ring-indigo-500"
                                                     value={item.qty}
                                                     min="1"
                                                     onChange={e => {
                                                         const newQty = Math.max(1, Number(e.target.value)) || 1;
                                                         const diff = newQty - item.qty;
-                                                        
+
                                                         // Update cart
                                                         const newCart = [...cart];
                                                         newCart[index] = { ...item, qty: newQty, total: newQty * item.rate };
                                                         setCart(newCart);
 
                                                         // Update local stock
-                                                        const updatedSearchResults = searchResults.map(p => 
+                                                        const updatedSearchResults = searchResults.map(p =>
                                                             p._id === item.productId ? { ...p, currentStock: p.currentStock - diff } : p
                                                         );
                                                         setSearchResults(updatedSearchResults);
@@ -370,8 +384,8 @@ const BillingPage = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-1">
                                                     <span className="text-gray-400">₹</span>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        type="number"
                                                         className="w-20 bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-lg px-2 py-1 text-right font-medium outline-none focus:ring-1 focus:ring-indigo-500"
                                                         value={item.rate}
                                                         min="0"
@@ -384,9 +398,9 @@ const BillingPage = () => {
                                                     />
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right font-black text-indigo-600">₹{item.total.toFixed(2)}</td>
+                                            <td className="px-6 py-4 text-right font-black text-indigo-600">₹{(item.total || item.amount || 0).toFixed(2)}</td>
                                             <td className="px-6 py-4 text-center">
-                                                <button 
+                                                <button
                                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                     onClick={() => removeItem(index)}
                                                 >
@@ -412,12 +426,12 @@ const BillingPage = () => {
                         {/* Payment Method */}
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Method</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {['Cash', 'UPI', 'Card'].map(mode => (
-                                    <button 
+                            <div className="grid grid-cols-2 gap-2">
+                                {['Cash', 'UPI', 'Card', 'Mixed'].map(mode => (
+                                    <button
                                         key={mode}
                                         onClick={() => setPaymentMode(mode as any)}
-                                        className={`py-2 rounded-xl text-[10px] font-black transition-all border ${paymentMode === mode ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-200' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 border-gray-100 dark:border-gray-700'}`}
+                                        className={`py-2 rounded-xl text-[10px] font-black transition-all border ${paymentMode === mode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 border-gray-100 dark:border-gray-700'}`}
                                     >
                                         {mode.toUpperCase()}
                                     </button>
@@ -425,11 +439,65 @@ const BillingPage = () => {
                             </div>
                         </div>
 
+                        {/* Mixed Payment Details */}
+                        {paymentMode === 'Mixed' && (
+                            <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                <p className="text-[10px] font-black text-indigo-600 uppercase">Split Amount</p>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center gap-2">
+                                        <span className="text-xs font-bold text-gray-500 w-12">CASH</span>
+                                        <input
+                                            type="number"
+                                            className="w-full bg-white dark:bg-gray-900 border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                                            value={mixedPayments.cash || ''}
+                                            min="0"
+                                            onChange={e => {
+                                                const val = Math.max(0, Number(e.target.value));
+                                                setMixedPayments({ ...mixedPayments, cash: val });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center gap-2">
+                                        <span className="text-xs font-bold text-gray-500 w-12">CARD</span>
+                                        <input
+                                            type="number"
+                                            className="w-full bg-white dark:bg-gray-900 border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                                            value={mixedPayments.card || ''}
+                                            min="0"
+                                            onChange={e => {
+                                                const val = Math.max(0, Number(e.target.value));
+                                                setMixedPayments({ ...mixedPayments, card: val });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center gap-2">
+                                        <span className="text-xs font-bold text-gray-500 w-12">UPI</span>
+                                        <input
+                                            type="number"
+                                            className="w-full bg-white dark:bg-gray-900 border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                                            value={mixedPayments.upi || ''}
+                                            min="0"
+                                            onChange={e => {
+                                                const val = Math.max(0, Number(e.target.value));
+                                                setMixedPayments({ ...mixedPayments, upi: val });
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="pt-2 border-t dark:border-gray-700 flex justify-between text-[10px] font-black text-gray-400">
+                                        <span>TOTAL SPLIT:</span>
+                                        <span className={Math.abs(mixedPayments.cash + mixedPayments.card + mixedPayments.upi - Math.round(grandTotal)) > 2 ? 'text-red-500' : 'text-emerald-500'}>
+                                            ₹{mixedPayments.cash + mixedPayments.card + mixedPayments.upi} / ₹{Math.round(grandTotal)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Status & Discount */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</label>
-                                <select 
+                                <select
                                     className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                                     value={status}
                                     onChange={e => setStatus(e.target.value as any)}
@@ -442,7 +510,7 @@ const BillingPage = () => {
                             <div className="space-y-1">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount</label>
                                 <div className="flex">
-                                    <input 
+                                    <input
                                         className="w-full bg-gray-50 dark:bg-gray-800 border dark:border-gray-700 rounded-l-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                                         type="number"
                                         placeholder="0"
@@ -450,7 +518,7 @@ const BillingPage = () => {
                                         min="0"
                                         onChange={e => setDiscount(Math.max(0, Number(e.target.value)))}
                                     />
-                                    <select 
+                                    <select
                                         className="bg-gray-100 dark:bg-gray-700 border-y border-r dark:border-gray-600 rounded-r-xl px-2 text-xs font-bold outline-none"
                                         value={discountType}
                                         onChange={e => setDiscountType(e.target.value as any)}
@@ -463,14 +531,14 @@ const BillingPage = () => {
                         </div>
 
                         {/* Tax */}
-                        
+
 
                         {/* Paid Amount */}
                         <div className="space-y-1">
                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Paid Amount</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-black">₹</span>
-                                <input 
+                                <input
                                     className="w-full bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-xl pl-8 pr-4 py-3 text-lg font-black text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-500"
                                     type="number"
                                     value={paidAmount || ''}
@@ -487,10 +555,6 @@ const BillingPage = () => {
                                 <span className="text-gray-800 dark:text-gray-200">₹{subtotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">Taxable Amount</span>
-                                <span className="text-gray-800 dark:text-gray-200">₹{taxableAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
                                 <span className="text-gray-400">Tax (GST)</span>
                                 <span className="text-gray-800 dark:text-gray-200">₹{taxGST.toFixed(2)}</span>
                             </div>
@@ -500,7 +564,7 @@ const BillingPage = () => {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             className="w-full bg-[#b388ff] text-white py-4 rounded-2xl font-black uppercase tracking-[2px] transition-all shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                             disabled={isGenerating}
                             onClick={handleSaveAndPrint}

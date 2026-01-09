@@ -6,14 +6,9 @@ import {
    User,
    Bell
 } from 'lucide-react';
-import {
-   getDoctorDashboardAction,
-   getQuickNotesAction,
-   getDoctorProfileAction
-} from '@/lib/integrations/actions/doctor.actions';
-import QuickNotesInput from '@/components/doctor/QuickNotesInput';
-import DoctorNotesList from '@/components/doctor/DoctorNotesList';
-import Link from 'next/link';
+import { getDoctorDashboardAction, getMyAnnouncementsAction } from '@/lib/integrations';
+import { getMeAction as getAuthMeAction } from '@/lib/integrations/actions/auth.actions';
+import DoctorDashboardCharts from '@/components/doctor/DoctorDashboardCharts';
 
 export default async function DoctorDashboard() {
    // Parallel data fetching
@@ -61,17 +56,25 @@ export default async function DoctorDashboard() {
             </div>
          </div>
 
-         {/* Dashboard Grid */}
-         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left Column (Main Stats + Input) */}
-            <div className="lg:col-span-3 space-y-6">
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Today Appointments (Wide) */}
-                  <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[300px] flex flex-col">
-                     <div className="flex justify-between items-start mb-8">
-                        <h3 className="text-lg font-bold text-gray-900">Today Appointments</h3>
-                        <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">{appointments.length} Today</span>
-                     </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Live Queue & Charts */}
+        <div className="lg:col-span-2 space-y-8">
+           {/* Consultation Analysis Chart */}
+           <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                 <div>
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic">Consultation Flow Analysis</h3>
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">Real-time throughput metrics</p>
+                 </div>
+                 <div className="flex bg-gray-50 dark:bg-gray-700/50 p-1 rounded-xl">
+                    <button className="px-4 py-1.5 bg-white dark:bg-gray-600 shadow-sm text-xs font-black rounded-lg">Weekly</button>
+                    <button className="px-4 py-1.5 text-xs font-black text-gray-400">Monthly</button>
+                 </div>
+              </div>
+              <div className="h-[300px]">
+                 <DoctorDashboardCharts type="area" />
+              </div>
+           </div>
 
                      <div className="flex-1 flex items-center justify-center">
                         {appointments.length > 0 ? (
