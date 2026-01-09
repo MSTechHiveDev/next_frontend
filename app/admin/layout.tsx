@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import { Settings, LogOut, X, User } from "lucide-react";
+import LogoutModal from "@/components/auth/LogoutModal";
 import { ThemeToggle } from '@/components/ThemeToggle';
 import NotificationCenter from "@/components/navbar/NotificationCenter";
 
@@ -36,6 +37,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     const [searchPlaceholder, setSearchPlaceholder] = useState("Search...");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     const adminUser = user || {
         name: "Super Admin",
@@ -51,31 +53,61 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
     // Redirect to login if not authenticated after initialization
     useEffect(() => {
-        if (isInitialized && !isAuthenticated) {
-            router.push('/auth/login');
+        if (isInitialized) {
+            if (!isAuthenticated) {
+                router.push('/auth/login');
+            } else if (user?.role !== 'admin' && user?.role !== 'super-admin') {
+                const routeMap: Record<string, string> = {
+                    'staff': '/staff',
+                    'doctor': '/doctor',
+                    'hospital-admin': '/hospital-admin',
+                    'lab': '/lab/dashboard',
+                    'pharma-owner': '/pharmacy/dashboard',
+                    'pharmacy': '/pharmacy/dashboard',
+                    'helpdesk': '/helpdesk',
+                    'patient': '/patient'
+                };
+                router.push(routeMap[user?.role || ''] || '/auth/login');
+            }
         }
-    }, [isAuthenticated, isInitialized, router]);
+    }, [isAuthenticated, isInitialized, user?.role, router]);
 
-    // Show loading while checking auth
-    if (!isInitialized) {
+    const handleConfirmLogout = async () => {
+        await logout();
+        router.push('/auth/login');
+    };
+
+    // Premium Loading UI
+    if (isLoading || !isInitialized) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
-                <div className="text-(--text-color) text-lg">Loading...</div>
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative w-24 h-24">
+                        <div className="absolute inset-0 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-4 border-4 border-indigo-600/20 border-b-indigo-600 rounded-full animate-spin-reverse"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic text-center">Super Admin</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Verifying Root Node</p>
+                    </div>
+                </div>
             </div>
         );
     }
 
-    // Don't render if not authenticated
-    if (!isAuthenticated) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
-                <div className="text-(--text-color) text-lg">Redirecting to login...</div>
-            </div>
-        );
-    }
+    if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'super-admin')) return null;
 
     return (
         <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
+            <LogoutModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleConfirmLogout}
+                userName={user?.name}
+            />
             {/* Overlay for mobile */}
             {isSidebarOpen && (
                 <div
@@ -203,61 +235,61 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                         <ThemeToggle />
                         <div className="h-6 w-px" style={{ backgroundColor: 'var(--border-color)' }}></div>
                         <div className="relative">
-                        <button
-                            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-shadow">
-                                {adminUser.name?.charAt(0).toUpperCase() || "A"}
-                            </div>
-                            <div className="hidden md:block text-left">
-                                <p className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>
-                                    {adminUser.name}
-                                </p>
-                                <p className="text-xs opacity-60">Super Admin</p>
-                            </div>
-                        </button>
+                            <button
+                                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg hover:shadow-xl transition-shadow">
+                                    {adminUser.name?.charAt(0).toUpperCase() || "A"}
+                                </div>
+                                <div className="hidden md:block text-left">
+                                    <p className="text-sm font-medium" style={{ color: 'var(--text-color)' }}>
+                                        {adminUser.name}
+                                    </p>
+                                    <p className="text-xs opacity-60">Super Admin</p>
+                                </div>
+                            </button>
 
-                        {/* Dropdown Menu */}
-                        {isProfileDropdownOpen && (
-                            <>
-                                <div className="fixed inset-0 z-30" onClick={() => setIsProfileDropdownOpen(false)} />
-                                <div
-                                    className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl border z-40 overflow-hidden"
-                                    style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
-                                >
-                                    <div className="p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow">
-                                                {adminUser.name?.charAt(0).toUpperCase() || "A"}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold" style={{ color: 'var(--text-color)' }}>{adminUser.name}</p>
-                                                <p className="text-xs opacity-60">Super Administrator</p>
+                            {/* Dropdown Menu */}
+                            {isProfileDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setIsProfileDropdownOpen(false)} />
+                                    <div
+                                        className="absolute right-0 mt-2 w-64 rounded-xl shadow-2xl border z-40 overflow-hidden"
+                                        style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}
+                                    >
+                                        <div className="p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow">
+                                                    {adminUser.name?.charAt(0).toUpperCase() || "A"}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold" style={{ color: 'var(--text-color)' }}>{adminUser.name}</p>
+                                                    <p className="text-xs opacity-60">Super Administrator</p>
+                                                </div>
                                             </div>
                                         </div>
+                                        <div className="py-2">
+                                            <button
+                                                onClick={() => { router.push('/admin/profile'); setIsProfileDropdownOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                style={{ color: 'var(--text-color)' }}
+                                            >
+                                                <User size={18} className="text-blue-500" />
+                                                <span>My Profile</span>
+                                            </button>
+                                            <button
+                                                onClick={() => { setIsLogoutModalOpen(true); setIsProfileDropdownOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                            >
+                                                <LogOut size={18} />
+                                                <span>Logout</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="py-2">
-                                        <button
-                                            onClick={() => { router.push('/admin/profile'); setIsProfileDropdownOpen(false); }}
-                                            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-                                            style={{ color: 'var(--text-color)' }}
-                                        >
-                                            <User size={18} className="text-blue-500" />
-                                            <span>My Profile</span>
-                                        </button>
-                                        <button
-                                            onClick={() => { logout(); setIsProfileDropdownOpen(false); }}
-                                            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-                                        >
-                                            <LogOut size={18} />
-                                            <span>Logout</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </header>
 

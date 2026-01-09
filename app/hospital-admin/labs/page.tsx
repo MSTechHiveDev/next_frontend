@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import React from "react";
-import { FlaskConical } from "lucide-react";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function HospitalAdminLabs() {
+export default function HospitalAdminLabsPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/hospital-admin/labs/dashboard');
+  }, [router]);
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold" style={{ color: 'var(--text-color)' }}>
-        Laboratory Management
-      </h1>
-      <div className="text-center py-12" style={{ color: 'var(--secondary-color)' }}>
-        <FlaskConical size={48} className="mx-auto mb-4 opacity-50" />
-        <p>Laboratory management feature coming soon</p>
-      </div>
+    <div className="flex flex-col items-center justify-center p-20 gap-4">
+      <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+      <p className="text-xs font-black text-gray-400 uppercase tracking-widest animate-pulse">Initialising Lab Suite...</p>
     </div>
   );
 }
-

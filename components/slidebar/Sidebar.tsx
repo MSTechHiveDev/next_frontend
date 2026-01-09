@@ -16,6 +16,9 @@ import {
     X,
     LucideIcon
 } from 'lucide-react';
+import LogoutModal from '../auth/LogoutModal';
+import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'next/navigation';
 
 export interface SidebarItem {
     icon: LucideIcon;
@@ -68,6 +71,14 @@ export default function Sidebar({
     onLogout
 }: SidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { user } = useAuthStore();
+
+    const handleLogoutClick = () => {
+        if (onLogout) {
+            onLogout();
+        }
+    };
 
     return (
         <>
@@ -109,7 +120,12 @@ export default function Sidebar({
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            if (item.href === '#logout') {
+                                                e.preventDefault();
+                                                handleLogoutClick();
+                                                return;
+                                            }
                                             // Close sidebar on mobile when link clicked
                                             if (window.innerWidth < 1024 && onClose) {
                                                 onClose();
@@ -148,14 +164,14 @@ export default function Sidebar({
                         <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                             {onLogout && (
                                 <button
-                                    onClick={onLogout}
+                                    onClick={handleLogoutClick}
                                     className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors group mb-4"
                                 >
                                     <LogOut className="w-5 h-5 group-hover:text-red-500" />
                                     <span>Sign Out</span>
                                 </button>
                             )}
-                
+
                         </div>
                     )}
                 </div>

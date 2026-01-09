@@ -116,11 +116,11 @@ const ProductsPage = () => {
 
         worksheet.mergeCells('A3:H3');
         const subtitleCell = worksheet.getCell('A3');
-        subtitleCell.value = 'Owner Manifest Audit';
+        subtitleCell.value = 'Hospital Administrator Audit Log';
         subtitleCell.font = { size: 14, bold: true };
         subtitleCell.alignment = { horizontal: 'center' };
 
-        worksheet.getCell('A5').value = 'Export Date:';
+        worksheet.getCell('A5').value = 'Audit Date:';
         worksheet.getCell('B5').value = new Date().toLocaleDateString('en-GB');
         worksheet.getCell('A5').font = { bold: true };
 
@@ -169,8 +169,8 @@ const ProductsPage = () => {
 
         const buffer = await workbook.xlsx.writeBuffer();
         const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(data, `Pharma_Registry_${new Date().toISOString().split('T')[0]}.xlsx`);
-        toast.success('Registry manifest exported');
+        saveAs(data, `Pharma_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+        toast.success('Manifest exported successfully');
     };
 
     const suppliers = ['All Suppliers', ...Array.from(new Set(products.map(p => {
@@ -191,14 +191,14 @@ const ProductsPage = () => {
                 <div className="flex flex-wrap items-center gap-3">
                     <button
                         onClick={() => setIsBulkModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30"
+                        className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm"
                     >
                         <FileSpreadsheet size={16} />
                         Bulk Manifest
                     </button>
                     <button
                         onClick={handleExportExcel}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm dark:bg-indigo-950/20 dark:border-indigo-900/30"
+                        className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm"
                     >
                         <Download size={16} />
                         Export Audit
@@ -222,7 +222,7 @@ const ProductsPage = () => {
                         placeholder="Search by nomenclature, composition, or SKU..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                 </div>
                 <div className="flex items-center gap-3 w-full lg:w-auto">
@@ -251,7 +251,7 @@ const ProductsPage = () => {
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Stock Threshold</p>
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
@@ -264,7 +264,7 @@ const ProductsPage = () => {
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Vendor Origin</p>
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                             value={supplierFilter}
                             onChange={(e) => setSupplierFilter(e.target.value)}
                         >
@@ -274,7 +274,7 @@ const ProductsPage = () => {
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Stability Status</p>
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                             value={expiryStatusFilter}
                             onChange={(e) => setExpiryStatusFilter(e.target.value)}
                         >

@@ -50,7 +50,7 @@ const PharmacyDashboard = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest text-[10px] font-black">Loading Dashboard...</p>
+                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Loading Dashboard...</p>
             </div>
         );
     }
@@ -60,8 +60,8 @@ const PharmacyDashboard = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Dashboard</h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Real-time operational overview</p>
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Pharma Hub</h1>
+                    <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Operational Oversight Dashboard</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -76,9 +76,6 @@ const PharmacyDashboard = () => {
                             </span>
                         ) : null}
                     </button>
-                    <button onClick={fetchStats} className="p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl hover:bg-gray-50 transition-all text-gray-500">
-                        <TrendingUp size={20} />
-                    </button>
                 </div>
             </div>
 
@@ -90,10 +87,10 @@ const PharmacyDashboard = () => {
             {/* Top 4 Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: "TODAY'S SALES", value: formatCurrency(stats?.todayStats.revenue || 0), sub: `${stats?.todayStats.billCount || 0} invoices`, icon: DollarSign, color: "blue" },
-                    { label: "TOTAL PRODUCTS", value: stats?.inventoryStats.totalProducts.toString() || "0", sub: "Active products", icon: Package, color: "indigo" },
-                    { label: "LOW STOCK ITEMS", value: stats?.inventoryStats.lowStockCount.toString() || "0", sub: stats?.inventoryStats.outOfStockCount ? `${stats.inventoryStats.outOfStockCount} Out of Stock` : "Need attention", icon: AlertTriangle, color: "red" },
-                    { label: "TODAY'S BILLS", value: stats?.todayStats.billCount.toString() || "0", sub: "Dispatched today", icon: FileText, color: "cyan" },
+                    { label: "Today's Revenue", value: formatCurrency(stats?.todayStats.revenue || 0), sub: `${stats?.todayStats.billCount || 0} Transactions`, icon: DollarSign, color: "blue" },
+                    { label: "Inventory Size", value: stats?.inventoryStats.totalProducts.toString() || "0", sub: "Active Stock Items", icon: Package, color: "indigo" },
+                    { label: "Critical Stock", value: stats?.inventoryStats.lowStockCount.toString() || "0", sub: stats?.inventoryStats.outOfStockCount ? `${stats.inventoryStats.outOfStockCount} Depleted` : "Stable Registry", icon: AlertTriangle, color: "red" },
+                    { label: "Session Bills", value: stats?.todayStats.billCount.toString() || "0", sub: "Dispatched Today", icon: FileText, color: "cyan" },
                 ].map((stat, idx) => (
                     <div key={idx} className="bg-white dark:bg-gray-800 p-6 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden relative group hover:scale-[1.02] transition-all">
                         <div className={`absolute top-0 right-0 p-8 opacity-5 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform text-${stat.color}-600`}>
@@ -113,6 +110,7 @@ const PharmacyDashboard = () => {
 
             {/* Primary Action Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Reusing existing links for simplicity but can be updated later if admin has specific billing views */}
                 <Link href="/pharmacy/billing">
                     <button className="w-full flex items-center justify-between p-8 rounded-4xl bg-blue-600 text-white shadow-xl shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-all group">
                         <div className="flex items-center gap-5">
@@ -120,38 +118,38 @@ const PharmacyDashboard = () => {
                                 <PlusCircle size={28} />
                             </div>
                             <div className="text-left">
-                                <h4 className="font-black uppercase tracking-tight text-lg">Create Invoice</h4>
-                                <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">New bill node</p>
+                                <h4 className="font-black uppercase tracking-tight text-lg">New Dispatch</h4>
+                                <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Generate Billing Node</p>
                             </div>
                         </div>
                         <ChevronRight className="opacity-0 group-hover:opacity-100 transform group-hover:translate-x-2 transition-all" size={24} />
                     </button>
                 </Link>
 
-                <Link href="/pharmacy/products">
+                <Link href="/hospital-admin/pharma/products">
                     <button className="w-full flex items-center justify-between p-8 rounded-4xl bg-indigo-600 text-white shadow-xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all group">
                         <div className="flex items-center gap-5">
                             <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
                                 <Package size={28} />
                             </div>
                             <div className="text-left">
-                                <h4 className="font-black uppercase tracking-tight text-lg">Manage Products</h4>
-                                <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Inventory hub</p>
+                                <h4 className="font-black uppercase tracking-tight text-lg">Inventory</h4>
+                                <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Manage Registry</p>
                             </div>
                         </div>
                         <ChevronRight className="opacity-0 group-hover:opacity-100 transform group-hover:translate-x-2 transition-all" size={24} />
                     </button>
                 </Link>
 
-                <Link href="/pharmacy/transactions">
+                <Link href="/hospital-admin/pharma/transactions">
                     <button className="w-full flex items-center justify-between p-8 rounded-4xl bg-emerald-600 text-white shadow-xl shadow-emerald-200 dark:shadow-none hover:bg-emerald-700 transition-all group">
                         <div className="flex items-center gap-5">
                             <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
                                 <TrendingUp size={28} />
                             </div>
                             <div className="text-left">
-                                <h4 className="font-black uppercase tracking-tight text-lg">View Reports</h4>
-                                <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Transaction logs</p>
+                                <h4 className="font-black uppercase tracking-tight text-lg">Analytics</h4>
+                                <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Audit Transactions</p>
                             </div>
                         </div>
                         <ChevronRight className="opacity-0 group-hover:opacity-100 transform group-hover:translate-x-2 transition-all" size={24} />
@@ -162,25 +160,25 @@ const PharmacyDashboard = () => {
             {/* Bottom Detail Sections */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Today's Summary */}
-                <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm text-gray-900 dark:text-white">
+                <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30">
+                            <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
                                 <FileText size={20} />
                             </div>
-                            <h4 className="text-sm font-black uppercase tracking-widest">Today's Summary</h4>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">Session Summary</h4>
                         </div>
-                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full uppercase">Verified</span>
+                        <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase">Real-Time</span>
                     </div>
-                    <div className="p-8 space-y-4 text-gray-900 dark:text-white">
+                    <div className="p-8 space-y-4">
                         {[
-                            { label: "Total Revenue", value: formatCurrency(stats?.todayStats.revenue || 0), desc: "Current cycle gross" },
-                            { label: "Total Bills", value: stats?.todayStats.billCount.toString() || "0", desc: "Invoices generated" },
-                            { label: "Avg. Bill Value", value: formatCurrency(stats?.todayStats.avgBillValue || 0), desc: "Per transaction density" },
+                            { label: "Gross Revenue", value: formatCurrency(stats?.todayStats.revenue || 0), desc: "Total value generated in current cycle" },
+                            { label: "Dispatch Volume", value: stats?.todayStats.billCount.toString() || "0", desc: "Total invoices confirmed" },
+                            { label: "Average Value", value: formatCurrency(stats?.todayStats.avgBillValue || 0), desc: "Value density per transaction" },
                         ].map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between p-5 rounded-3xl bg-gray-50/50 dark:bg-gray-700/30 border border-gray-100/50">
                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-tight">{item.label}</p>
+                                    <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight">{item.label}</p>
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{item.desc}</p>
                                 </div>
                                 <span className="text-lg font-black text-blue-600">{item.value}</span>
@@ -189,14 +187,14 @@ const PharmacyDashboard = () => {
                     </div>
                 </div>
 
-                {/* Payment Methods */}
+                {/* Payment Breakdown */}
                 <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30">
+                            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
                                 <Wallet size={20} />
                             </div>
-                            <h4 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">Payment Methods</h4>
+                            <h4 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white">Gateway Analysis</h4>
                         </div>
                     </div>
                     <div className="p-8 grid grid-cols-2 gap-4">
@@ -219,12 +217,12 @@ const PharmacyDashboard = () => {
 
             {/* Quick Actions Footer */}
             <div className="bg-white dark:bg-gray-800 p-8 rounded-4xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-wrap gap-4 items-center justify-center">
-                <p className="w-full text-center text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Fleet Management</p>
+                <p className="w-full text-center text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Hub Access</p>
                 {[
-                    { label: "Inventory", href: "/pharmacy/products" },
-                    { label: "Suppliers", href: "/pharmacy/suppliers" },
-                    { label: "Billing", href: "/pharmacy/billing" },
-                    { label: "Transactions", href: "/pharmacy/transactions" },
+                    { label: "Inventory", href: "/hospital-admin/pharma/products" },
+                    { label: "Suppliers", href: "/hospital-admin/pharma/suppliers" },
+                    { label: "Transactions", href: "/hospital-admin/pharma/transactions" },
+                    { label: "Direct Billing", href: "/pharmacy/billing" },
                 ].map((link, i) => (
                     <Link key={i} href={link.href}>
                         <button className="px-6 py-3 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm">

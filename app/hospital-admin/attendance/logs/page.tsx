@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Calendar, 
-  MoreVertical, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
+import {
+  Search,
+  Filter,
+  Download,
+  Calendar,
+  MoreVertical,
+  CheckCircle2,
+  XCircle,
+  Clock,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
@@ -60,10 +60,16 @@ export default function AttendanceLogs() {
     }
   };
 
-  const filteredAttendance = attendance.filter(item => 
-    item.staff?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.staff?.employeeId?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAttendance = attendance.filter(item => {
+    const matchesSearch =
+      item.staff?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.staff?.employeeId?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const isShowingLeave = filters.status === 'on-leave';
+    const isNotLeave = item.status !== 'on-leave';
+
+    return matchesSearch && (isShowingLeave || isNotLeave);
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -84,29 +90,29 @@ export default function AttendanceLogs() {
       <div className="bg-white dark:bg-gray-800 p-4 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col lg:flex-row items-center gap-4">
         <div className="relative flex-1 w-full lg:w-auto">
           <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text" 
-            placeholder="Search by name or employee ID..." 
+          <input
+            type="text"
+            placeholder="Search by name or employee ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <div className="relative flex-1 lg:flex-none min-w-[150px]">
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={filters.date}
-              onChange={(e) => setFilters({...filters, date: e.target.value})}
+              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
               className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
             />
             <Calendar className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          <select 
+          <select
             value={filters.status}
-            onChange={(e) => setFilters({...filters, status: e.target.value})}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="flex-1 lg:flex-none min-w-[150px] px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="">All Statuses</option>
@@ -119,7 +125,7 @@ export default function AttendanceLogs() {
           <button className="p-3 bg-gray-50 dark:bg-gray-700/50 text-gray-500 rounded-2xl hover:text-blue-500 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100">
             <Filter className="w-5 h-5" />
           </button>
-          
+
           <button className="p-3 bg-gray-50 dark:bg-gray-700/50 text-gray-500 rounded-2xl hover:text-emerald-500 hover:bg-emerald-50 transition-all border border-transparent hover:border-emerald-100">
             <Download className="w-5 h-5" />
           </button>
@@ -167,8 +173,8 @@ export default function AttendanceLogs() {
                     <td className="px-8 py-6">
                       <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase border ${getStatusStyle(record.status)}`}>
                         {record.status === 'present' ? <CheckCircle2 className="w-3.5 h-3.5" /> :
-                         record.status === 'late' ? <Clock className="w-3.5 h-3.5" /> :
-                         <XCircle className="w-3.5 h-3.5" />}
+                          record.status === 'late' ? <Clock className="w-3.5 h-3.5" /> :
+                            <XCircle className="w-3.5 h-3.5" />}
                         {record.status}
                       </span>
                     </td>
@@ -192,7 +198,7 @@ export default function AttendanceLogs() {
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                           {record.workHours ? `${record.workHours} hrs` : '--:--'}
+                          {record.workHours ? `${record.workHours} hrs` : '--:--'}
                         </span>
                         <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tighter">
                           {record.location?.name || 'Main Gate'} Registry
@@ -202,13 +208,13 @@ export default function AttendanceLogs() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-1">
                         <button className="p-2.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-400 hover:text-blue-600 rounded-xl transition-all" title="View Details">
-                           <Eye className="w-5 h-5" />
+                          <Eye className="w-5 h-5" />
                         </button>
                         <button className="p-2.5 hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-400 hover:text-amber-600 rounded-xl transition-all" title="Override Status">
-                           <Edit2 className="w-5 h-5" />
+                          <Edit2 className="w-5 h-5" />
                         </button>
                         <button className="p-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 rounded-xl transition-all" title="Invalidate Entry">
-                           <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     </td>
@@ -235,18 +241,18 @@ export default function AttendanceLogs() {
             Showing <span className="text-gray-900 dark:text-white">{filteredAttendance.length}</span> registry entries
           </p>
           <div className="flex items-center gap-2">
-             <button className="p-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-400 hover:text-blue-500 disabled:opacity-50" disabled>
-               <ChevronLeft className="w-5 h-5" />
-             </button>
-             <button className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-600 text-white text-xs font-black shadow-lg shadow-blue-200 dark:shadow-none">
-               1
-             </button>
-             <button className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-600 text-xs font-black hover:bg-gray-50">
-               2
-             </button>
-             <button className="p-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-400 hover:text-blue-500">
-               <ChevronRight className="w-5 h-5" />
-             </button>
+            <button className="p-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-400 hover:text-blue-500 disabled:opacity-50" disabled>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-blue-600 text-white text-xs font-black shadow-lg shadow-blue-200 dark:shadow-none">
+              1
+            </button>
+            <button className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-600 text-xs font-black hover:bg-gray-50">
+              2
+            </button>
+            <button className="p-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-400 hover:text-blue-500">
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>

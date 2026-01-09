@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import { Settings, LogOut, X, LayoutDashboard, FileText, Activity, FlaskConical } from "lucide-react";
+import LogoutModal from "@/components/auth/LogoutModal";
 
 // Lab specific menu items
 const labMenu = [
@@ -18,11 +19,11 @@ const labMenu = [
 const LabLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
-    // @ts-ignore
     const { user, logout, isAuthenticated, checkAuth, isLoading, isInitialized } = useAuthStore();
     const [searchQuery, setSearchQuery] = useState("");
     const [searchPlaceholder, setSearchPlaceholder] = useState("Search...");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     const labUser = user || {
         name: "Lab User",
@@ -37,36 +38,60 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        if (isInitialized && !isAuthenticated) {
-            router.push('/auth/login');
-        } else if (isInitialized && isAuthenticated && user?.role !== 'lab') {
-            // Redirect non-lab users
-            if (user?.role === 'admin' || user?.role === 'super-admin') {
-                router.push('/admin');
-            } else {
-                router.push('/hospital-admin');
+        if (isInitialized) {
+            if (!isAuthenticated) {
+                router.push('/auth/login');
+            } else if (user?.role !== 'lab') {
+                const routeMap: Record<string, string> = {
+                    'staff': '/staff',
+                    'doctor': '/doctor',
+                    'hospital-admin': '/hospital-admin',
+                    'pharmacy': '/pharmacy/dashboard',
+                    'pharma-owner': '/pharmacy/dashboard',
+                    'super-admin': '/admin',
+                    'admin': '/admin'
+                };
+                router.push(routeMap[user?.role || ''] || '/auth/login');
             }
         }
-    }, [isAuthenticated, isInitialized, router, user]);
+    }, [isAuthenticated, isInitialized, user?.role, router]);
 
-    if (!isInitialized) {
+    const handleConfirmLogout = async () => {
+        await logout();
+        router.push('/auth/login');
+    };
+
+    // Show premium loading state
+    if (isLoading || !isInitialized) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
-                <div className="text-(--text-color) text-lg">Loading...</div>
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative w-24 h-24">
+                        <div className="absolute inset-0 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-4 border-4 border-indigo-600/20 border-b-indigo-600 rounded-full animate-spin-reverse"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic text-center">Lab Panel</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Verifying Diagnostic Access</p>
+                    </div>
+                </div>
             </div>
         );
     }
 
-    if (!isAuthenticated || user?.role !== 'lab') {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
-                <div className="text-(--text-color) text-lg">Redirecting...</div>
-            </div>
-        );
-    }
+    if (!isAuthenticated || user?.role !== 'lab') return null;
 
     return (
         <div className="flex min-h-screen" style={{ backgroundColor: 'var(--bg-color)' }}>
+            <LogoutModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleConfirmLogout}
+                userName={user?.name}
+            />
             {/* Overlay for mobile */}
             {isSidebarOpen && (
                 <div
@@ -170,7 +195,7 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                     </button>
 
                     <button
-                        onClick={logout}
+                        onClick={() => setIsLogoutModalOpen(true)}
                         className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
                     >
                         <LogOut size={20} />
@@ -199,8 +224,14 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                         {/* Search bar if needed */}
                     </div>
                     <div className="flex items-center space-x-4">
-                        <span style={{ color: 'var(--text-color)' }}>{labUser.name}</span>
-                        {/* Logout or Profile */}
+                        <span className="font-medium" style={{ color: 'var(--text-color)' }}>{labUser.name}</span>
+                        <button
+                            onClick={() => setIsLogoutModalOpen(true)}
+                            className="p-2 hover:bg-red-500/10 text-red-400 rounded-full transition-colors"
+                            title="Sign Out"
+                        >
+                            <LogOut size={20} />
+                        </button>
                     </div>
                 </header>
 

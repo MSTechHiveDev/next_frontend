@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import NotificationCenter from "@/components/navbar/NotificationCenter";
+import LogoutModal from "@/components/auth/LogoutModal";
 
 interface MenuItem {
   icon: any;
@@ -66,18 +67,32 @@ const hospitalAdminMenu: MenuItem[] = [
     path: "/hospital-admin/transactions",
   },
   { icon: Bell, label: "Notice Board", path: "/hospital-admin/announcements" },
-  { icon: Pill, label: "Pharmacy Unit", path: "/hospital-admin/pharma" },
+  {
+    icon: Pill,
+    label: "Pharmacy Unit",
+    subItems: [
+      { label: "Dashboard", path: "/hospital-admin/pharma/dashboard" },
+      { label: "Products Registry", path: "/hospital-admin/pharma/products" },
+      { label: "Supplier Network", path: "/hospital-admin/pharma/suppliers" },
+      { label: "Transaction Logs", path: "/hospital-admin/pharma/transactions" },
+    ],
+  },
   {
     icon: FlaskConical,
     label: "Diagnostics Lab",
-    path: "/hospital-admin/labs",
+    subItems: [
+      { label: "Dashboard", path: "/hospital-admin/labs/dashboard" },
+      { label: "Transactions", path: "/hospital-admin/labs/transactions" },
+      { label: "Departments", path: "/hospital-admin/labs/departments" },
+      { label: "Test Master", path: "/hospital-admin/labs/tests" },
+    ],
   },
 ];
 
 const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, isAuthenticated, checkAuth, isInitialized } =
+  const { user, logout, isAuthenticated, checkAuth, isInitialized, isLoading } =
     useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchPlaceholder, setSearchPlaceholder] = useState("Search...");
@@ -86,6 +101,7 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     "Management": true,
   });
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const toggleMenu = (label: string) => {
     setExpandedMenus((prev) => ({
@@ -112,29 +128,46 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
       if (!isAuthenticated) {
         router.push("/auth/login");
       } else if (user?.role !== "hospital-admin") {
-        router.push("/auth/login");
+        const routeMap: Record<string, string> = {
+          'staff': '/staff',
+          'doctor': '/doctor',
+          'helpdesk': '/helpdesk',
+          'lab': '/lab/dashboard',
+          'pharma-owner': '/pharmacy/dashboard',
+          'pharmacy': '/pharmacy/dashboard',
+          'super-admin': '/admin',
+          'admin': '/admin',
+          'patient': '/patient'
+        };
+        router.push(routeMap[user?.role || ''] || "/auth/login");
       }
     }
   }, [isAuthenticated, isInitialized, user?.role, router]);
 
   // Show loading while checking auth
-  if (!isInitialized) {
+  if (!isInitialized || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
-        <div className="text-(--text-color) text-lg">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative w-24 h-24">
+            <div className="absolute inset-0 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="absolute inset-4 border-4 border-indigo-600/20 border-b-indigo-600 rounded-full animate-spin-reverse"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-ping"></div>
+            </div>
+          </div>
+          <div>
+            <p className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic text-center">MS CureChain</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Verifying Administrator Session</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   // Don't render if not authenticated or wrong role
   if (!isAuthenticated || user?.role !== "hospital-admin") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-(--bg-color)">
-        <div className="text-(--text-color) text-lg">
-          Redirecting to login...
-        </div>
-      </div>
-    );
+    return null; // Redirect logic in useEffect will handle this
   }
 
   return (
@@ -142,38 +175,51 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
       className="flex min-h-screen"
       style={{ backgroundColor: "var(--bg-color)" }}
     >
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={async () => {
+          await logout();
+          router.push("/auth/login");
+        }}
+        userName={user?.name}
+      />
+
       {/* Overlay for mobile */}
-      {isSidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {
+        isSidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-30"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )
+      }
 
       {/* Close button for mobile */}
-      {isSidebarOpen && (
-        <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="lg:hidden fixed top-2 right-4 z-50 p-2 rounded-md shadow-md transition-all"
-          style={{
-            backgroundColor: "var(--card-bg)",
-            color: "var(--secondary-color)",
-          }}
-        >
-          <X size={24} />
-        </button>
-      )}
+      {
+        isSidebarOpen && (
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden fixed top-2 right-4 z-50 p-2 rounded-md shadow-md transition-all"
+            style={{
+              backgroundColor: "var(--card-bg)",
+              color: "var(--secondary-color)",
+            }}
+          >
+            <X size={24} />
+          </button>
+        )
+      }
 
       {/* Sidebar */}
       <div
         className={`
                 fixed left-0 top-0 h-full w-64 text-(--secondary-color) flex flex-col z-40
                 transform transition-transform duration-300 ease-in-out
-                ${
-                  isSidebarOpen
-                    ? "translate-x-0"
-                    : "-translate-x-full lg:translate-x-0"
-                }
+                ${isSidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
+          }
                 border-r
             `}
         style={{
@@ -223,11 +269,10 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
                     }
                   }}
                   className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 w-full text-left group
-                                    ${
-                                      isActive && !hasSubItems
-                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-none"
-                                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400"
-                                    }`}
+                                    ${isActive && !hasSubItems
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-none"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400"
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <IconComponent
@@ -259,11 +304,10 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
                           setIsSidebarOpen(false);
                         }}
                         className={`w-full text-left px-4 py-2 rounded-lg text-xs font-bold transition-all
-                                      ${
-                                        pathname === sub.path
-                                          ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20"
-                                          : "text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/30"
-                                      }`}
+                                      ${pathname === sub.path
+                            ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                            : "text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/30"
+                          }`}
                       >
                         {sub.label}
                       </button>
@@ -410,7 +454,7 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
                       <div className="h-px bg-gray-100 dark:bg-gray-800 my-2 mx-2"></div>
                       <button
                         onClick={() => {
-                          logout();
+                          setIsLogoutModalOpen(true);
                           setIsProfileDropdownOpen(false);
                         }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-black text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all rounded-xl"
@@ -433,7 +477,7 @@ const HospitalAdminLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </main>
       </div>
-    </div>
+    </div >
   );
 };
 

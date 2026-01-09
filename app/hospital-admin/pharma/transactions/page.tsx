@@ -10,7 +10,6 @@ import {
     ChevronRight,
     Calendar,
     CreditCard,
-    Plus,
     ArrowUpRight
 } from 'lucide-react';
 import { PharmacyBillingService } from '@/lib/integrations/services/pharmacyBilling.service';
@@ -102,14 +101,12 @@ const TransactionsPage = () => {
 
         setIsExporting(true);
         try {
-            // Fetch more records for export (limit 2000)
             const exportData = await PharmacyBillingService.getBills(1, 2000, searchTerm, paymentFilter, dateFilter);
             const allBills = exportData.bills;
 
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet('Transaction Audit');
 
-            // Header Branding
             worksheet.mergeCells('A2:G2');
             const titleCell = worksheet.getCell('A2');
             titleCell.value = 'Pharmacy Transaction Logs';
@@ -118,11 +115,11 @@ const TransactionsPage = () => {
 
             worksheet.mergeCells('A3:G3');
             const subCell = worksheet.getCell('A3');
-            subCell.value = 'Sales Audit & Revenue Tracking Manifest';
+            subCell.value = 'Hospital Administrator Finance Audit Manifest';
             subCell.font = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF6B7280' } };
             subCell.alignment = { horizontal: 'center' };
 
-            worksheet.getCell('A5').value = 'Export Date:';
+            worksheet.getCell('A5').value = 'Audit Date:';
             worksheet.getCell('B5').value = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             worksheet.getCell('A5').font = { bold: true };
 
@@ -132,7 +129,6 @@ const TransactionsPage = () => {
                 worksheet.getCell('D5').font = { bold: true };
             }
 
-            // Columns Definition
             const columns = [
                 { header: 'INVOICE_ID', key: 'id', width: 15 },
                 { header: 'TIMESTAMP', key: 'date', width: 15 },
@@ -143,7 +139,6 @@ const TransactionsPage = () => {
                 { header: 'VALIDATION', key: 'status', width: 12 },
             ];
 
-            // Header Row Styling
             const headerRow = worksheet.getRow(7);
             columns.forEach((col, idx) => {
                 const cell = headerRow.getCell(idx + 1);
@@ -151,7 +146,7 @@ const TransactionsPage = () => {
                 cell.fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: 'FF1F2937' } // Gray 800
+                    fgColor: { argb: 'FF1F2937' }
                 };
                 cell.font = { color: { argb: 'FFFFFFFF' }, bold: true, size: 10 };
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -160,7 +155,6 @@ const TransactionsPage = () => {
                 };
             });
 
-            // Data Ingestion
             allBills.forEach((bill, index) => {
                 const rIdx = 8 + index;
                 const row = worksheet.getRow(rIdx);
@@ -175,12 +169,10 @@ const TransactionsPage = () => {
                     bill.paymentSummary.status
                 ];
 
-                // Formatting Cells
                 row.eachCell((cell, colIdx) => {
                     cell.font = { size: 11 };
                     cell.alignment = { vertical: 'middle', horizontal: colIdx === 6 ? 'right' : 'center' };
 
-                    // Row Striping
                     if (index % 2 !== 0) {
                         cell.fill = {
                             type: 'pattern',
@@ -189,12 +181,10 @@ const TransactionsPage = () => {
                         };
                     }
 
-                    // Border Protocol
                     cell.border = {
                         bottom: { style: 'thin', color: { argb: 'FFF3F4F6' } }
                     };
 
-                    // Status Highlight
                     if (colIdx === 7) {
                         const status = cell.value as string;
                         cell.font = {
@@ -205,7 +195,6 @@ const TransactionsPage = () => {
                 });
             });
 
-            // Footer / Metrics
             const totalQuantum = allBills.reduce((acc, b) => acc + (b.paymentSummary.grandTotal || 0), 0);
             const summaryRowIdx = 8 + allBills.length + 1;
             worksheet.getCell(`E${summaryRowIdx}`).value = 'AGGREGATE:';
@@ -215,7 +204,7 @@ const TransactionsPage = () => {
 
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(blob, `Pharma_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
+            saveAs(blob, `Hospital_Pharma_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
             toast.success('Audit Log exported successfully');
         } catch (error) {
             console.error('Export Error:', error);
@@ -226,7 +215,7 @@ const TransactionsPage = () => {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 text-gray-900 dark:text-white">
+        <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
@@ -251,7 +240,7 @@ const TransactionsPage = () => {
                     <div className="relative flex-1 w-full">
                         <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl pl-11 pr-4 py-4 outline-none focus:ring-2 focus:ring-blue-500 text-xs font-bold dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl pl-11 pr-4 py-4 outline-none focus:ring-2 focus:ring-blue-500 text-xs font-bold"
                             placeholder="Search by Invoice ID nomenclature..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -263,7 +252,7 @@ const TransactionsPage = () => {
                     <div className="space-y-2">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Gateway Filter</p>
                         <select
-                            className="bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 min-w-[180px] dark:text-white"
+                            className="bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 min-w-[180px]"
                             value={paymentFilter}
                             onChange={e => setPaymentFilter(e.target.value)}
                         >
@@ -280,7 +269,7 @@ const TransactionsPage = () => {
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Temporal Filter</p>
                         <input
                             type="date"
-                            className="bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 dark:text-white"
+                            className="bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500"
                             value={dateFilter}
                             onChange={e => setDateFilter(e.target.value)}
                             max={new Date().toISOString().split('T')[0]}
@@ -289,7 +278,7 @@ const TransactionsPage = () => {
                 </div>
             </div>
 
-            {/* Invoices List Container */}
+            {/* Active Logs Container */}
             <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm relative">
                 {/* Custom Pagination Header */}
                 <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50 dark:border-gray-700 bg-gray-50/30 dark:bg-black/10">
@@ -307,7 +296,7 @@ const TransactionsPage = () => {
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-white dark:hover:bg-gray-800 transition-all dark:text-white"
+                            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-white dark:hover:bg-gray-800 transition-all"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -317,7 +306,7 @@ const TransactionsPage = () => {
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-white dark:hover:bg-gray-800 transition-all dark:text-white"
+                            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-white dark:hover:bg-gray-800 transition-all"
                         >
                             <ChevronRight size={18} />
                         </button>
@@ -341,7 +330,7 @@ const TransactionsPage = () => {
                             {loading ? (
                                 [...Array(5)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan={7} className="px-8 py-6"><div className="h-14 bg-gray-50 dark:bg-gray-800 rounded-3xl w-full"></div></td>
+                                        <td colSpan={7} className="px-8 py-6"><div className="h-14 bg-gray-50 dark:bg-gray-700 rounded-3xl w-full"></div></td>
                                     </tr>
                                 ))
                             ) : (

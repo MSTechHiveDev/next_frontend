@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from '@/components/ThemeToggle';
 import NotificationCenter from "@/components/navbar/NotificationCenter";
+import LogoutModal from "@/components/auth/LogoutModal";
 
 const doctorMenu = [
     {
@@ -56,6 +57,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     const { user, logout, isAuthenticated, checkAuth, isLoading, isInitialized } = useAuthStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     useEffect(() => {
         useAuthStore.getState().initEvents();
@@ -63,28 +65,62 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
     }, []);
 
     useEffect(() => {
-        // Only redirect AFTER initialization is complete and user is still not authenticated
-        if (isInitialized && !isAuthenticated) {
-            router.push('/auth/login');
+        if (isInitialized) {
+            if (!isAuthenticated) {
+                router.push('/auth/login');
+            } else if (user?.role !== 'doctor') {
+                // REDIRECT PROTECTION: Ensure staff/admin don't end up here
+                const routeMap: Record<string, string> = {
+                    'staff': '/staff',
+                    'hospital-admin': '/hospital-admin',
+                    'pharmacy': '/pharmacy/dashboard',
+                    'pharma-owner': '/pharmacy/dashboard',
+                    'lab': '/lab/dashboard',
+                    'super-admin': '/admin',
+                    'admin': '/admin'
+                };
+                router.push(routeMap[user?.role || ''] || '/auth/login');
+            }
         }
-    }, [isAuthenticated, isInitialized, router]);
+    }, [isAuthenticated, isInitialized, user?.role, router]);
 
-    // Show loading state while checking auth (isLoading) or before check starts (!isInitialized)
+    const handleConfirmLogout = async () => {
+        await logout();
+        router.push('/auth/login');
+    };
+
+    // Show premium loading state
     if (isLoading || !isInitialized) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-600 dark:text-gray-400 font-medium">Loading Doctor Portal...</p>
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative w-24 h-24">
+                        <div className="absolute inset-0 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-4 border-4 border-teal-600/20 border-b-teal-600 rounded-full animate-spin-reverse"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-2 h-2 bg-emerald-600 rounded-full animate-ping"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic text-center">Doctor Portal</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Verifying Clinical Node</p>
+                    </div>
                 </div>
             </div>
         );
     }
 
-    if (!isAuthenticated) return null;
+    if (!isAuthenticated || user?.role !== 'doctor') return null;
 
     return (
         <div className="flex min-h-screen bg-gray-50 dark:bg-[#0a0a0a]">
+            {/* Logout Modal */}
+            <LogoutModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleConfirmLogout}
+                userName={user?.name}
+            />
             {/* Sidebar */}
             <aside className={`
                 fixed left-0 top-0 h-full w-64 bg-white dark:bg-[#111] border-r border-gray-200 dark:border-gray-800 z-40
@@ -162,7 +198,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                     <div className="flex items-center gap-4">
                         <ThemeToggle />
                         <NotificationCenter />
-                        
+
                         <div className="h-8 w-px bg-gray-200 dark:border-gray-800 mx-2"></div>
 
                         <div className="relative">
@@ -203,7 +239,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                                                 <span>My Profile</span>
                                             </button>
                                             <button
-                                                onClick={() => { logout(); setIsProfileDropdownOpen(false); }}
+                                                onClick={() => { setIsLogoutModalOpen(true); setIsProfileDropdownOpen(false); }}
                                                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                                             >
                                                 <LogOut size={18} />
