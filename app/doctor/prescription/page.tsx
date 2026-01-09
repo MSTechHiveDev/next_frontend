@@ -16,6 +16,8 @@ import {
     PenTool
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'next/navigation';
+import { getDoctorPatientDetailsAction, getAppointmentDetailsAction, getDoctorProfileAction } from '@/lib/integrations/actions/doctor.actions';
 import medicineData from '@/medicine.json';
 
 // --- Types ---
@@ -42,6 +44,7 @@ interface PrescriptionForm {
     followUp: string;
     avoid: string[];
     doctorName: string;
+    doctorSignature?: string; // URL or base64
 }
 
 const INITIAL_FORM: PrescriptionForm = {
@@ -58,7 +61,7 @@ const INITIAL_FORM: PrescriptionForm = {
     suggestedTests: [],
     followUp: '',
     avoid: [],
-    doctorName: 'Dr. Lakshmi Prasad'
+    doctorName: ''
 };
 
 // --- Mock Patients for Dropdown Removed as per request ---
@@ -66,50 +69,153 @@ const INITIAL_FORM: PrescriptionForm = {
 export default function PrescriptionPage() {
     const [mode, setMode] = useState<'AI' | 'SELF'>('SELF');
     const [formData, setFormData] = useState<PrescriptionForm>(INITIAL_FORM);
-    const [aiSearchTerm, setAiSearchTerm] = useState('');
+    // const [aiSearchTerm, setAiSearchTerm] = useState(''); // Unused
 
-    // -- AI Mode Handlers --
-    const handleAiSelect = (symptomData: any) => {
-        // Parse medicines from string "Name (Dosage)" to object if possible, or just raw
-        // The JSON has strings like "Paracetamol 500 mg (every 6 hrs)"
-        // We will put the whole string in 'name' or split it. 
-        // For specific layout match, we'll try to split, or just put descriptive text.
 
-        // Mapping JSON structure to Form
-        const mappedMeds: Medicine[] = symptomData.medicine.map((m: string) => ({
-            name: m,
-            dosage: '-',
-            freq: '-',
-            duration: '-',
-            notes: ''
-        }));
+    const searchParams = useSearchParams();
+    const appointmentId = searchParams.get('appointmentId');
+
+    // -- Fetch Appointment Details if ID present --
+    useEffect(() => {
+        if (appointmentId) {
+            const fetchDetails = async () => {
+                try {
+                    const res = await getAppointmentDetailsAction(appointmentId);
+
+                    if (res.success && res.data) {
+                        const apt = res.data;
+                        const patientName = apt.patient?.name || apt.patientDetails?.name || '';
+                        const age = apt.patient?.age || apt.patientDetails?.age || '';
+                        const gender = apt.patient?.gender || apt.patientDetails?.gender || 'Male';
+                        const mrn = apt.patient?.mrn || apt.mrn || '';
+                        const symptoms = Array.isArray(apt.symptoms) ? apt.symptoms.join(', ') : (apt.symptoms || '');
+                        const diagnosis = apt.reason || symptoms;
+
+                        setFormData(prev => ({
+                            ...prev,
+                            patientName,
+                            age: String(age), // Ensure string
+                            gender: gender,
+                            mrn,
+                            symptoms,
+                            diagnosis
+                        }));
+
+                        toast.success("Patient details loaded");
+                    } else {
+                        toast.error(res.error || "Failed to load appointment details");
+                    }
+                } catch (error) {
+                    console.error("Failed to prefill", error);
+                    toast.error("Failed to load appointment details");
+                }
+            };
+            fetchDetails();
+        }
+    }, [appointmentId]);
+
+    // -- Fetch Doctor Profile for Signature --
+    useEffect(() => {
+        const fetchDoctorProfile = async () => {
+            const res = await getDoctorProfileAction();
+            if (res.success && res.data) {
+                const doc = res.data;
+                setFormData(prev => ({
+                    ...prev,
+                    doctorName: doc.user?.name || doc.name || prev.doctorName,
+                    doctorSignature: doc.signature
+                }));
+            }
+        };
+        fetchDoctorProfile();
+    }, []);
+
+    // -- Auto-Generate Prescription Handler --
+    const handleGeneratePrescription = () => {
+        if (!formData.symptoms) {
+            toast.error("No symptoms to generate prescription from");
+            return;
+        }
+
+        const currentSymptoms = formData.symptoms.split(',').map(s => s.trim().toLowerCase());
+        let matchedMeds: Medicine[] = [];
+        let matchedDiet: string[] = [];
+        let matchedTests: string[] = [];
+        let matchedAvoid: string[] = [];
+        let matchedFollowUp: string = '';
+        let matchedDiagnosis: string[] = [];
+
+        // Iterate through all protocols
+        medicineData.symptoms_data.forEach((protocol: any) => {
+            // Check if protocol symptom is present in current symptoms (partial matching)
+            // We check if "Fever" is in "Fever, Cold"
+            const protocolSymptomLower = protocol.symptom.toLowerCase();
+
+            // Check if any user symptom contains the protocol symptom or vice versa
+            const isMatch = currentSymptoms.some(userSym =>
+                userSym.includes(protocolSymptomLower) || protocolSymptomLower.includes(userSym)
+            );
+
+            if (isMatch) {
+                matchedDiagnosis.push(protocol.symptom);
+
+                // Map Medicines
+                const meds: Medicine[] = protocol.medicine.map((m: string) => ({
+                    name: m,
+                    dosage: '-',
+                    freq: '-',
+                    duration: '-',
+                    notes: ''
+                }));
+                matchedMeds = [...matchedMeds, ...meds];
+
+                // Map Advice
+                if (protocol.diet_advice) matchedDiet = [...matchedDiet, ...protocol.diet_advice];
+                if (protocol.suggested_tests) matchedTests = [...matchedTests, ...protocol.suggested_tests];
+                if (protocol.avoid) matchedAvoid = [...matchedAvoid, ...protocol.avoid];
+                if (protocol.follow_up) matchedFollowUp = protocol.follow_up; // Take last matched follow up or append? Let's take last for now.
+            }
+        });
+
+        if (matchedMeds.length === 0) {
+            toast.error("No matching protocols found for these symptoms");
+            return;
+        }
+
+        // Deduplicate simple arrays
+        matchedDiet = Array.from(new Set(matchedDiet));
+        matchedTests = Array.from(new Set(matchedTests));
+        matchedAvoid = Array.from(new Set(matchedAvoid));
+        matchedDiagnosis = Array.from(new Set(matchedDiagnosis));
 
         setFormData(prev => ({
             ...prev,
-            symptoms: symptomData.symptom,
-            diagnosis: symptomData.symptom, // Using symptom as diagnosis for AI
-            medicines: mappedMeds,
-            dietAdvice: symptomData.diet_advice || [],
-            suggestedTests: symptomData.suggested_tests || [],
-            followUp: symptomData.follow_up || '',
-            avoid: symptomData.avoid || [],
-            date: new Date().toLocaleDateString('en-GB')
+            diagnosis: matchedDiagnosis.join(', '),
+            medicines: matchedMeds,
+            dietAdvice: matchedDiet,
+            suggestedTests: matchedTests,
+            avoid: matchedAvoid,
+            followUp: matchedFollowUp || prev.followUp
         }));
-        toast.success("AI Protocol Loaded for " + symptomData.symptom);
+
+        toast.success("Prescription Generated Successfully");
     };
+
+    // -- AI Mode Handlers Removed/Replaced --
+    // The previous handleAiSelect is no longer needed as we use the new button logic.
 
     // -- Self Mode Handlers --
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
-        // AI Match Logic on Symptoms Input
-        if (mode === 'AI' && name === 'symptoms') {
-            const match = medicineData.symptoms_data.find((s: any) => s.symptom.toLowerCase() === value.toLowerCase());
-            if (match) {
-                handleAiSelect(match);
-            }
-        }
+        // AI Match Logic on Symptoms Input removed as we use read-only symptoms
+        // if (mode === 'AI' && name === 'symptoms') {
+        //     const match = medicineData.symptoms_data.find((s: any) => s.symptom.toLowerCase() === value.toLowerCase());
+        //     if (match) {
+        //         handleAiSelect(match);
+        //     }
+        // }
     };
 
     // -- Medicine Array Handlers --
@@ -224,15 +330,16 @@ export default function PrescriptionPage() {
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Duration</label>
-                                <input type="text" name="duration" value={formData.duration} onChange={handleInputChange} placeholder="e.g. 3 days" className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-blue-500" />
+                                {/* Hidden/Removed as per request */}
+                                <input type="text" name="duration" value={formData.duration} onChange={handleInputChange} disabled className="w-full p-3 bg-gray-100 rounded-lg border border-gray-200 text-sm font-medium outline-none text-gray-400 cursor-not-allowed hidden" />
+                                <span className="text-xs text-gray-400 italic">Not required</span>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Date</label>
                                 <input type="text" name="date" value={formData.date} onChange={handleInputChange} className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-blue-500" />
                             </div>
                             <div className="col-span-1 flex flex-col items-center justify-center">
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">View Vitals</label>
-                                <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"><Activity size={18} /></button>
+                                {/* View Vitals Removed */}
                             </div>
                         </div>
                     </div>
@@ -242,23 +349,17 @@ export default function PrescriptionPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex justify-between">
-                                    Symptoms
-                                    {mode === 'AI' && <span className="text-indigo-500 flex items-center gap-1"><Sparkles size={10} /> AI Auto-Fill Active</span>}
+                                    Symptoms (Read-Only)
                                 </label>
-                                <input
-                                    type="text"
-                                    name="symptoms"
-                                    list="symptoms-list"
-                                    value={formData.symptoms}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100/50 transition-all"
-                                    placeholder={mode === 'AI' ? "Type symptom (e.g. Fever) to auto-fill..." : "Enter symptoms"}
-                                />
-                                <datalist id="symptoms-list">
-                                    {medicineData.symptoms_data.map((s: any, idx: number) => (
-                                        <option key={idx} value={s.symptom} />
-                                    ))}
-                                </datalist>
+                                <div className="w-full p-3 bg-gray-100 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 min-h-[46px] flex items-center">
+                                    {formData.symptoms || <span className="text-gray-400 italic">No symptoms fetched</span>}
+                                </div>
+                                <button
+                                    onClick={handleGeneratePrescription}
+                                    className="mt-3 w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Sparkles size={14} /> Generate Prescription
+                                </button>
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Diagnosis / Reason</label>
@@ -382,16 +483,17 @@ export default function PrescriptionPage() {
 
                         {/* Signature Block Editor */}
                         <div className="flex justify-end mt-12">
-                            <div className="w-64 border p-4 bg-gray-100 rounded-lg text-center opacity-80 group hover:opacity-100 transition-opacity">
-                                <input
-                                    type="text"
-                                    name="doctorName"
-                                    value={formData.doctorName}
-                                    onChange={handleInputChange}
-                                    className="font-handwriting text-2xl text-blue-900 mb-2 w-full text-center bg-transparent outline-none placeholder-blue-300"
-                                    placeholder="Sign Name"
-                                />
-                                <p className="text-[10px] uppercase text-gray-500">Doctor's Signature (Editable)</p>
+                            <div className="w-64 border p-4 bg-gray-50 rounded-lg text-center">
+                                {formData.doctorSignature ? (
+                                    <div className="h-16 flex items-center justify-center mb-2">
+                                        <img src={formData.doctorSignature} alt="Signature" className="max-h-full max-w-full" />
+                                    </div>
+                                ) : (
+                                    <div className="h-16 flex items-end justify-center mb-2">
+                                        <span className="font-handwriting text-2xl text-blue-900 font-bold">{formData.doctorName}</span>
+                                    </div>
+                                )}
+                                <p className="text-[10px] uppercase text-gray-500">Doctor's Signature</p>
                             </div>
                         </div>
 
@@ -522,9 +624,13 @@ export default function PrescriptionPage() {
                 {/* Footer Signature */}
                 <div className="absolute bottom-12 right-12 w-64 text-center">
                     <div className="h-20 flex items-end justify-center mb-2">
-                        {/* Signature Image Placeholder - in a real app, this would be an image tag */}
-                        <div className="bg-gray-100 px-4 py-2 rotate-[-2deg] opacity-80 rounded shadow-sm border border-gray-200">
-                            <span className="font-handwriting text-2xl text-blue-900 font-bold">{formData.doctorName}</span>
+                        {/* Signature Image or Font */}
+                        <div className="px-4 py-2 rotate-[-2deg] opacity-80 rounded align-bottom">
+                            {formData.doctorSignature ? (
+                                <img src={formData.doctorSignature} alt="Signature" className="h-16 object-contain" />
+                            ) : (
+                                <span className="font-handwriting text-2xl text-blue-900 font-bold">{formData.doctorName}</span>
+                            )}
                         </div>
                     </div>
                     <div className="border-t border-gray-400 pt-2">

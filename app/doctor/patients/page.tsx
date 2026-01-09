@@ -64,7 +64,7 @@ export default function PatientsPage() {
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                />
             </div>
-           
+
          </div>
 
          {/* Patients List */}
@@ -91,7 +91,7 @@ export default function PatientsPage() {
                                     </div>
                                     <div>
                                        <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{patient.name}</p>
-                                       <p className="text-xs text-gray-500">ID: {patient.id.slice(0, 8)}</p>
+                                       <p className="text-xs text-gray-500">MRN: {patient.mrn || 'N/A'}</p>
                                     </div>
                                  </div>
                               </td>

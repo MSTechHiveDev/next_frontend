@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Filter, Search, MoreVertical, X } from 'lucide-react';
 import { getAllAppointmentsAction } from '@/lib/integrations/actions/doctor.actions';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function DoctorAppointmentsPage() {
+   const router = useRouter();
    const [appointments, setAppointments] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
 
@@ -47,21 +49,30 @@ export default function DoctorAppointmentsPage() {
       // Assuming apt.date exists in YYYY-MM-DD or ISO format, or apt.startTime
       let matchesDate = true;
       if (dateFilter) {
-         const aptDate = apt.date ? new Date(apt.date).toISOString().split('T')[0] :
-            apt.startTime ? new Date(apt.startTime).toISOString().split('T')[0] : '';
-         matchesDate = aptDate === dateFilter;
+         // Create dates for comparison (ignoring time)
+         let aptDateStr = '';
+
+         if (apt.date) {
+            aptDateStr = new Date(apt.date).toISOString().split('T')[0];
+         } else if (apt.startTime) {
+            // Fallback if date field missing
+            aptDateStr = new Date(apt.startTime).toISOString().split('T')[0];
+         }
+
+         // Use local date string comparison if possible or simple ISO match
+         matchesDate = aptDateStr === dateFilter;
+
+         // Debug help if needed
+         // console.log(`Filter: ${dateFilter}, Apt: ${aptDateStr}, Match: ${matchesDate}`);
       }
 
       return matchesSearch && matchesStatus && matchesDate;
    });
 
-   // Date Restrictions (Current Month)
-   const now = new Date();
-   const currentYear = now.getFullYear();
-   const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-   const lastDay = new Date(currentYear, now.getMonth() + 1, 0).getDate();
-   const minDate = `${currentYear}-${currentMonth}-01`;
-   const maxDate = `${currentYear}-${currentMonth}-${lastDay}`;
+   // Date Restrictions (Removed to allow full history)
+   // const now = new Date();
+   // const currentYear = now.getFullYear();
+   // ...
 
    const clearFilters = () => {
       setSearchQuery('');
@@ -114,8 +125,6 @@ export default function DoctorAppointmentsPage() {
                <input
                   type="date"
                   value={dateFilter}
-                  min={minDate}
-                  max={maxDate}
                   onChange={(e) => setDateFilter(e.target.value)}
                   className="pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 font-medium rounded-lg text-sm border border-gray-200 dark:border-gray-800 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                />
@@ -149,6 +158,7 @@ export default function DoctorAppointmentsPage() {
                         <tr>
                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Time</th>
                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Patient Details</th>
+                           <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Symptoms</th>
                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                            <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
@@ -182,6 +192,11 @@ export default function DoctorAppointmentsPage() {
                                  </div>
                               </td>
                               <td className="px-6 py-4">
+                                 <span className="text-sm text-gray-600 dark:text-gray-300">
+                                    {Array.isArray(apt.symptoms) && apt.symptoms.length > 0 ? apt.symptoms.join(', ') : (apt.symptoms || '-')}
+                                 </span>
+                              </td>
+                              <td className="px-6 py-4">
                                  <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700">
                                     {apt.type}
                                  </span>
@@ -196,8 +211,11 @@ export default function DoctorAppointmentsPage() {
                                  </span>
                               </td>
                               <td className="px-6 py-4 text-right">
-                                 <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
-                                    <MoreVertical size={18} />
+                                 <button
+                                    onClick={() => router.push(`/doctor/prescription?appointmentId=${apt.id || apt._id}`)}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-md shadow-blue-600/20 transition-all flex items-center gap-2 ml-auto"
+                                 >
+                                    Start <MoreVertical size={14} className="hidden" />
                                  </button>
                               </td>
                            </tr>

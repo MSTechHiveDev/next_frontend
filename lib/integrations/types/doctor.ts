@@ -25,6 +25,7 @@ export interface DoctorPatient {
   age?: number;
   gender?: string;
   condition?: string;
+  mrn?: string;
 }
 
 export interface DoctorQuickNote {
@@ -53,4 +54,11 @@ export interface DoctorProfile {
   bio?: string;
   consultationFee?: number;
   quickNotes?: DoctorQuickNote[];
+  availability?: {
+    days: string[];
+    startTime: string;
+    endTime: string;
+    breakStart?: string;
+    breakEnd?: string;
+  }[];
 }

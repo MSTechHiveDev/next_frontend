@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { helpdeskData } from "@/lib/integrations/data/helpdesk";
+import { helpdeskService } from '@/lib/integrations/services/helpdesk.service';
+import type { HelpdeskDoctor } from '@/lib/integrations/types/helpdesk';
 
 export interface Patient {
   id: string; // MRN
@@ -20,21 +21,25 @@ export interface Patient {
 
 export interface Appointment {
   id: string;
-  patientId: string; // MRN
   patientName: string;
   doctorName: string;
-  doctorId: string;
   time: string;
+  date: Date | string;
   type: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  status: string;
+  patientId?: string; // Optional if backend provides it later
+  doctorId?: string; // Optional if backend provides it later
 }
 
 interface HelpdeskState {
   patients: Patient[];
   appointments: Appointment[];
-  doctors: typeof helpdeskData.doctors;
-  
+  doctors: HelpdeskDoctor[];
+  isLoading: boolean;
+  error: string | null;
+
   // Actions
+  fetchDashboardData: () => Promise<void>;
   addPatient: (patient: Patient) => void;
   addAppointment: (appointment: Appointment) => void;
   getPatient: (id: string) => Patient | undefined;
@@ -49,15 +54,12 @@ interface HelpdeskState {
 }
 
 export const useHelpdeskStore = create<HelpdeskState>((set, get) => ({
-  patients: helpdeskData.recentPatients,
-  appointments: helpdeskData.upcomingAppointments.map(a => ({
-    ...a, 
-    status: 'Scheduled', 
-    doctorId: '1',
-    patientId: `MRN-${Math.floor(Math.random() * 90000)}` 
-  })),
-  doctors: helpdeskData.doctors,
-  
+  patients: [],
+  appointments: [],
+  doctors: [],
+  isLoading: false,
+  error: null,
+
   hospitalDetails: {
     name: "CureChain Medical Center",
     address: "123 Health Avenue, Medicity, NY 10001",
@@ -65,16 +67,38 @@ export const useHelpdeskStore = create<HelpdeskState>((set, get) => ({
     email: "contact@curechain.health"
   },
 
-  addPatient: (patient) => set((state) => ({ 
-    patients: [patient, ...state.patients] 
+  fetchDashboardData: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await helpdeskService.getDashboard();
+
+      // Map backend data to store types if necessary
+      // Note: Backend 'recentPatients' and 'appointments' match store expectations mostly
+      set({
+        patients: (data.recentPatients || []) as Patient[],
+        appointments: (data.appointments || []) as Appointment[],
+        isLoading: false
+      });
+
+      // Also fetch doctors as they might be separate in some implementations
+      const doctors = await helpdeskService.getDoctors();
+      set({ doctors });
+
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch dashboard data', isLoading: false });
+    }
+  },
+
+  addPatient: (patient) => set((state) => ({
+    patients: [patient, ...state.patients]
   })),
 
-  addAppointment: (appointment) => set((state) => ({ 
-    appointments: [...state.appointments, appointment] 
+  addAppointment: (appointment) => set((state) => ({
+    appointments: [...state.appointments, appointment]
   })),
 
   getPatient: (id) => get().patients.find(p => p.id === id),
-  
+
   checkPatientExists: (mobile) => {
     return get().patients.some(p => p.contact === mobile);
   },
