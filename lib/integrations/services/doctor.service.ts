@@ -81,5 +81,56 @@ export const doctorService = {
     apiClient<any>(DOCTOR_ENDPOINTS.START_NEXT, {
       method: 'POST',
     }),
+
+  // Consultation Workflow
+  startConsultation: (appointmentId: string) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.START_CONSULTATION(appointmentId), {
+      method: 'POST',
+    }),
+
+  endConsultation: (appointmentId: string, data?: any) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.END_CONSULTATION(appointmentId), {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
+  getConsultationSummary: (appointmentId: string) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.CONSULTATION_SUMMARY(appointmentId)),
+
+  createPrescription: (data: any) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.CREATE_PRESCRIPTION, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  createLabToken: (data: any) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.CREATE_LAB_TOKEN, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getPrescriptionById: (id: string) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.GET_PRESCRIPTION(id)),
+
+  getLabTokenById: (id: string) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.GET_LAB_TOKEN(id)),
+
+  sendToHelpdesk: (data: { appointmentId: string; cloudinaryDocumentUrl?: string; cloudinaryLabTokenUrl?: string }) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.SEND_TO_HELPDESK, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  uploadDocument: (file: File | Blob, fileName: string) => {
+    const formData = new FormData();
+    formData.append('photo', file, fileName);
+    return apiClient<any>(DOCTOR_ENDPOINTS.UPLOAD_PHOTO, {
+      method: 'POST',
+      body: formData,
+      // Note: apiClient needs to NOT set Content-Type if body is FormData
+      headers: {} 
+    });
+  },
 };
+
 

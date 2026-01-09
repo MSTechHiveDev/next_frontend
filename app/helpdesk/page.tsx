@@ -16,7 +16,8 @@ import {
   Stethoscope,
   TrendingUp,
   MapPin,
-  MoreVertical
+  MoreVertical,
+  User
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { helpdeskService, type HelpdeskDashboard } from "@/lib/integrations";
@@ -28,6 +29,7 @@ export default function HelpdeskDashboard() {
   const { user, isAuthenticated } = useAuthStore();
   const [dashboardData, setDashboardData] = useState<HelpdeskDashboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showQueue, setShowQueue] = useState(true); // Toggle for showing queue with wait times
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'hospital-admin') {
@@ -44,13 +46,14 @@ export default function HelpdeskDashboard() {
     try {
       setLoading(true);
       const data = await helpdeskService.getDashboard();
-      console.log('[Dashboard] Received data from backend:', data);
-      console.log('[Dashboard] Stats:', data.stats);
-      console.log('[Dashboard] Recent patients:', data.recentPatients?.length || 0);
-      console.log('[Dashboard] Appointments:', data.appointments?.length || 0);
+      console.log('[Helpdesk] Received data from backend:', data);
+      console.log('[Helpdesk] Stats:', data.stats);
+      console.log('[Helpdesk] Recent patients:', data.recentPatients?.length || 0);
+      console.log('[Helpdesk] Appointments:', data.appointments?.length || 0);
+      console.log('[Helpdesk] Appointments array:', data.appointments);
       setDashboardData(data);
     } catch (error: any) {
-      console.error("[Dashboard] Failed to fetch dashboard data:", error);
+      console.error("[Helpdesk] Failed to fetch dashboard data:", error);
       toast.error(error.message || "Failed to load dashboard statistics");
       setDashboardData({
         stats: {
@@ -159,56 +162,110 @@ export default function HelpdeskDashboard() {
                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic leading-none">Operational Queue</h3>
                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">Upcoming Patient Transitions</p>
                 </div>
-                <div className="relative">
-                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                   <input type="text" placeholder="Search manifest..." className="pl-11 pr-6 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64" />
+                <div className="flex items-center gap-4">
+                   {/* Queue Toggle Switch */}
+                   <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-2xl border border-gray-200 dark:border-gray-600">
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Queue View</span>
+                      <button
+                        onClick={() => setShowQueue(!showQueue)}
+                        className={`relative w-12 h-6 rounded-full transition-all ${
+                          showQueue ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                      >
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                          showQueue ? 'translate-x-6' : 'translate-x-0'
+                        }`} />
+                      </button>
+                      <span className={`text-[10px] font-black uppercase tracking-wider ${
+                        showQueue ? 'text-blue-600' : 'text-gray-400'
+                      }`}>
+                        {showQueue ? 'ON' : 'OFF'}
+                      </span>
+                   </div>
+                   
+                   <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input type="text" placeholder="Search manifest..." className="pl-11 pr-6 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64" />
+                   </div>
                 </div>
              </div>
              
              <div className="divide-y divide-gray-50 dark:divide-gray-700">
-                {appointments.length > 0 ? appointments.map((apt: any, idx: number) => (
-                  <div key={idx} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-all group">
-                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-center gap-5">
-                           <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-black group-hover:scale-110 transition-transform">
-                              {apt.patientName?.charAt(0) || 'P'}
-                           </div>
-                           <div>
-                              <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tight text-lg">{apt.patientName}</h4>
-                              <div className="flex items-center gap-3 mt-1">
-                                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md">
-                                    <Stethoscope size={10} className="inline mr-1" /> {apt.doctorName}
-                                 </span>
-                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                    {apt.type}
-                                 </span>
+                {showQueue ? (
+                  appointments.length > 0 ? appointments.map((apt: any, idx: number) => (
+                    <div key={idx} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-all group">
+                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                          <div className="flex items-center gap-5">
+                             <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-black group-hover:scale-110 transition-transform">
+                                {apt.patientName?.charAt(0) || 'P'}
+                             </div>
+                             <div>
+                                <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tight text-lg">{apt.patientName}</h4>
+                                <div className="flex items-center gap-3 mt-1">
+                                   <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md">
+                                      <Stethoscope size={10} className="inline mr-1" /> {apt.doctorName}
+                                   </span>
+                                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                      {apt.type}
+                                   </span>
+                                </div>
+                             </div>
+                          </div>
+                          <div className="flex items-center gap-4 justify-between md:justify-end">
+                              <div className="text-right">
+                                 <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tighter">
+                                   {apt.time && apt.time !== 'N/A' ? apt.time : (
+                                     <span className="text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md text-[9px] animate-pulse">IN QUEUE</span>
+                                   )}
+                                 </p>
+                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Est. Duration 20m</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                 {["Booked", "pending"].includes(apt.status) ? (
+                                   <button 
+                                     onClick={async () => {
+                                       try {
+                                         await helpdeskService.updateAppointmentStatus(apt.id || apt._id, 'confirmed');
+                                         toast.success("Patient sent to doctor!");
+                                         fetchDashboardData();
+                                       } catch (err: any) {
+                                         toast.error(err.message || "Failed to send patient");
+                                       }
+                                     }}
+                                     className="px-4 py-1.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
+                                   >
+                                     SEND TO DOCTOR
+                                   </button>
+                                 ) : (
+                                   <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                                      {apt.status}
+                                   </span>
+                                 )}
+                                 <button className="p-2.5 text-gray-300 hover:text-blue-600 transition-colors">
+                                    <ChevronRight size={18} />
+                                 </button>
                               </div>
                            </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-8 justify-between md:justify-end">
-                           <div className="text-right">
-                              <p className="text-sm font-black text-gray-900 dark:text-white">{apt.time}</p>
-                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Est. Duration 20m</p>
-                           </div>
-                           <div className="flex items-center gap-2">
-                              <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${idx === 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
-                                 {apt.status}
-                              </span>
-                              <button className="p-2.5 text-gray-300 hover:text-blue-600 transition-colors">
-                                 <ChevronRight size={18} />
-                              </button>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-                )) : (
-                  <div className="p-20 text-center">
-                    <div className="w-20 h-20 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100 dark:border-gray-600">
-                       <Calendar className="text-gray-200 w-10 h-10" />
+                       </div>
                     </div>
-                    <h4 className="text-xl font-black text-gray-300 italic tracking-tight uppercase">Manifest Empty</h4>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">No upcoming consultations logged for this window</p>
+                  )) : (
+                    <div className="p-20 text-center">
+                      <div className="w-20 h-20 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100 dark:border-gray-600">
+                         <Calendar className="text-gray-200 w-10 h-10" />
+                      </div>
+                      <h4 className="text-xl font-black text-gray-300 italic tracking-tight uppercase">Manifest Empty</h4>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-2">No upcoming consultations logged for this window</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="p-20 text-center">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Queue View Disabled</p>
+                    <p className="text-xs text-gray-400 mt-1">Toggle ON to see patient queue</p>
+                    <div className="mt-4 text-4xl font-black text-gray-300">{appointments.length}</div>
+                    <p className="text-xs text-gray-400 mt-1">Appointments hidden</p>
                   </div>
                 )}
              </div>

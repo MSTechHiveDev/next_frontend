@@ -15,6 +15,7 @@ import {
 import DoctorDashboardCharts from '@/components/doctor/DoctorDashboardCharts';
 import QuickNotesInput from '@/components/doctor/QuickNotesInput';
 import DoctorNotesList from '@/components/doctor/DoctorNotesList';
+import DoctorAppointmentsSection from '@/components/doctor/DoctorAppointmentsSection';
 
 export default async function DoctorDashboard() {
    // Parallel data fetching
@@ -77,82 +78,16 @@ export default async function DoctorDashboard() {
                   </div>
                </div>
 
-               <div className="flex-1 flex items-center justify-center">
-                  {appointments.length > 0 ? (
-                     <div className="w-full space-y-3">
-                        {appointments.slice(0, 3).map((apt: any, i: number) => (
-                           <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-blue-200 transition-all group">
-                              <div className="flex items-center gap-4">
-                                 <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold shadow-sm">{apt.patientName?.charAt(0) || 'P'}</div>
-                                 <div>
-                                    <h4 className="font-bold text-gray-900 dark:text-white">{apt.patientName}</h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">{apt.time} • {apt.type}</p>
-                                 </div>
-                              </div>
-                              <span className="px-3 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">Start</span>
-                           </div>
-                        ))}
-                        {appointments.length > 3 && <p className="text-center text-xs text-gray-400 font-medium mt-2">+{appointments.length - 3} more</p>}
-                     </div>
-                  ) : (
-                     <div className="text-center">
-                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-sm font-medium text-gray-400">No appointments scheduled for today</p>
-                     </div>
-                  )}
-               </div>
-
                {/* Quick Notes Input */}
                <QuickNotesInput />
             </div>
 
-            {/* Right Column: Summary & Notes */}
-            <div className="space-y-6">
-               {/* Patient Queue Summary */}
-               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Patient Queue</h3>
-                  <div className="flex items-center justify-between">
-                     <div>
-                        <span className="text-4xl font-black text-blue-600 block mb-1">
-                           {appointments.length}
-                        </span>
-                        <span className="text-xs font-medium text-gray-400">Patients Waiting</span>
-                     </div>
-                     <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600">
-                        <User size={24} />
-                     </div>
-                  </div>
-               </div>
+            {/* Appointments Section with Dynamic Stats */}
+            <DoctorAppointmentsSection />
 
-               {/* Today's Summary */}
-               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-6">Today's Summary</h3>
-                  <div className="space-y-6">
-                     <div>
-                        <div className="flex justify-between text-xs font-bold mb-2">
-                           <span className="text-gray-500 dark:text-gray-400">Total Appointments</span>
-                           <span className="text-gray-900 dark:text-white">{stats.appointmentsToday}</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                           <div className="h-full bg-blue-600 rounded-full" style={{ width: '100%' }}></div>
-                        </div>
-                     </div>
-                     <div>
-                        <div className="flex justify-between text-xs font-bold mb-2">
-                           <span className="text-gray-500 dark:text-gray-400">Completed</span>
-                           <span className="text-green-600">{stats.appointmentsToday}</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                           <div className="h-full bg-green-500 rounded-full" style={{ width: '0%' }}></div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               {/* Notes List */}
-               <div className="h-full">
-                  <DoctorNotesList initialNotes={notes} />
-               </div>
+            {/* Notes List */}
+            <div className="lg:col-span-3">
+               <DoctorNotesList initialNotes={notes} />
             </div>
          </div>
       </div>
