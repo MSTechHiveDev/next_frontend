@@ -21,6 +21,7 @@ export const DISCHARGE_ENDPOINTS = {
 export const USER_ENDPOINTS = {
   PROFILE: '/auth/me', // Unified profile endpoint in new backend
   PATCH_PROFILE: '/auth/me',
+  UPDATE_PROFILE: '/auth/me', // Updated to match backend route
   PATIENT_PROFILE: '/patients/profile',
   DOCTOR_PROFILE: '/doctors/me',
   UPDATE_PATIENT_PROFILE: '/patients/profile',
@@ -94,6 +95,7 @@ export const LAB_ENDPOINTS = {
   TESTS: {
     BASE: '/lab/tests',
     BY_ID: (id: string) => `/lab/tests/${id}`,
+    PARAMETERS: (id: string) => `/lab/tests/${id}/parameters`,
   },
   DEPARTMENTS: {
     BASE: '/lab/departments',

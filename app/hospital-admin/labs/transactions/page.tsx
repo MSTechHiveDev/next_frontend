@@ -77,9 +77,14 @@ export default function HospitalAdminLabTransactionsPage() {
             subCell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF6B7280' } };
             subCell.alignment = { horizontal: 'center' };
 
-            worksheet.getCell('A5').value = 'Audit Sector:';
-            worksheet.getCell('B5').value = startDate && endDate ? `${startDate} to ${endDate}` : 'ALL_TIME_RECORDS';
+            // Dates
+            worksheet.getCell('A5').value = 'Report Period Start:';
+            worksheet.getCell('B5').value = startDate ? new Date(startDate).toLocaleDateString('en-GB') : 'ALL_TIME_START';
             worksheet.getCell('A5').font = { bold: true };
+
+            worksheet.getCell('A6').value = 'Report Period End:';
+            worksheet.getCell('B6').value = endDate ? new Date(endDate).toLocaleDateString('en-GB') : 'CURRENT';
+            worksheet.getCell('A6').font = { bold: true };
 
             // Column Alignment Mapping
             const columns = [
@@ -87,13 +92,13 @@ export default function HospitalAdminLabTransactionsPage() {
                 { header: 'TIMESTAMP', key: 'date', width: 15 },
                 { header: 'PATIENT_ENTITY', key: 'patient', width: 25 },
                 { header: 'CONTACT', key: 'phone', width: 15 },
-                { header: 'QUANTUM (₹)', key: 'amount', width: 12 },
-                { header: 'PAID (₹)', key: 'paid', width: 12 },
-                { header: 'VALIDATION', key: 'status', width: 12 },
-                { header: 'GATEWAY', key: 'mode', width: 10 },
+                { header: 'QUANTUM (₹)', key: 'amount', width: 15 },
+                { header: 'PAID (₹)', key: 'paid', width: 15 },
+                { header: 'VALIDATION', key: 'status', width: 15 },
+                { header: 'GATEWAY', key: 'mode', width: 15 },
             ];
 
-            const headerRow = worksheet.getRow(7);
+            const headerRow = worksheet.getRow(8);
             columns.forEach((col, idx) => {
                 const cell = headerRow.getCell(idx + 1);
                 cell.value = col.header;
@@ -105,10 +110,11 @@ export default function HospitalAdminLabTransactionsPage() {
                 cell.font = { color: { argb: 'FFFFFFFF' }, bold: true, size: 10 };
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
                 cell.border = { bottom: { style: 'medium', color: { argb: 'FF3B82F6' } } };
+                worksheet.getColumn(idx + 1).width = col.width;
             });
 
             allBills.forEach((bill, index) => {
-                const rIdx = 8 + index;
+                const rIdx = 9 + index;
                 const row = worksheet.getRow(rIdx);
                 row.values = [
                     bill.invoiceId,
@@ -135,6 +141,35 @@ export default function HospitalAdminLabTransactionsPage() {
                     }
                 });
             });
+
+            // Calculate Totals
+            const totalAmount = allBills.reduce((sum, b) => sum + (Number(b.finalAmount) || 0), 0);
+            const totalPaid = allBills.reduce((sum, b) => sum + (Number(b.paidAmount) || 0), 0);
+            const lastRowIdx = 9 + allBills.length;
+
+            // Margin
+            const marginRow = worksheet.getRow(lastRowIdx + 1);
+            marginRow.height = 10;
+
+            // Total Amount Row
+            const totalRow = worksheet.getRow(lastRowIdx + 2);
+            totalRow.getCell(4).value = 'TOTAL REVENUE:';
+            totalRow.getCell(4).font = { bold: true, color: { argb: 'FF1F2937' } };
+            totalRow.getCell(4).alignment = { horizontal: 'right' };
+
+            totalRow.getCell(5).value = totalAmount;
+            totalRow.getCell(5).numFmt = '₹#,##0.00';
+            totalRow.getCell(5).font = { bold: true, size: 12, color: { argb: 'FF1F2937' } };
+
+            // Total Paid Row
+            const paidRow = worksheet.getRow(lastRowIdx + 3);
+            paidRow.getCell(4).value = 'TOTAL RECEIVED:';
+            paidRow.getCell(4).font = { bold: true, color: { argb: 'FF059669' } };
+            paidRow.getCell(4).alignment = { horizontal: 'right' };
+
+            paidRow.getCell(6).value = totalPaid;
+            paidRow.getCell(6).numFmt = '₹#,##0.00';
+            paidRow.getCell(6).font = { bold: true, size: 12, color: { argb: 'FF059669' } };
 
             const buffer = await workbook.xlsx.writeBuffer();
             saveAs(new Blob([buffer]), `Lab_Audit_Manifest_${new Date().toISOString().split('T')[0]}.xlsx`);

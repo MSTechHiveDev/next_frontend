@@ -82,12 +82,30 @@ const ResultPrintView: React.FC<ResultPrintViewProps> = ({ sample }) => {
                 </div>
 
                 <div className="grid grid-cols-[100px_1fr]">
-                    <span className="font-bold">Sample Type :</span>
-                    <span>{sample.sampleType}</span>
+                    <span className="font-bold">Ordered On :</span>
+                    <span>{sample.createdAt ? new Date(sample.createdAt).toLocaleString() : '-'}</span>
                 </div>
                 <div className="grid grid-cols-[100px_1fr]">
                     <span className="font-bold">Reported On :</span>
                     <span>{sample.reportDate ? new Date(sample.reportDate).toLocaleString() : '-'}</span>
+                </div>
+
+                <div className="grid grid-cols-[100px_1fr]">
+                    <span className="font-bold">Sample Type :</span>
+                    <span>{sample.sampleType}</span>
+                </div>
+
+                <div className="grid grid-cols-[100px_1fr]">
+                    <span className="font-bold">Turnaround :</span>
+                    <span>
+                        {(() => {
+                            if (!sample.collectionDate || !sample.reportDate) return '-';
+                            const diff = new Date(sample.reportDate).getTime() - new Date(sample.collectionDate).getTime();
+                            const hours = Math.floor(diff / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            return `${hours}h ${minutes}m`;
+                        })()}
+                    </span>
                 </div>
             </div>
 

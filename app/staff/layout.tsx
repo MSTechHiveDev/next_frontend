@@ -6,6 +6,7 @@ import Navbar from '@/components/navbar/Navbar';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
 import { LayoutDashboard, CalendarCheck, Calendar, Clock, Bell, User, ReceiptText, BookOpenCheck, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useThemeStore } from '@/stores/themeStore';
 import LogoutModal from '@/components/auth/LogoutModal';
 
 const staffMenuItems: SidebarItem[] = [
@@ -18,8 +19,8 @@ const staffMenuItems: SidebarItem[] = [
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const { user, logout, isInitialized, isAuthenticated, isLoading, checkAuth, initEvents } = useAuthStore();
+    const { theme, toggleTheme } = useThemeStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     useEffect(() => {
@@ -81,7 +82,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     };
 
     return (
-        <div className={`flex min-h-screen ${isDarkMode ? 'dark' : ''} bg-gray-50 dark:bg-gray-900`}>
+        <div className={`flex min-h-screen bg-gray-50 dark:bg-gray-900`}>
             <LogoutModal
                 isOpen={isLogoutModalOpen}
                 onClose={() => setIsLogoutModalOpen(false)}
@@ -104,8 +105,8 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                     title="Staff Portal"
                     user={staffUser}
                     onMenuClick={() => setIsSidebarOpen(true)}
-                    isDarkMode={isDarkMode}
-                    onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+                    isDarkMode={theme === 'dark'}
+                    onThemeToggle={toggleTheme}
                     onLogout={() => setIsLogoutModalOpen(true)}
                     className="sticky top-0 z-30"
                 />

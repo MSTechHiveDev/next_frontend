@@ -67,14 +67,28 @@ export default function TransactionsPage() {
             subtitleCell.alignment = { horizontal: 'center' };
 
             // 2. Date Range
-            const dates = allBills.map(b => new Date(b.createdAt));
-            const fromDate = new Date(Math.min(...dates.map(d => d.getTime()))).toLocaleDateString();
-            const toDate = new Date(Math.max(...dates.map(d => d.getTime()))).toLocaleDateString();
+            // 2. Date Range
+            let fromDateCheck = 'All Time';
+            let toDateCheck = 'Present';
 
-            worksheet.getCell('A4').value = 'From Date:';
-            worksheet.getCell('B4').value = fromDate;
-            worksheet.getCell('A5').value = 'To Date:';
-            worksheet.getCell('B5').value = toDate;
+            if (startDate) {
+                fromDateCheck = new Date(startDate).toLocaleDateString('en-GB');
+            } else if (allBills.length > 0) {
+                const dates = allBills.map(b => new Date(b.createdAt));
+                fromDateCheck = new Date(Math.min(...dates.map(d => d.getTime()))).toLocaleDateString('en-GB');
+            }
+
+            if (endDate) {
+                toDateCheck = new Date(endDate).toLocaleDateString('en-GB');
+            } else if (allBills.length > 0 && !startDate) {
+                const dates = allBills.map(b => new Date(b.createdAt));
+                toDateCheck = new Date(Math.max(...dates.map(d => d.getTime()))).toLocaleDateString('en-GB');
+            }
+
+            worksheet.getCell('A4').value = 'Report From:';
+            worksheet.getCell('B4').value = fromDateCheck;
+            worksheet.getCell('A5').value = 'Report To:';
+            worksheet.getCell('B5').value = toDateCheck;
             [worksheet.getCell('A4'), worksheet.getCell('A5')].forEach(c => c.font = { bold: true });
 
             // 3. Header Row
@@ -159,11 +173,11 @@ export default function TransactionsPage() {
     };
 
     return (
-        <div className="p-6">
+        <div className="p-6 transition-colors duration-500">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Transactions</h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage and track all laboratory billings</p>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">Transactions</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track all laboratory billings</p>
                 </div>
                 <button
                     onClick={handleExport}
@@ -176,14 +190,14 @@ export default function TransactionsPage() {
             </div>
 
             {/* Filter Bar */}
-            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6 flex flex-wrap gap-4 items-end">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm mb-6 flex flex-wrap gap-4 items-end transition-colors">
                 <div>
                     <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1 tracking-widest">Start Date</label>
                     <input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                        className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-green-500 transition-all placeholder:text-gray-400"
                     />
                 </div>
                 <div>
@@ -193,7 +207,7 @@ export default function TransactionsPage() {
                         value={endDate}
                         min={startDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-green-500 transition-all"
+                        className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-green-500 transition-all placeholder:text-gray-400"
                     />
                 </div>
                 <button
@@ -204,10 +218,10 @@ export default function TransactionsPage() {
                 </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-600">
-                        <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
+                    <table className="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+                        <thead className="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 font-medium border-b border-gray-200 dark:border-gray-700">
                             <tr>
                                 <th className="px-6 py-4">Invoice ID</th>
                                 <th className="px-6 py-4">Date</th>
@@ -219,28 +233,28 @@ export default function TransactionsPage() {
                                 <th className="px-6 py-4">Mode</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">Loading transactions...</td>
+                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Loading transactions...</td>
                                 </tr>
                             ) : bills.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">No transactions found</td>
+                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No transactions found</td>
                                 </tr>
                             ) : (
                                 bills.map((bill) => (
-                                    <tr key={bill._id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-gray-800">{bill.invoiceId}</td>
+                                    <tr key={bill._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-gray-800 dark:text-white">{bill.invoiceId}</td>
                                         <td className="px-6 py-4">{new Date(bill.createdAt).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 font-semibold">{bill.patientDetails.name}</td>
+                                        <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">{bill.patientDetails.name}</td>
                                         <td className="px-6 py-4">{bill.patientDetails.mobile}</td>
-                                        <td className="px-6 py-4 font-bold">₹{bill.finalAmount}</td>
-                                        <td className="px-6 py-4 text-green-600 font-bold">₹{bill.paidAmount}</td>
+                                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">₹{bill.finalAmount}</td>
+                                        <td className="px-6 py-4 text-green-600 dark:text-green-400 font-bold">₹{bill.paidAmount}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${bill.status === 'Paid' ? 'bg-green-100 text-green-700' :
-                                                bill.status === 'Due' ? 'bg-red-100 text-red-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${bill.status === 'Paid' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                                bill.status === 'Due' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                                                    'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                                                 }`}>
                                                 {bill.status}
                                             </span>
@@ -256,11 +270,11 @@ export default function TransactionsPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="p-4 border-t border-gray-200 flex justify-between items-center bg-gray-50/50">
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900 transition-colors">
                     <button
                         disabled={page <= 1}
                         onClick={() => setPage(p => p - 1)}
-                        className="px-6 py-2 text-xs font-black uppercase tracking-widest border border-gray-200 rounded-lg hover:bg-white transition-all disabled:opacity-50 shadow-sm active:scale-95"
+                        className="px-6 py-2 text-xs font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50 shadow-sm active:scale-95"
                     >
                         Previous
                     </button>
@@ -268,7 +282,7 @@ export default function TransactionsPage() {
                     <button
                         disabled={page >= totalPages}
                         onClick={() => setPage(p => p + 1)}
-                        className="px-6 py-2 text-xs font-black uppercase tracking-widest border border-gray-200 rounded-lg hover:bg-white transition-all disabled:opacity-50 shadow-sm active:scale-95"
+                        className="px-6 py-2 text-xs font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50 shadow-sm active:scale-95"
                     >
                         Next
                     </button>

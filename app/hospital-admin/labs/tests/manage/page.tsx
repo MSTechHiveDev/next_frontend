@@ -239,6 +239,19 @@ export default function HospitalAdminManageTestPage() {
                                 </div>
                             </div>
 
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Internal Code</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        className="w-full pl-5 pr-4 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-black dark:text-white"
+                                        placeholder="CODE-001"
+                                        value={formData.testCode}
+                                        onChange={e => setFormData({ ...formData, testCode: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
                             <div className="space-y-6 md:col-span-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Node Distribution *</label>
@@ -321,6 +334,147 @@ export default function HospitalAdminManageTestPage() {
                         </div>
                     </div>
 
+                    {/* Clinical Parameters Section */}
+                    <div className="space-y-10">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-2xl">
+                                <Activity size={24} />
+                            </div>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic underline decoration-teal-500/30 decoration-4 underline-offset-8">Clinical Parameters</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Unit of Measure</label>
+                                <select
+                                    className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 text-xs font-black dark:text-white"
+                                    value={formData.unit}
+                                    onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                                >
+                                    <option value="">-- Select Unit --</option>
+                                    {metaOptions.units?.map((u: string) => <option key={u} value={u}>{u}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Report Format</label>
+                                <select
+                                    className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 text-xs font-black dark:text-white"
+                                    value={formData.reportType}
+                                    onChange={e => setFormData({ ...formData, reportType: e.target.value as any })}
+                                >
+                                    <option value="numeric">NUMERIC ONLY</option>
+                                    <option value="text">TEXTUAL / REMARKS</option>
+                                    <option value="both">HYBRID (BOTH)</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sample Volume</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 text-xs font-black dark:text-white"
+                                    placeholder="e.g. 2ml Serum"
+                                    value={formData.sampleVolume}
+                                    onChange={e => setFormData({ ...formData, sampleVolume: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex items-center h-full pt-4">
+                                <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl w-full cursor-pointer" onClick={() => setFormData({ ...formData, fastingRequired: !formData.fastingRequired })}>
+                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${formData.fastingRequired ? 'border-teal-500 bg-teal-500' : 'border-gray-300 dark:border-gray-700'}`}>
+                                        {formData.fastingRequired && <Activity size={14} className="text-white" />}
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 select-none">Fasting Required</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Biological Reference Thresholds */}
+                    <div className="space-y-10">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-2xl">
+                                <Activity size={24} />
+                            </div>
+                            <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic underline decoration-rose-500/30 decoration-4 underline-offset-8">Biological Reference Thresholds</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {/* Male */}
+                            <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-3xl border border-blue-100 dark:border-blue-900/30 hover:border-blue-300 transition-colors">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-800 dark:text-blue-300">Male Spectrum</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input
+                                        type="number"
+                                        placeholder="MIN"
+                                        className="w-full p-3 bg-white dark:bg-gray-900 border-none rounded-xl text-xs font-black text-center dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        value={formData.normalRanges.male.min}
+                                        onChange={e => handleRangeChange('male', 'min', e.target.value)}
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="MAX"
+                                        className="w-full p-3 bg-white dark:bg-gray-900 border-none rounded-xl text-xs font-black text-center dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        value={formData.normalRanges.male.max}
+                                        onChange={e => handleRangeChange('male', 'max', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Female */}
+                            <div className="p-6 bg-pink-50/50 dark:bg-pink-900/10 rounded-3xl border border-pink-100 dark:border-pink-900/30 hover:border-pink-300 transition-colors">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-3 h-3 rounded-full bg-pink-500 shadow-lg shadow-pink-500/50"></div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-800 dark:text-pink-300">Female Spectrum</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input
+                                        type="number"
+                                        placeholder="MIN"
+                                        className="w-full p-3 bg-white dark:bg-gray-900 border-none rounded-xl text-xs font-black text-center dark:text-white outline-none focus:ring-2 focus:ring-pink-500/50"
+                                        value={formData.normalRanges.female.min}
+                                        onChange={e => handleRangeChange('female', 'min', e.target.value)}
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="MAX"
+                                        className="w-full p-3 bg-white dark:bg-gray-900 border-none rounded-xl text-xs font-black text-center dark:text-white outline-none focus:ring-2 focus:ring-pink-500/50"
+                                        value={formData.normalRanges.female.max}
+                                        onChange={e => handleRangeChange('female', 'max', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Child */}
+                            <div className="p-6 bg-green-50/50 dark:bg-green-900/10 rounded-3xl border border-green-100 dark:border-green-900/30 hover:border-green-300 transition-colors">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></div>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-800 dark:text-green-300">Child Spectrum</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input
+                                        type="number"
+                                        placeholder="MIN"
+                                        className="w-full p-3 bg-white dark:bg-gray-900 border-none rounded-xl text-xs font-black text-center dark:text-white outline-none focus:ring-2 focus:ring-green-500/50"
+                                        value={formData.normalRanges.child.min}
+                                        onChange={e => handleRangeChange('child', 'min', e.target.value)}
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="MAX"
+                                        className="w-full p-3 bg-white dark:bg-gray-900 border-none rounded-xl text-xs font-black text-center dark:text-white outline-none focus:ring-2 focus:ring-green-500/50"
+                                        value={formData.normalRanges.child.max}
+                                        onChange={e => handleRangeChange('child', 'max', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Submit Terminal */}
                     <div className="flex justify-end items-center gap-6 pt-10 border-t border-gray-100 dark:border-gray-700">
                         <button type="button" onClick={() => router.back()} className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] hover:text-rose-500 transition-colors">Abort sequence</button>
@@ -348,11 +502,31 @@ export default function HospitalAdminManageTestPage() {
                         <div className="p-10 space-y-8">
                             <div className="space-y-4">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic">Nomenclature Hub</label>
+                                {showDeptModal && metaOptions.departmentNames && (
+                                    <div className="relative group">
+                                        <select
+                                            className="w-full p-5 bg-gray-50 dark:bg-gray-900 border-none rounded-3xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-black dark:text-white italic tracking-tight appearance-none transition-all"
+                                            onChange={(e) => setNewItemName(e.target.value)}
+                                            value={""} // Always show placeholder to encourage "selection" or "typing" distinctness, or bind to newItemName if we want it to reflect.
+                                        // Actually, binding to newItemName is better UX if they just picked it.
+                                        // But if they type something custom, the select might look weird.
+                                        // Let's stick to the Lab Panel implementation which binds value={newItemName}
+                                        >
+                                            <option value="">-- SELECT STANDARD TEMPLATE --</option>
+                                            {metaOptions.departmentNames.map((name: string) => (
+                                                <option key={name} value={name}>{name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-hover:text-blue-500 transition-colors">
+                                            <Database size={16} />
+                                        </div>
+                                    </div>
+                                )}
                                 <input
                                     autoFocus
                                     type="text"
                                     className="w-full p-5 bg-gray-50 dark:bg-gray-900 border-none rounded-3xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-black dark:text-white italic tracking-tight"
-                                    placeholder="NOMENCLATURE_VAL..."
+                                    placeholder="OR_INPUT_CUSTOM_NOMENCLATURE..."
                                     value={newItemName}
                                     onChange={e => setNewItemName(e.target.value)}
                                 />

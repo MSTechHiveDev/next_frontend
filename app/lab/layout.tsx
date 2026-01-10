@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import { Settings, LogOut, X, LayoutDashboard, FileText, Activity, FlaskConical } from "lucide-react";
 import LogoutModal from "@/components/auth/LogoutModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Lab specific menu items
 const labMenu = [
@@ -224,6 +225,7 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                         {/* Search bar if needed */}
                     </div>
                     <div className="flex items-center space-x-4">
+                        <ThemeToggle />
                         <span className="font-medium" style={{ color: 'var(--text-color)' }}>{labUser.name}</span>
                         <button
                             onClick={() => setIsLogoutModalOpen(true)}

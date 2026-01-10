@@ -7,6 +7,7 @@ export interface BillItem {
 export interface PatientDetails {
     name: string;
     age: number;
+    ageUnit: 'Years' | 'Months' | 'Days'; // Added Age Unit
     gender: 'Male' | 'Female' | 'Other';
     mobile: string;
     refDoctor: string; // ✅ REQUIRED

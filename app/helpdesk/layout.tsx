@@ -18,7 +18,8 @@ import {
     Bell,
     Search,
     User,
-    Users
+    Users,
+    LifeBuoy
 } from "lucide-react";
 import { ThemeToggle } from '@/components/ThemeToggle';
 import NotificationCenter from "@/components/navbar/NotificationCenter";
@@ -33,6 +34,7 @@ const helpdeskMenu = [
     { icon: <Truck size={20} />, label: "Transits", path: "/helpdesk/transits" },
     { icon: <CreditCard size={20} />, label: "Transactions", path: "/helpdesk/transactions" },
     { icon: <AlertCircle size={20} />, label: "Emergency Accept", path: "/helpdesk/emergency-accept" },
+    { icon: <LifeBuoy size={20} />, label: "Support Tickets", path: "/helpdesk/support" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
