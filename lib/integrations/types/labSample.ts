@@ -3,14 +3,19 @@ export interface SubTestResult {
     result?: string;
     unit?: string;
     range?: string;
+    normalRanges?: any;
 }
 
 export interface SampleTestResult {
     _id: string;
     testName: string;
+    departmentName?: string;
     price: number;
     resultValue?: string;
     unit?: string;
+    method?: string; // Added
+    testCode?: string; // Added
+    shortName?: string; // Added
     normalRange?: string;
     normalRanges?: {
         male?: { min?: number; max?: number };

@@ -6,6 +6,8 @@ export interface DashboardStats {
     collections: number;
     patients: number;
     totalTests: number;
+    totalTestMaster?: number;
+    totalDepartments?: number;
     pendingSamples: number;
     paymentBreakdown: {
         Cash: number;

@@ -29,6 +29,7 @@ export default function ManageTestPage() {
     const [showDeptModal, setShowDeptModal] = useState(false);
     const [showMethodModal, setShowMethodModal] = useState(false);
     const [showSampleModal, setShowSampleModal] = useState(false);
+    const [showTatModal, setShowTatModal] = useState(false);
     const [newItemName, setNewItemName] = useState('');
 
     const [formData, setFormData] = useState({
@@ -38,8 +39,9 @@ export default function ManageTestPage() {
         sampleType: '',
         price: '',
         unit: '',
-        method: '',
-        turnaroundTime: '',
+        method: '', // Used for Methodology
+        turnaroundTime: '', // Used for Temporal TAT Cycle
+        temporalTATCycle: '', // Explicit field if needed, but turnaroundTime seems to be it
         normalRanges: {
             male: { min: '', max: '' },
             female: { min: '', max: '' },
@@ -52,6 +54,7 @@ export default function ManageTestPage() {
         sampleVolume: '',
         testCode: '',
         reportType: 'numeric' as 'numeric' | 'text' | 'both',
+        reportFormat: '' // Explicit field
     });
 
     useEffect(() => {
@@ -92,8 +95,9 @@ export default function ManageTestPage() {
                 sampleType: test.sampleType || '',
                 price: test.price.toString(),
                 unit: test.unit || '',
-                method: test.method || '',
-                turnaroundTime: test.turnaroundTime || '',
+                method: test.method || test.methodology || '',
+                turnaroundTime: test.turnaroundTime || test.temporalTATCycle || '',
+                temporalTATCycle: test.temporalTATCycle || test.turnaroundTime || '',
                 normalRanges: {
                     male: { min: test.normalRanges?.male?.min?.toString() || '', max: test.normalRanges?.male?.max?.toString() || '' },
                     female: { min: test.normalRanges?.female?.min?.toString() || '', max: test.normalRanges?.female?.max?.toString() || '' },
@@ -105,6 +109,7 @@ export default function ManageTestPage() {
                 fastingRequired: test.fastingRequired || false,
                 sampleVolume: test.sampleVolume || '',
                 reportType: test.reportType || 'numeric',
+                reportFormat: test.reportFormat || '',
                 testCode: test.testCode || '',
             });
         } catch (error) {
@@ -128,6 +133,8 @@ export default function ManageTestPage() {
         const payload: any = {
             ...formData,
             price: priceVal,
+            methodology: formData.method, // Sync
+            temporalTATCycle: formData.turnaroundTime, // Sync
             normalRanges: {
                 male: { min: parseFloat(formData.normalRanges.male.min) || 0, max: parseFloat(formData.normalRanges.male.max) || 0 },
                 female: { min: parseFloat(formData.normalRanges.female.min) || 0, max: parseFloat(formData.normalRanges.female.max) || 0 },
@@ -178,6 +185,10 @@ export default function ManageTestPage() {
             toast.error("Node initialization failed");
         }
     };
+
+
+
+
 
     if (initialLoading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
@@ -324,6 +335,7 @@ export default function ManageTestPage() {
                                     >
                                         <option value="">-- Select Method --</option>
                                         {metaOptions.methods.map((m: string) => <option key={m} value={m}>{m}</option>)}
+                                        {formData.method && !metaOptions.methods.includes(formData.method) && <option value={formData.method}>{formData.method}</option>}
                                     </select>
                                     <button type="button" onClick={() => setShowMethodModal(true)} className="p-4 bg-gray-100 dark:bg-gray-700 text-gray-400 rounded-2xl active:scale-95"><Plus size={20} /></button>
                                 </div>
@@ -331,14 +343,18 @@ export default function ManageTestPage() {
 
                             <div className="space-y-3">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Temporal TAT cycle</label>
-                                <select
-                                    className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-purple-500 text-xs font-black dark:text-white"
-                                    value={formData.turnaroundTime}
-                                    onChange={e => setFormData({ ...formData, turnaroundTime: e.target.value })}
-                                >
-                                    <option value="">-- Select Interval --</option>
-                                    {metaOptions.turnaroundTimes.map((tat: string) => <option key={tat} value={tat}>{tat}</option>)}
-                                </select>
+                                <div className="flex gap-2">
+                                    <select
+                                        className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-purple-500 text-xs font-black dark:text-white"
+                                        value={formData.turnaroundTime}
+                                        onChange={e => setFormData({ ...formData, turnaroundTime: e.target.value })}
+                                    >
+                                        <option value="">-- Select Interval --</option>
+                                        {metaOptions.turnaroundTimes.map((tat: string) => <option key={tat} value={tat}>{tat}</option>)}
+                                        {formData.turnaroundTime && !metaOptions.turnaroundTimes.includes(formData.turnaroundTime) && <option value={formData.turnaroundTime}>{formData.turnaroundTime}</option>}
+                                    </select>
+                                    <button type="button" onClick={() => setShowTatModal(true)} className="p-4 bg-gray-100 dark:bg-gray-700 text-gray-400 rounded-2xl active:scale-95"><Plus size={20} /></button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -366,7 +382,7 @@ export default function ManageTestPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Report Format</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Report Type</label>
                                 <select
                                     className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 text-xs font-black dark:text-white"
                                     value={formData.reportType}
@@ -376,6 +392,17 @@ export default function ManageTestPage() {
                                     <option value="text">TEXTUAL / REMARKS</option>
                                     <option value="both">HYBRID (BOTH)</option>
                                 </select>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Report Format</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 text-xs font-black dark:text-white"
+                                    placeholder="e.g. Table, List, Paragraph"
+                                    value={formData.reportFormat}
+                                    onChange={e => setFormData({ ...formData, reportFormat: e.target.value })}
+                                />
                             </div>
 
                             <div className="space-y-3">
@@ -571,14 +598,14 @@ export default function ManageTestPage() {
             </div>
 
             {/* MODALS */}
-            {(showTestModal || showDeptModal || showMethodModal || showSampleModal) && (
+            {(showTestModal || showDeptModal || showMethodModal || showSampleModal || showTatModal) && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/80 backdrop-blur-md">
                     <div className="bg-white dark:bg-gray-800 rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 dark:border-gray-700">
                         <div className="p-8 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
                             <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-[0.2em] italic">
-                                Initialize {showTestModal ? 'Protocol' : showDeptModal ? 'Node' : showSampleModal ? 'Material' : 'Method'}
+                                Initialize {showTestModal ? 'Protocol' : showDeptModal ? 'Node' : showSampleModal ? 'Material' : showTatModal ? 'Cycle' : 'Method'}
                             </h3>
-                            <button onClick={() => { setShowTestModal(false); setShowDeptModal(false); setShowMethodModal(false); setShowSampleModal(false); setNewItemName(''); }} className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-gray-400 hover:text-rose-500 rounded-xl transition-all"><X size={20} /></button>
+                            <button onClick={() => { setShowTestModal(false); setShowDeptModal(false); setShowMethodModal(false); setShowSampleModal(false); setShowTatModal(false); setNewItemName(''); }} className="p-2 hover:bg-rose-50 dark:hover:bg-rose-900/20 text-gray-400 hover:text-rose-500 rounded-xl transition-all"><X size={20} /></button>
                         </div>
                         <div className="p-10 space-y-8">
                             <div className="space-y-4">
@@ -617,7 +644,8 @@ export default function ManageTestPage() {
                                     if (showTestModal) { setFormData(prev => ({ ...prev, testName: newItemName })); setShowTestModal(false); }
                                     else if (showDeptModal) { handleAddNewDept(); }
                                     else if (showSampleModal) { setFormData(prev => ({ ...prev, sampleType: newItemName })); setShowSampleModal(false); }
-                                    else { setFormData(prev => ({ ...prev, method: newItemName })); setShowMethodModal(false); }
+                                    else if (showMethodModal) { setFormData(prev => ({ ...prev, method: newItemName })); setShowMethodModal(false); }
+                                    else if (showTatModal) { setFormData(prev => ({ ...prev, turnaroundTime: newItemName })); setShowTatModal(false); }
                                     setNewItemName('');
                                 }}
                                 className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
