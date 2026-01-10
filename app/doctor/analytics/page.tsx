@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
 
    return (
       <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-         {/* Header */}
+        
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                <h1 className="text-2xl max-sm:text-[14px] font-semibold text-foreground">Practice Analytics</h1>
@@ -90,7 +90,7 @@ export default function AnalyticsPage() {
 
          </div>
 
-         {/* Primary Analytics Grid */}
+         
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
                { label: "Patient Retention", value: stats.retention, icon: Target, color: "emerald", trend: "+2.4%" },
