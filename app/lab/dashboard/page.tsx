@@ -11,7 +11,8 @@ import {
     ChevronDown,
     ArrowUpRight,
     ArrowDownRight,
-    Microscope
+    Microscope,
+    Network
 } from 'lucide-react';
 import { LabDashboardService, DashboardStats } from '@/lib/integrations/services/labDashboard.service';
 import { toast } from 'react-hot-toast';
@@ -114,9 +115,16 @@ export default function LabDashboard() {
                 />
                 <StatCard
                     title="Total Tests"
-                    value={stats?.totalTests || 0}
+                    value={stats?.totalTestMaster || 0}
                     icon={Layers}
                     color="purple"
+                    subValue={stats?.totalTests ? `${stats.totalTests} performed` : undefined}
+                />
+                <StatCard
+                    title="Departments"
+                    value={stats?.totalDepartments || 0}
+                    icon={Network}
+                    color="orange"
                 />
                 <StatCard
                     title="Pending"

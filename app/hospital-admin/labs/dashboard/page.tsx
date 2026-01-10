@@ -12,7 +12,8 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Microscope,
-    Activity
+    Activity,
+    Network
 } from 'lucide-react';
 import { LabDashboardService, DashboardStats } from '@/lib/integrations/services/labDashboard.service';
 import { toast } from 'react-hot-toast';
@@ -102,7 +103,7 @@ export default function HospitalAdminLabDashboard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <StatCard
                     title="Revenue Magnitude"
                     value={`₹${stats?.revenue.toLocaleString() || 0}`}
@@ -123,10 +124,17 @@ export default function HospitalAdminLabDashboard() {
                     color="indigo"
                 />
                 <StatCard
-                    title="Protocol Count"
-                    value={stats?.totalTests || 0}
+                    title="Total Protocols"
+                    value={stats?.totalTestMaster || 0}
                     icon={Layers}
                     color="purple"
+                    subValue={stats?.totalTests ? `${stats.totalTests} executed` : undefined}
+                />
+                <StatCard
+                    title="Dept. Registry"
+                    value={stats?.totalDepartments || 0}
+                    icon={Network}
+                    color="orange"
                 />
             </div>
 

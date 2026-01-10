@@ -38,11 +38,14 @@ export interface LabTest {
     price: number;
     unit?: string;
     method?: string;
+    methodology?: string;
     turnaroundTime?: string;
+    temporalTATCycle?: string;
     normalRanges?: NormalRanges;
     fastingRequired?: boolean;
     sampleVolume?: string;
     reportType?: 'numeric' | 'text' | 'both';
+    reportFormat?: string;
     isActive: boolean;
     createdAt?: string;
     updatedAt?: string;
@@ -57,10 +60,13 @@ export interface LabTestPayload {
     price: number;
     unit?: string;
     method?: string;
+    methodology?: string;
     turnaroundTime?: string;
+    temporalTATCycle?: string;
     normalRanges?: NormalRanges;
     fastingRequired?: boolean;
     sampleVolume?: string;
     reportType?: 'numeric' | 'text' | 'both';
+    reportFormat?: string;
     isActive?: boolean;
 }
