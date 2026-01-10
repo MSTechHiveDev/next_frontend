@@ -62,7 +62,10 @@ export async function deleteQuickNoteAction(id: string): Promise<{ success: bool
 export async function getDoctorWeeklyStatsAction(): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const today = new Date();
-    const data = await apiServer(`${DOCTOR_ENDPOINTS.CALENDAR_STATS}?view=weekly&startDate=${today.toISOString()}`);
+    // Default to last 7 days or start of current week for better visualization of flow
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - 6); // Last 7 days including today
+    const data = await apiServer(`${DOCTOR_ENDPOINTS.CALENDAR_STATS}?view=weekly&startDate=${startOfWeek.toISOString()}`);
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to fetch weekly stats' };
@@ -103,7 +106,7 @@ export async function getAllAppointmentsAction(): Promise<{ success: boolean; da
       const eTime = formatTimeOnly(item.endTime);
 
       const rawTime = tSlot || apptTime || (sTime && eTime ? `${sTime} - ${eTime}` : sTime) || 'N/A';
-      
+
       return {
         ...item,
         id: item._id,

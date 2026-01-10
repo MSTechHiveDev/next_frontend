@@ -162,7 +162,7 @@ export const DOCTOR_ENDPOINTS = {
   CALENDAR_APPOINTMENTS: '/doctors/calendar/appointments',
   QUICK_NOTES: '/doctors/quick-notes',
   START_NEXT: '/doctors/start-next',
-  PATIENT_DETAILS: (id: string) => `/patient/${id}`,
+  PATIENT_DETAILS: (id: string) => `/patients/profile/${id}`,
   // Consultation Workflow
   START_CONSULTATION: (id: string) => `/doctor/appointments/${id}/start`,
   END_CONSULTATION: (id: string) => `/doctor/appointments/${id}/end`,

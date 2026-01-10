@@ -103,7 +103,7 @@ export default function Navbar({
         }
     };
     return (
-        <nav className={`w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between sticky top-0 z-50 ${className}`}>
+        <nav className={`w-full bg-card border-b border-border-theme px-4 py-3 flex items-center justify-between sticky top-0 z-50 ${className}`}>
             {/* Left Section: Logo & Menu Toggle */}
             <div className="flex items-center gap-4">
                 {/* Mobile menu button */}
@@ -130,12 +130,12 @@ export default function Navbar({
             <div className="hidden md:flex flex-1 max-w-md mx-8">
                 {onSearch && (
                     <div className="relative w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                         <input
                             type="text"
                             placeholder="Search protocol registry..."
                             onChange={(e) => onSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800/50 border border-transparent focus:border-blue-500 rounded-xl focus:outline-none transition-all text-sm font-bold shadow-xs whitespace-nowrap"
+                            className="w-full pl-10 pr-4 py-2 bg-secondary-theme border border-border-theme focus:border-primary-theme rounded-xl focus:outline-none transition-all text-sm font-bold shadow-xs whitespace-nowrap text-foreground placeholder:text-muted"
                         />
                     </div>
                 )}
@@ -184,7 +184,7 @@ export default function Navbar({
 
                     {/* Dropdown Menu */}
                     {isProfileOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden p-2 transform animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="absolute right-0 mt-2 w-56 bg-card rounded-2xl shadow-2xl border border-border-theme z-50 overflow-hidden p-2 transform animate-in fade-in slide-in-from-top-2 duration-200">
                             <div className="px-4 py-3 mb-2 border-b border-gray-50 dark:border-gray-800">
                                 <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Authenticated Node</p>
                                 <p className="text-sm font-black text-gray-900 dark:text-white truncate uppercase">{user?.name}</p>

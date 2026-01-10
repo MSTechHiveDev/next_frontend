@@ -87,7 +87,7 @@ export default function DoctorAppointmentsPage() {
                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Appointments</h1>
                <p className="text-gray-500 mt-1">Manage your schedule and patient consultations.</p>
             </div>
-            <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-lg shadow-emerald-600/20">
+            <button className="px-4 py-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg shadow-blue-600/20">
                + New Appointment
             </button>
          </div>
@@ -110,7 +110,7 @@ export default function DoctorAppointmentsPage() {
                <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="pl-10 pr-8 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-medium rounded-lg text-sm border border-emerald-100 dark:border-emerald-800 outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
+                  className="pl-10 pr-8 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-medium rounded-lg text-sm border border-blue-100 dark:border-blue-800 outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                >
                   <option value="">All Statuses</option>
                   <option value="Scheduled">Scheduled</option>

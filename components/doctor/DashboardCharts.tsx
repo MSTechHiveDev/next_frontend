@@ -37,39 +37,39 @@ export default function DashboardCharts({ type, data = [] }: DashboardChartsProp
         <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="colorConsult" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--chart-line)" stopOpacity={0.1} />
+              <stop offset="95%" stopColor="var(--chart-line)" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
           <XAxis
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fontWeight: 700, fill: 'var(--muted)' }}
             dy={10}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+            tick={{ fontSize: 10, fontWeight: 700, fill: 'var(--muted)' }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#111827',
-              border: 'none',
+              backgroundColor: 'var(--card)',
+              border: '1px solid var(--border)',
               borderRadius: '12px',
-              color: '#fff',
+              color: 'var(--foreground)',
               fontSize: '12px',
               fontWeight: 'bold',
               boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
             }}
-            itemStyle={{ color: '#fff' }}
+            itemStyle={{ color: 'var(--foreground)' }}
           />
           <Area
             type="monotone"
             dataKey="count"
-            stroke="#10b981"
+            stroke="var(--chart-line)"
             strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorConsult)"
