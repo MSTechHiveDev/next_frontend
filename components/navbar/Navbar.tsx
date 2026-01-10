@@ -192,7 +192,7 @@ export default function Navbar({
 
                             {user?.role?.toLowerCase() !== 'staff' && (
                                 <Link
-                                    href={`/${user?.role?.toLowerCase()}/profile`}
+                                    href={user?.role?.toLowerCase() === 'pharma-owner' ? '/pharmacy/profile' : `/${user?.role?.toLowerCase()}/profile`}
                                     onClick={() => setIsProfileOpen(false)}
                                     className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all group"
                                 >

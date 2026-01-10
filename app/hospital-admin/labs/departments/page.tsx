@@ -14,6 +14,7 @@ export default function HospitalAdminDepartmentMasterPage() {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 
     useEffect(() => {
         fetchInitialData();
@@ -207,16 +208,20 @@ export default function HospitalAdminDepartmentMasterPage() {
                             </div>
                         ) : (
                             filteredDepartments.map((dept) => (
-                                <div key={dept._id} className="group p-8 bg-white dark:bg-gray-800 border-2 border-transparent hover:border-blue-500/20 rounded-[2.5rem] transition-all relative overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
+                                <div
+                                    key={dept._id}
+                                    onClick={() => setSelectedDepartment(dept)}
+                                    className="group p-8 bg-white dark:bg-gray-800 border-2 border-transparent hover:border-blue-500/20 rounded-[2.5rem] transition-all relative overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1 cursor-pointer"
+                                >
                                     <div className="absolute top-4 right-4 flex gap-2 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
                                         <button
-                                            onClick={() => { setEditingId(dept._id); setFormData({ name: dept.name, description: dept.description || '' }); }}
+                                            onClick={(e) => { e.stopPropagation(); setEditingId(dept._id); setFormData({ name: dept.name, description: dept.description || '' }); }}
                                             className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl hover:scale-110 transition-transform"
                                         >
                                             <Edit3 size={16} />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(dept._id)}
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(dept._id); }}
                                             className="p-2 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl hover:scale-110 transition-transform"
                                         >
                                             <Trash2 size={16} />
@@ -267,6 +272,98 @@ export default function HospitalAdminDepartmentMasterPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Department Details Modal */}
+            {selectedDepartment && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedDepartment(null)}>
+                    <div
+                        className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md lg:max-w-lg max-h-[80vh] flex flex-col shadow-2xl border border-gray-100 dark:border-gray-700 animate-in fade-in zoom-in duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="p-8 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50 rounded-t-3xl">
+                            <div className="flex items-center gap-6">
+                                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-blue-500/20">
+                                    {selectedDepartment.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic">{selectedDepartment.name}</h3>
+                                    <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1 flex items-center gap-2">
+                                        <Layers className="w-3 h-3 text-blue-500" />
+                                        {selectedDepartment.testCount || 0} Registered Protocols
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setSelectedDepartment(null)}
+                                className="p-3 bg-white dark:bg-gray-700 text-gray-400 hover:text-rose-500 dark:text-gray-400 dark:hover:text-rose-400 rounded-xl shadow-sm hover:shadow-lg transition-all"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body / Scrollable List */}
+                        <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+                            {selectedDepartment.description && (
+                                <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-gray-100 dark:border-gray-700">
+                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <Network className="w-3 h-3" />
+                                        Functional Abstract
+                                    </h4>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+                                        {selectedDepartment.description}
+                                    </p>
+                                </div>
+                            )}
+
+                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-4">
+                                Configured Test Protocols
+                                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700 border-dashed border-b border-gray-200"></div>
+                            </h4>
+
+                            {selectedDepartment.tests && selectedDepartment.tests.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {selectedDepartment.tests.map((test: any, index: number) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between p-5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm hover:border-blue-200 dark:hover:border-blue-800 transition-colors group"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-xs font-black text-blue-600 dark:text-blue-400">
+                                                    {(index + 1).toString().padStart(2, '0')}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-gray-900 dark:text-gray-100 text-sm">{test.testName}</div>
+                                                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Parameter Configuration Active</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="block font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg text-xs">₹{test.price}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-3xl bg-gray-50/50 dark:bg-gray-800/50">
+                                    <Database size={40} className="text-gray-300 dark:text-gray-600 mb-4" />
+                                    <p className="font-bold text-gray-400 dark:text-gray-500 mb-1 text-xs uppercase tracking-wider">No Protocols Linked</p>
+                                    <p className="text-[10px] text-gray-400">Navigate to Test Master to assign protocols to this node.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/30 rounded-b-3xl">
+                            <button
+                                onClick={() => setSelectedDepartment(null)}
+                                className="w-full py-4 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-black dark:hover:bg-gray-600 transition-all shadow-xl shadow-gray-200 dark:shadow-none hover:-translate-y-1"
+                            >
+                                Terminate Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

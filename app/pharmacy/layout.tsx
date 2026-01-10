@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
+import { useThemeStore } from '@/stores/themeStore';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
 import Navbar from '@/components/navbar/Navbar';
 import LogoutModal from '@/components/auth/LogoutModal';
@@ -26,8 +27,8 @@ const pharmacyMenu: SidebarItem[] = [
 const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { user, logout, isAuthenticated, checkAuth, isInitialized, isLoading } = useAuthStore();
+    const { theme, toggleTheme } = useThemeStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     const isPharma = user?.role === 'pharma-owner' || user?.role === 'pharmacy';
@@ -117,8 +118,8 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
                         image: (pharmacyUser as any).image
                     }}
                     onMenuClick={() => setIsSidebarOpen(true)}
-                    isDarkMode={isDarkMode}
-                    onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+                    isDarkMode={theme === 'dark'}
+                    onThemeToggle={toggleTheme}
                     onLogout={() => setIsLogoutModalOpen(true)}
                     title="Pharmacy Panel"
                 />

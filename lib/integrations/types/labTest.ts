@@ -1,14 +1,29 @@
 import { Department } from './department';
 
 export interface NormalRange {
-    min: string;
-    max: string;
+    min?: number | string;
+    max?: number | string;
+    text?: string;
 }
 
 export interface NormalRanges {
     male: NormalRange;
     female: NormalRange;
     child: NormalRange;
+    newborn?: NormalRange;
+    infant?: NormalRange;
+    geriatric?: NormalRange;
+}
+
+export interface TestParameter {
+    _id: string;
+    testId: string;
+    name: string;
+    unit?: string;
+    normalRanges: NormalRanges;
+    criticalLow?: number;
+    criticalHigh?: number;
+    displayOrder: number;
 }
 
 export interface LabTest {

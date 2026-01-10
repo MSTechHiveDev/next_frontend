@@ -3,8 +3,11 @@ export interface SupportTicket {
     subject: string;
     message: string;
     category: string;
+    type?: string; // Add type property
     priority: 'low' | 'medium' | 'high' | 'critical';
     status: 'open' | 'in-progress' | 'resolved' | 'closed';
+    name?: string; // Snapshot
+    role?: string; // Snapshot
     requester: {
         _id: string;
         name: string;

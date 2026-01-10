@@ -41,10 +41,28 @@ export default function LabBillingPage() {
     const [patient, setPatient] = useState<PatientDetails>({
         name: '',
         age: 0,
-        gender: '' as any, // Start with empty so they must pick one
+        ageUnit: 'Years',
+        gender: '' as any,
         mobile: '',
         refDoctor: '',
     });
+
+    const getAgeGroup = () => {
+        const { age, ageUnit } = patient;
+        if (!age) return 'N/A';
+
+        if (ageUnit === 'Days') {
+            return age <= 28 ? 'Newborn' : 'Infant';
+        }
+        if (ageUnit === 'Months') {
+            return age <= 12 ? 'Infant' : 'Child';
+        }
+        // Years
+        if (age <= 1) return 'Infant';
+        if (age <= 12) return 'Child';
+        if (age >= 60) return 'Geriatric';
+        return 'Adult';
+    };
 
     const [selectedTests, setSelectedTests] = useState<BillItem[]>([]);
     const [discount, setDiscount] = useState<number>(0);
@@ -65,9 +83,11 @@ export default function LabBillingPage() {
         }
 
         // Age: Positive integers only 0-120
-        if (patient.age < 0 || patient.age > 120 || !Number.isInteger(Number(patient.age))) {
-            newErrors.age = "Age must be between 0 and 120";
+        // Relax check for days/months
+        if (patient.age < 0 || !Number.isInteger(Number(patient.age))) {
+            newErrors.age = "Invalid Age";
         }
+        if (patient.ageUnit === 'Years' && patient.age > 120) newErrors.age = "Max 120 Years";
 
         // Gender: Mandatory
         if (!patient.gender) {
@@ -208,19 +228,19 @@ export default function LabBillingPage() {
        UI
     ----------------------------------------- */
     return (
-        <div className="p-8 bg-gray-50/50 min-h-screen">
-            <h1 className="text-3xl font-black text-gray-900 mb-8 tracking-tight">Lab Billing</h1>
+        <div className="p-8 bg-gray-50/50 dark:bg-gray-900 min-h-screen transition-colors duration-500">
+            <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Lab Billing</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Patient Info */}
-                <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-5">
-                    <h3 className="text-lg font-black text-gray-800 uppercase tracking-wider mb-2">Patient Details</h3>
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-5 transition-colors">
+                    <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 uppercase tracking-wider mb-2">Patient Details</h3>
 
                     <div>
                         <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Patient Name</label>
                         <input
                             placeholder="Enter patient name"
-                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+                            className="w-full bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium dark:text-white"
                             value={patient.name}
                             onChange={e => setPatient({ ...patient, name: e.target.value })}
                         />
@@ -228,32 +248,49 @@ export default function LabBillingPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Age</label>
-                            <input
-                                type="number"
-                                placeholder="Age"
-                                min="0"
-                                max="120"
-                                className={`w-full bg-gray-50/50 border ${errors.age ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium`}
-                                value={patient.age || ''}
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    if (val === '' || (/^\d+$/.test(val))) {
-                                        setPatient({ ...patient, age: val === '' ? 0 : parseInt(val) });
-                                    }
-                                }}
-                            />
-                            {errors.age && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.age}</p>}
+                            <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Age & Unit</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Age"
+                                    min="0"
+                                    className={`w-1/2 bg-gray-50/50 dark:bg-gray-900 border ${errors.age ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium dark:text-white`}
+                                    value={patient.age || ''}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '' || (/^\d+$/.test(val))) {
+                                            setPatient({ ...patient, age: val === '' ? 0 : parseInt(val) });
+                                        }
+                                    }}
+                                />
+                                <select
+                                    className="w-1/2 bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3 outline-none transition-all font-medium dark:text-white"
+                                    value={patient.ageUnit}
+                                    onChange={e => setPatient({ ...patient, ageUnit: e.target.value as any })}
+                                >
+                                    <option value="Years">Years</option>
+                                    <option value="Months">Months</option>
+                                    <option value="Days">Days</option>
+                                </select>
+                            </div>
+                            <div className="mt-1 ml-1 flex items-center gap-2">
+                                {errors.age && <p className="text-[10px] text-red-500 font-bold">{errors.age}</p>}
+                                {!errors.age && patient.age > 0 && (
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-md">
+                                        Group: {getAgeGroup()}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Gender</label>
-                            <div className="flex bg-gray-50 items-center justify-between gap-1 p-1 rounded-xl border border-gray-100">
+                            <div className="flex bg-gray-50 dark:bg-gray-900 items-center justify-between gap-1 p-1 rounded-xl border border-gray-100 dark:border-gray-700">
                                 {['Male', 'Female', 'Other'].map(g => (
                                     <button
                                         key={g}
                                         type="button"
                                         onClick={() => setPatient({ ...patient, gender: g as any })}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-black uppercase transition-all ${patient.gender === g ? 'bg-white text-indigo-600 shadow-sm border border-indigo-100' : 'text-gray-400 hover:text-gray-600'}`}
+                                        className={`flex-1 py-2 rounded-lg text-xs font-black uppercase transition-all ${patient.gender === g ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-900/30' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                                     >
                                         {g}
                                     </button>
@@ -268,7 +305,7 @@ export default function LabBillingPage() {
                         <input
                             placeholder="Enter 10-digit mobile"
                             maxLength={10}
-                            className={`w-full bg-gray-50/50 border ${errors.mobile ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium`}
+                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.mobile ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium dark:text-white`}
                             value={patient.mobile}
                             onChange={e => {
                                 const val = e.target.value;
@@ -284,7 +321,7 @@ export default function LabBillingPage() {
                         <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Ref Doctor</label>
                         <input
                             placeholder="Referring doctor name"
-                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+                            className="w-full bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium dark:text-white"
                             value={patient.refDoctor}
                             onChange={e => setPatient({ ...patient, refDoctor: e.target.value })}
                         />
@@ -292,20 +329,20 @@ export default function LabBillingPage() {
                 </div>
 
                 {/* Tests Selection */}
-                <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
-                    <h3 className="text-lg font-black text-gray-800 uppercase tracking-wider mb-6">Select Tests</h3>
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col transition-colors">
+                    <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 uppercase tracking-wider mb-6">Select Tests</h3>
 
                     <div className="relative mb-6">
                         <select
-                            className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium appearance-none"
+                            className="w-full bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium appearance-none dark:text-white"
                             onChange={handleAddTest}
                             value=""
                         >
-                            <option value="" disabled>
+                            <option value="" disabled className="dark:text-gray-400">
                                 {testsLoading ? 'Loading tests...' : 'Select Test'}
                             </option>
                             {availableTests.map(t => (
-                                <option key={t._id} value={t._id}>
+                                <option key={t._id} value={t._id} className="dark:bg-gray-800 dark:text-white">
                                     {t.testName || t.name} - ₹{t.price}
                                 </option>
                             ))}
@@ -319,6 +356,10 @@ export default function LabBillingPage() {
                         {availableTests.map((test) => {
                             const currentName = test.testName || test.name || "Unknown Test";
                             const isSelected = selectedTests.some(t => t.testName === currentName);
+                            // Show details if selected? Actually the user said "display ... in the Lab Billing page".
+                            // I will show them in the list always, or just when selected.
+                            // The availableTests map iterate over ALL tests. I should show Method/TAT here for reference.
+
                             return (
                                 <div
                                     key={test._id}
@@ -331,29 +372,39 @@ export default function LabBillingPage() {
                                             setSelectedTests([...selectedTests, { testName: nameToUse, price: test.price, discount: 0 }]);
                                         }
                                     }}
-                                    className={`flex justify-between items-start p-4 rounded-xl mb-2 cursor-pointer transition-all border ${isSelected ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-transparent hover:bg-gray-50'}`}
+                                    className={`flex justify-between items-start p-4 rounded-xl mb-2 cursor-pointer transition-all border ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-white dark:bg-gray-800 border-transparent hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className={`mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'}`}>
+                                        <div className={`mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300 dark:border-gray-600'}`}>
                                             {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
                                         </div>
                                         <div>
-                                            <p className={`font-black text-sm leading-tight mb-1 ${isSelected ? 'text-indigo-900' : 'text-gray-800'}`}>
+                                            <p className={`font-black text-sm leading-tight mb-1 ${isSelected ? 'text-indigo-900 dark:text-indigo-300' : 'text-gray-800 dark:text-gray-200'}`}>
                                                 {test.testName || test.name}
                                             </p>
-                                            <div className="flex gap-2 items-center">
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase">
-                                                    Sample: <span className="text-gray-600">{test.sampleType || 'N/A'}</span>
-                                                </span>
-                                                {test.departmentId && (
-                                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">
-                                                        | {(typeof test.departmentId === 'object' ? test.departmentId.name : 'Lab')}
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex gap-2 items-center">
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase">
+                                                        Sample: <span className="text-gray-600 dark:text-gray-400">{test.sampleType || 'N/A'}</span>
                                                     </span>
-                                                )}
+                                                    {test.departmentId && (
+                                                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">
+                                                            | {(typeof test.departmentId === 'object' ? test.departmentId.name : 'Lab')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-2 items-center text-[10px]">
+                                                    {test.method && (
+                                                        <span className="font-medium text-gray-400 uppercase">Method: <span className="text-gray-600 dark:text-gray-300">{test.method}</span></span>
+                                                    )}
+                                                    {test.turnaroundTime && (
+                                                        <span className="font-medium text-gray-400 uppercase ml-1">TAT: <span className="text-gray-600 dark:text-gray-300">{test.turnaroundTime}</span></span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <p className={`font-black text-sm whitespace-nowrap pt-1 ${isSelected ? 'text-indigo-600' : 'text-gray-400'}`}>₹{test.price}</p>
+                                    <p className={`font-black text-sm whitespace-nowrap pt-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`}>₹{test.price}</p>
                                 </div>
                             );
                         })}
@@ -361,12 +412,12 @@ export default function LabBillingPage() {
                 </div>
 
                 {/* Payment & Summary */}
-                <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                    <h3 className="text-lg font-black text-gray-800 uppercase tracking-wider mb-2">Payment</h3>
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-6 transition-colors">
+                    <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 uppercase tracking-wider mb-2">Payment</h3>
 
                     <div className="flex justify-between items-center">
-                        <span className="font-bold text-gray-800">Total:</span>
-                        <span className="text-xl font-black text-gray-900">₹{totalAmount}</span>
+                        <span className="font-bold text-gray-800 dark:text-gray-200">Total:</span>
+                        <span className="text-xl font-black text-gray-900 dark:text-white">₹{totalAmount}</span>
                     </div>
 
                     <div>
@@ -375,7 +426,7 @@ export default function LabBillingPage() {
                             type="number"
                             placeholder="0"
                             min="0"
-                            className={`w-full bg-gray-50/50 border ${errors.discount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right`}
+                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.discount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right dark:text-white`}
                             value={discount || ''}
                             onChange={e => {
                                 const val = e.target.value;
@@ -387,7 +438,7 @@ export default function LabBillingPage() {
                         {errors.discount && <p className="text-[10px] text-red-500 font-bold mt-1 text-right">{errors.discount}</p>}
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-dashed pt-4">
+                    <div className="flex justify-between items-center border-t border-dashed dark:border-gray-700 pt-4">
                         <span className="font-bold text-green-600 text-lg uppercase">Final:</span>
                         <span className="text-2xl font-black text-green-600">₹{finalAmount}</span>
                     </div>
@@ -398,7 +449,7 @@ export default function LabBillingPage() {
                             type="number"
                             placeholder="0"
                             min="0"
-                            className={`w-full bg-gray-50/50 border ${errors.paidAmount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right`}
+                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.paidAmount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right dark:text-white`}
                             value={paidAmount || ''}
                             onChange={e => {
                                 const val = e.target.value;
@@ -410,9 +461,9 @@ export default function LabBillingPage() {
                         {errors.paidAmount && <p className="text-[10px] text-red-500 font-bold mt-1 text-right">{errors.paidAmount}</p>}
                     </div>
 
-                    <div className="flex justify-between items-center bg-orange-50/50 p-4 rounded-xl border border-orange-100 border-dashed">
-                        <span className="font-bold text-orange-600 uppercase">Balance:</span>
-                        <span className="text-2xl font-black text-orange-600">₹{balance}</span>
+                    <div className="flex justify-between items-center bg-orange-50/50 dark:bg-orange-900/10 p-4 rounded-xl border border-orange-100 dark:border-orange-900/30 border-dashed">
+                        <span className="font-bold text-orange-600 dark:text-orange-400 uppercase">Balance:</span>
+                        <span className="text-2xl font-black text-orange-600 dark:text-orange-400">₹{balance}</span>
                     </div>
 
                     <div className="space-y-3 pt-2">
@@ -422,7 +473,7 @@ export default function LabBillingPage() {
                                 <button
                                     key={mode}
                                     onClick={() => setPaymentMode(mode as any)}
-                                    className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${paymentMode === mode ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 text-gray-500 border-gray-100'}`}
+                                    className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${paymentMode === mode ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 border-gray-100 dark:border-gray-700 dark:text-gray-400'}`}
                                 >
                                     {mode}
                                 </button>
@@ -431,15 +482,15 @@ export default function LabBillingPage() {
                     </div>
 
                     {paymentMode === 'Mixed' && (
-                        <div className="space-y-3 p-4 bg-indigo-50/30 rounded-2xl border border-indigo-100 border-dashed">
-                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider mb-2">Split Amount</p>
+                        <div className="space-y-3 p-4 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 border-dashed">
+                            <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">Split Amount</p>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center gap-4">
-                                    <span className="text-xs font-bold text-gray-500 w-12">CASH</span>
+                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 w-12">CASH</span>
                                     <input
                                         type="number"
                                         min="0"
-                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right"
+                                        className="w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
                                         value={mixedPayments.cash || ''}
                                         onChange={e => {
                                             const val = e.target.value;
@@ -450,11 +501,11 @@ export default function LabBillingPage() {
                                     />
                                 </div>
                                 <div className="flex justify-between items-center gap-4">
-                                    <span className="text-xs font-bold text-gray-500 w-12">UPI</span>
+                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 w-12">UPI</span>
                                     <input
                                         type="number"
                                         min="0"
-                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right"
+                                        className="w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
                                         value={mixedPayments.upi || ''}
                                         onChange={e => {
                                             const val = e.target.value;
@@ -465,11 +516,11 @@ export default function LabBillingPage() {
                                     />
                                 </div>
                                 <div className="flex justify-between items-center gap-4">
-                                    <span className="text-xs font-bold text-gray-500 w-12">CARD</span>
+                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 w-12">CARD</span>
                                     <input
                                         type="number"
                                         min="0"
-                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right"
+                                        className="w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
                                         value={mixedPayments.card || ''}
                                         onChange={e => {
                                             const val = e.target.value;
@@ -479,10 +530,10 @@ export default function LabBillingPage() {
                                         }}
                                     />
                                 </div>
-                                <div className="pt-2 border-t border-indigo-100 flex flex-col gap-1">
+                                <div className="pt-2 border-t border-indigo-100 dark:border-indigo-900/30 flex flex-col gap-1">
                                     <div className="flex justify-between text-[10px] font-black tracking-widest uppercase">
                                         <span className="text-gray-400">Total Mixed:</span>
-                                        <span className={errors.mixedMatch ? 'text-red-500' : 'text-indigo-600'}>
+                                        <span className={errors.mixedMatch ? 'text-red-500' : 'text-indigo-600 dark:text-indigo-400'}>
                                             ₹{mixedPayments.cash + mixedPayments.upi + mixedPayments.card} / ₹{finalAmount}
                                         </span>
                                     </div>

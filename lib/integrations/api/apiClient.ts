@@ -21,7 +21,9 @@ export async function apiClient<T>(
 
   // Construct headers more robustly
   const headers = new Headers();
-  headers.set('Content-Type', 'application/json');
+  if (!(options?.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   // Merge existing headers if any
   if (options?.headers) {

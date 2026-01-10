@@ -8,21 +8,20 @@ import {
     Trash2,
     ChevronLeft,
     ChevronRight,
-    Calendar,
-    CreditCard,
-    Plus,
     ArrowUpRight
 } from 'lucide-react';
 import { PharmacyBillingService } from '@/lib/integrations/services/pharmacyBilling.service';
 import { PharmacyBill } from '@/lib/integrations/types/pharmacyBilling';
-import PharmacyBillPrint from '@/components/pharmacy/billing/PharmacyBillPrint';
+import PharmacyBillPrint, { ShopDetails } from '@/components/pharmacy/billing/PharmacyBillPrint';
 import { useReactToPrint } from 'react-to-print';
 import { toast } from 'react-hot-toast';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { Download } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 const TransactionsPage = () => {
+    const { user } = useAuthStore();
     const [bills, setBills] = useState<PharmacyBill[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -35,6 +34,16 @@ const TransactionsPage = () => {
 
     const [selectedBill, setSelectedBill] = useState<PharmacyBill | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
+
+    const shopDetails: ShopDetails = {
+        name: (user as any)?.shopName || user?.name || 'Pharmacy Store',
+        address: (user as any)?.address || 'No Address Provided',
+        phone: (user as any)?.mobile || (user as any)?.phone || '-',
+        email: (user as any)?.email || '-',
+        gstin: (user as any)?.gstin || '-',
+        dlNo: (user as any)?.licenseNo,
+        logo: (user as any)?.image || (user as any)?.logo
+    };
 
     const handlePrint = useReactToPrint({
         contentRef: printRef,
@@ -252,7 +261,7 @@ const TransactionsPage = () => {
                         <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input
                             className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl pl-11 pr-4 py-4 outline-none focus:ring-2 focus:ring-blue-500 text-xs font-bold dark:text-white"
-                            placeholder="Search by Invoice ID nomenclature..."
+                            placeholder="Search by Invoice ID or Patient Name..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                         />
@@ -376,13 +385,13 @@ const TransactionsPage = () => {
                                             <div className="flex justify-center gap-4">
                                                 <button
                                                     onClick={() => onPrintClick(bill)}
-                                                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-blue-500 transition-all opacity-0 group-hover:opacity-100"
+                                                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-blue-500 transition-all"
                                                 >
                                                     <Eye className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(bill._id)}
-                                                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
+                                                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-red-500 transition-all"
                                                 >
                                                     <Trash2 className="w-5 h-5" />
                                                 </button>
@@ -406,7 +415,7 @@ const TransactionsPage = () => {
             {/* Hidden Print Area */}
             <div className="hidden">
                 <div ref={printRef}>
-                    {selectedBill && <PharmacyBillPrint billData={selectedBill} />}
+                    {selectedBill && <PharmacyBillPrint billData={selectedBill} shopDetails={shopDetails} />}
                 </div>
             </div>
         </div>

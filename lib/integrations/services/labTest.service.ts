@@ -1,5 +1,5 @@
 import { apiClient } from '../api/apiClient';
-import { LabTest, LabTestPayload } from '../types/labTest';
+import { LabTest, LabTestPayload, TestParameter } from '../types/labTest';
 import { LAB_ENDPOINTS } from '../config/endpoints';
 
 export const LabTestService = {
@@ -19,6 +19,11 @@ export const LabTestService = {
     // Get single test
     getTestById: async (id: string): Promise<LabTest> => {
         return apiClient<LabTest>(LAB_ENDPOINTS.TESTS.BY_ID(id));
+    },
+
+    // Get test parameters
+    getTestParameters: async (id: string): Promise<TestParameter[]> => {
+        return apiClient<TestParameter[]>(LAB_ENDPOINTS.TESTS.PARAMETERS(id));
     },
 
     // Update a test

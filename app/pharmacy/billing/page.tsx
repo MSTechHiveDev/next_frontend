@@ -1,16 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, Plus, Trash2, Printer, Save, User, ShoppingCart, CreditCard, ChevronRight, Calculator } from 'lucide-react';
 import { ProductService } from '@/lib/integrations/services/product.service';
 import { PharmacyBillingService } from '@/lib/integrations/services/pharmacyBilling.service';
 import { PharmacyProduct } from '@/lib/integrations/types/product';
 import { BillItem, PharmacyBillPayload, PharmacyBill } from '@/lib/integrations/types/pharmacyBilling';
-import PharmacyBillPrint from '@/components/pharmacy/billing/PharmacyBillPrint';
-import { useReactToPrint } from 'react-to-print';
 import { toast } from 'react-hot-toast';
+import PharmacyBillPrint, { ShopDetails } from '@/components/pharmacy/billing/PharmacyBillPrint';
+import { useAuthStore } from '@/stores/authStore';
+import { Eye } from 'lucide-react';
 
 const BillingPage = () => {
+    const router = useRouter();
+    const { user } = useAuthStore();
+
     // State
     const [patientName, setPatientName] = useState('');
     const [mobileNumber, setMobileNumber] = useState('');
@@ -29,17 +34,13 @@ const BillingPage = () => {
     const [discountType, setDiscountType] = useState<'%' | '₹'>('%');
     const [paidAmount, setPaidAmount] = useState(0);
 
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedBill, setGeneratedBill] = useState<PharmacyBill | null>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [tempBill, setTempBill] = useState<PharmacyBill | null>(null);
 
-    // Refs
-    const printRef = useRef<HTMLDivElement>(null);
-    const handlePrint = useReactToPrint({
-        contentRef: printRef,
-        documentTitle: generatedBill ? `Invoice_${generatedBill.invoiceId}` : 'Invoice',
-    });
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const subtotal = cart.reduce((sum, item: any) => sum + (item.total || 0), 0);
+
     const totalDiscount = discountType === '%' ? (subtotal * discount / 100) : discount;
     const grandTotal = Math.max(0, subtotal - totalDiscount);
 
@@ -186,18 +187,70 @@ const BillingPage = () => {
             };
 
             const res = await PharmacyBillingService.createBill(payload);
-            setGeneratedBill(res.bill);
             toast.success('Invoice generated successfully');
 
-            setTimeout(() => {
-                handlePrint();
-            }, 300);
+            // Navigate to preview page
+            router.push(`/pharmacy/billing/preview/${res.bill._id}`);
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || 'Failed to generate invoice');
         } finally {
             setIsGenerating(false);
         }
+    };
+
+    const shopDetails: ShopDetails = {
+        name: (user as any)?.shopName || user?.name || 'Pharmacy Store',
+        address: (user as any)?.address || 'No Address Provided',
+        phone: (user as any)?.mobile || (user as any)?.phone || '-',
+        email: (user as any)?.email || '-',
+        gstin: (user as any)?.gstin || '-',
+        dlNo: (user as any)?.licenseNo,
+        logo: (user as any)?.image || (user as any)?.logo
+    };
+
+    const handlePreview = () => {
+        if (cart.length === 0) {
+            toast.error('Cart is empty');
+            return;
+        }
+
+        if (!patientName || !mobileNumber) {
+            toast.error('Please enter patient details');
+            return;
+        }
+
+        const bill: PharmacyBill = {
+            _id: 'PREVIEW',
+            invoiceId: 'DRAFT-PREVIEW',
+            items: cart,
+            patientName,
+            customerPhone: mobileNumber,
+            paymentSummary: {
+                subtotal: Number(subtotal) || 0,
+                taxableAmount: Number(taxableAmount) || 0,
+                taxGST: Number(taxGST) || 0,
+                discount: Number(totalDiscount) || 0,
+                grandTotal: Number(Math.round(grandTotal)) || 0,
+                paidAmount: Number(paidAmount) || 0,
+                balanceDue: status === 'Paid' ? 0 : Math.round(grandTotal) - paidAmount,
+                paymentMode: paymentMode.toUpperCase() as any,
+                status: status.toUpperCase() as any,
+                paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined
+            },
+            createdAt: new Date().toISOString() as any,
+            updatedAt: new Date().toISOString() as any,
+
+            pharmacyId: (user as any)?._id || 'PREVIEW_PHARMACY'
+        };
+
+        setTempBill(bill);
+        setIsPreviewOpen(true);
+    };
+
+    const closePreview = () => {
+        setIsPreviewOpen(false);
+        setTempBill(null);
     };
 
     return (
@@ -384,12 +437,12 @@ const BillingPage = () => {
                                                         onChange={e => {
                                                             const newQty = Math.max(1, Number(e.target.value)) || 1;
                                                             const newCart = [...cart];
-                                                            newCart[index] = { ...item, qty: newQty, total: newQty * item.rate };
+                                                            newCart[index] = { ...item, qty: newQty, total: newQty * (item.rate || 0) };
                                                             setCart(newCart);
                                                         }}
                                                     />
                                                 </td>
-                                                <td className="px-8 py-5 text-right font-bold text-gray-500">₹{item.rate.toFixed(2)}</td>
+                                                <td className="px-8 py-5 text-right font-bold text-gray-500">₹{(item.rate || 0).toFixed(2)}</td>
                                                 <td className="px-8 py-5 text-right font-black text-blue-600 text-sm">₹{(item.total || item.amount || 0).toFixed(2)}</td>
                                                 <td className="px-8 py-5 text-center">
                                                     <button
@@ -535,25 +588,57 @@ const BillingPage = () => {
                             </div>
                         </div>
 
-                        <button
-                            className="w-full bg-blue-600 text-white py-5 rounded-3xl font-black uppercase tracking-[3px] text-[11px] transition-all shadow-2xl shadow-blue-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 hover:bg-blue-700 dark:shadow-none"
-                            disabled={isGenerating}
-                            onClick={handleSaveAndPrint}
-                        >
-                            <Printer size={18} className="font-black" />
-                            {isGenerating ? 'GENERATING QUANTUM...' : 'COMMIT & PRINT'}
-                        </button>
                     </div>
                 </div>
-            </div>
 
-            {/* Print Buffer */}
-            <div className="hidden">
-                <div ref={printRef}>
-                    {generatedBill && <PharmacyBillPrint billData={generatedBill} />}
+                <div className="flex gap-3">
+                    <button
+                        className="flex-1 bg-indigo-50 text-indigo-600 py-3.5 rounded-3xl font-black uppercase tracking-[2px] text-[10px] transition-all border border-indigo-100 dark:bg-indigo-900/10 dark:text-indigo-300 dark:border-indigo-800 flex items-center justify-center gap-2 hover:bg-indigo-100 disabled:opacity-50"
+                        disabled={isGenerating || cart.length === 0}
+                        onClick={handlePreview}
+                    >
+                        <Eye size={18} />
+                        Preview
+                    </button>
+                    <button
+                        className="flex-[2] bg-blue-600 text-white py-5 rounded-3xl font-black uppercase tracking-[3px] text-[11px] transition-all shadow-2xl shadow-blue-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 hover:bg-blue-700 dark:shadow-none"
+                        disabled={isGenerating}
+                        onClick={handleSaveAndPrint}
+                    >
+                        <Printer size={18} className="font-black" />
+                        {isGenerating ? 'GENERATING QUANTUM...' : 'COMMIT & PRINT'}
+                    </button>
                 </div>
             </div>
-        </div>
+            {
+                isPreviewOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto relative">
+                            <div className="sticky top-0 bg-white border-b z-10 p-4 flex justify-between items-center text-black">
+                                <h3 className="font-black uppercase tracking-wider text-sm">Invoice Preview</h3>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={closePreview}
+                                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-black"
+                                    >
+                                        Close
+                                    </button>
+                                    <button
+                                        onClick={() => { closePreview(); handleSaveAndPrint(); }}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+                                    >
+                                        <Printer size={14} /> Print Now
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-8 flex justify-center bg-gray-50">
+                                {tempBill && <PharmacyBillPrint billData={tempBill as PharmacyBill} shopDetails={shopDetails} />}
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
