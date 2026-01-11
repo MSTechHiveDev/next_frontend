@@ -81,23 +81,16 @@ export default function AnalyticsPage() {
 
    return (
       <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-         {/* Header */}
+        
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-               <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Practice Analytics</h1>
-               <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Strategic Clinical Insights & Performance Metrics</p>
+               <h1 className="text-2xl max-sm:text-[14px] font-semibold text-foreground">Practice Analytics</h1>
+               <p className="text-muted font-bold mt-1 uppercase tracking-widest text-[10px] max-sm:text-[10px]">Strategic Clinical Insights & Performance Metrics</p>
             </div>
-            <div className="flex items-center gap-3">
-               <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-white border border-gray-100 dark:border-gray-700 rounded-2xl text-sm font-black hover:bg-gray-50 transition-all shadow-sm">
-                  <Filter size={18} /> Interval: Last 30 Days
-               </button>
-               <button className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-black hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 dark:shadow-none">
-                  <Download size={18} /> Export Intel
-               </button>
-            </div>
+
          </div>
 
-         {/* Primary Analytics Grid */}
+         
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
                { label: "Patient Retention", value: stats.retention, icon: Target, color: "emerald", trend: "+2.4%" },
@@ -105,26 +98,26 @@ export default function AnalyticsPage() {
                { label: "New Registrations", value: stats.registrations, icon: Users, color: "indigo", trend: "+18" },
                { label: "Treatment Efficacy", value: stats.efficacy, icon: Activity, color: "rose", trend: "Optimum" }
             ].map((stat, i) => (
-               <div key={i} className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 group hover:border-emerald-500 transition-all">
-               
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
-                  <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">{stat.value}</h3>
+               <div key={i} className="bg-card p-8 rounded-4xl shadow-sm border border-border-theme group hover:border-primary-theme transition-all">
+
+                  <p className="text-[10px] font-black text-muted mb-1">{stat.label}</p>
+                  <h3 className="text-3xl font-black text-foreground">{stat.value}</h3>
                </div>
             ))}
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Patient Flux Analysis */}
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-10 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="lg:col-span-2 bg-card p-10 rounded-4xl shadow-sm border border-border-theme">
                <div className="flex items-center justify-between mb-10">
                   <div>
-                     <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic">Clinical Load Flux</h3>
-                     <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">Personnel through-put over time</p>
+                     <h3 className="text-xl font-black text-foreground">Clinical Load Flux</h3>
+                     <p className="text-sm font-bold text-muted mt-1">Personnel through-put over time</p>
                   </div>
                   <div className="flex items-center gap-4">
                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase">Consultations</span>
+                        <span className="w-2 h-2 rounded-full bg-primary-theme"></span>
+                        <span className="text-[10px] font-black text-muted">Consultations</span>
                      </div>
                   </div>
                </div>
@@ -134,32 +127,32 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Demographic Index */}
-            <div className="bg-white dark:bg-gray-800 p-10 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
-               <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic mb-2">Demographic Index</h3>
-               <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-10">Patient classification density</p>
+            <div className="bg-card p-10 rounded-4xl shadow-sm border border-border-theme flex flex-col">
+               <h3 className="text-xl font-black text-foreground mb-2">Demographic Index</h3>
+               <p className="text-sm font-bold text-muted mb-10">Patient classification density</p>
 
                <div className="flex-1 flex flex-col items-center justify-center space-y-8">
-                  <div className="w-48 h-48 rounded-full border-16 border-emerald-500/20 flex items-center justify-center relative shadow-2xl shadow-emerald-100 dark:shadow-none">
+                  <div className="w-48 h-48 rounded-full border-16 border-primary-theme/20 flex items-center justify-center relative shadow-2xl shadow-blue-100 dark:shadow-none">
                      <div className="text-center">
-                        <p className="text-4xl font-black text-gray-900 dark:text-white">65%</p>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Female Majority</p>
+                        <p className="text-4xl font-black text-foreground">65%</p>
+                        <p className="text-[10px] font-black text-muted uppercase tracking-widest mt-1">Female Majority</p>
                      </div>
-                     <div className="absolute inset-0 rounded-full border-t-16 border-emerald-500 animate-[spin_3s_linear_infinite] pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 50%)' }}></div>
+                     <div className="absolute inset-0 rounded-full border-t-16 border-primary-theme animate-[spin_3s_linear_infinite] pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 50%)' }}></div>
                   </div>
 
                   <div className="w-full space-y-4">
                      {[
-                        { label: "Adult (18-45)", value: 45, color: "emerald" },
-                        { label: "Senior (45+)", value: 30, color: "blue" },
-                        { label: "Junior (0-17)", value: 25, color: "amber" }
+                        { label: "Adult (18-45)", value: 45 },
+                        { label: "Senior (45+)", value: 30 },
+                        { label: "Junior (0-17)", value: 25 }
                      ].map((item, i) => (
                         <div key={i}>
                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</span>
-                              <span className="text-xs font-black text-gray-900 dark:text-white">{item.value}%</span>
+                              <span className="text-[10px] font-black text-muted uppercase tracking-widest">{item.label}</span>
+                              <span className="text-xs font-black text-foreground">{item.value}%</span>
                            </div>
-                           <div className="h-2 bg-gray-50 dark:bg-gray-700/50 rounded-full overflow-hidden">
-                              <div className={`h-full bg-${item.color}-500 transition-all duration-1000`} style={{ width: `${item.value}%` }}></div>
+                           <div className="h-2 bg-secondary-theme rounded-full overflow-hidden">
+                              <div className={`h-full bg-primary-theme transition-all duration-1000`} style={{ width: `${item.value}%`, opacity: 1 - (i * 0.2) }}></div>
                            </div>
                         </div>
                      ))}

@@ -5,41 +5,58 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --muted: #64748b;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --input: #f1f5f9;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --accent: #eff6ff;
+  --accent-foreground: #1e40af;
+  --chart-line: #000000;
+  --chart-grid: #e2e8f0;
+}
 
-  /* Light Theme - MSCureChain */
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --text-color: #0f172a;
-  --secondary-color: #64748b;
-  --border-color: #e2e8f0;
-  --navbar-bg: rgba(255, 255, 255, 0.8);
-  --sidebar-bg: #ffffff;
-  --hover-bg: #f1f5f9;
-  --accent-color: #3b82f6;
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --muted: #94a3b8;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --border: #334155;
+  --input: #334155;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f1f5f9;
+  --accent: #1e3a8a;
+  --accent-foreground: #bfdbfe;
+  --chart-line: #ffffff;
+  --chart-grid: #334155;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border-theme: var(--border);
+  --color-input: var(--input);
+  --color-primary-theme: var(--primary);
+  --color-primary-theme-foreground: var(--primary-foreground);
+  --color-secondary-theme: var(--secondary);
+  --color-secondary-theme-foreground: var(--secondary-foreground);
+  --color-accent-theme: var(--accent);
+  --color-accent-theme-foreground: var(--accent-foreground);
+  --color-chart-line: var(--chart-line);
+  --color-chart-grid: var(--chart-grid);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-.dark,
-[data-theme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-
-  /* Dark Theme - MSCureChain */
-  --bg-color: #0a0a0a;
-  --card-bg: #111111;
-  --text-color: #f1f5f9;
-  --secondary-color: #94a3b8;
-  --border-color: #1e293b;
-  --navbar-bg: rgba(17, 17, 17, 0.8);
-  --sidebar-bg: #111111;
-  --hover-bg: #1e293b;
-  --accent-color: #60a5fa;
 }
 
 body {
@@ -52,20 +69,25 @@ body {
   body * {
     visibility: hidden;
   }
+
   .print\:hidden {
     display: none !important;
   }
+
   .print\:shadow-none {
     box-shadow: none !important;
   }
+
   .print\:border-none {
     border: none !important;
   }
+
   /* Make the ticket and its children visible */
   .bg-white,
   .bg-white * {
     visibility: visible;
   }
+
   .bg-white {
     position: absolute;
     left: 0;

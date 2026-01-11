@@ -34,23 +34,20 @@ export default function AppointmentsQueue({ appointments }: QueueToggleProps) {
             {appointments.length} patient{appointments.length !== 1 ? 's' : ''} scheduled
           </p>
         </div>
-        
+
         {/* Queue Toggle */}
         <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600">
           <span className="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">Queue</span>
           <button
             onClick={() => setShowQueue(!showQueue)}
-            className={`relative w-12 h-6 rounded-full transition-all ${
-              showQueue ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-            }`}
+            className={`relative w-12 h-6 rounded-full transition-all cursor-pointer ${showQueue ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
           >
-            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-              showQueue ? 'translate-x-6' : 'translate-x-0'
-            }`} />
+            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform cursor-pointer ${showQueue ? 'translate-x-6' : 'translate-x-0'
+              }`} />
           </button>
-          <span className={`text-[10px] font-black uppercase ${
-            showQueue ? 'text-blue-600' : 'text-gray-400'
-          }`}>
+          <span className={`text-[10px] font-black uppercase ${showQueue ? 'text-blue-600' : 'text-gray-400'
+            }`}>
             {showQueue ? 'ON' : 'OFF'}
           </span>
         </div>

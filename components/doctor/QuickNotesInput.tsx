@@ -32,11 +32,11 @@ export default function QuickNotesInput() {
     };
 
     return (
-        <div className="bg-white dark:bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Notes</h3>
+        <div className="bg-card dark:bg-card p-6 rounded-2xl border border-border-theme dark:border-border-theme shadow-sm">
+            <h3 className="text-lg font-bold text-foreground mb-4">Quick Notes</h3>
             <div className="space-y-4">
                 <textarea
-                    className="w-full h-24 p-4 bg-gray-50 border border-gray-100 rounded-xl resize-none outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm text-gray-700 placeholder:text-gray-400"
+                    className="w-full h-24 p-4 bg-input dark:bg-input border border-border-theme rounded-xl resize-none outline-none focus:ring-2 focus:ring-primary-theme transition-all text-sm text-foreground placeholder:text-muted"
                     placeholder="Type a quick note here..."
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
@@ -48,18 +48,18 @@ export default function QuickNotesInput() {
                     }}
                 ></textarea>
                 <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-400">Press Ctrl+Enter to save</p>
+                    <p className="text-xs text-muted">Press Ctrl+Enter to save</p>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setNewNote('')}
-                            className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+                            className="px-4 py-2 text-sm font-medium text-muted hover:bg-secondary-theme cursor-pointer rounded-lg transition-colors border border-border-theme"
                         >
                             Clear
                         </button>
                         <button
                             onClick={handleAddNote}
                             disabled={isAdding || !newNote.trim()}
-                            className="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-50 flex items-center gap-2"
+                            className="px-6 py-2 max-sm:px-4 max-sm:py-1 bg-primary-theme text-primary-theme-foreground text-sm font-bold rounded-lg cursor-pointer hover:opacity-90 transition-all shadow-md shadow-blue-200 disabled:opacity-50 flex items-center gap-2"
                         >
                             {isAdding ? <Loader2 size={14} className="animate-spin" /> : null}
                             Save Note

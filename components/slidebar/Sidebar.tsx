@@ -92,13 +92,13 @@ export default function Sidebar({
 
             {/* Sidebar Container */}
             <aside
-                className={`fixed top-0 left-0 z-40 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed top-0 left-0 z-40 h-screen w-64 bg-card border-r border-border-theme transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     } ${className}`}
             >
                 <div className="flex flex-col h-full">
                     {/* Header: Title or Close Button */}
-                    <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
-                        <span className="text-lg font-semibold text-gray-800 dark:text-white lg:hidden">Menu</span>
+                    <div className="flex items-center justify-between h-16 px-6 border-b border-border-theme">
+                        <span className="text-lg font-black text-foreground lg:hidden">Menu</span>
                         <button
                             onClick={onClose}
                             className="lg:hidden p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
@@ -132,8 +132,8 @@ export default function Sidebar({
                                             }
                                         }}
                                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                                            ? 'bg-primary-theme/10 text-primary-theme font-black'
+                                            : 'text-muted hover:bg-secondary-theme hover:text-foreground'
                                             }`}
                                     >
                                         <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500'
@@ -156,18 +156,18 @@ export default function Sidebar({
 
                     {/* Footer Section */}
                     {footer ? (
-                        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                        <div className="p-4 border-t border-border-theme">
                             {footer}
                         </div>
                     ) : (
                         // Default Footer if none provided
-                        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                        <div className="p-4 border-t border-border-theme">
                             {onLogout && (
                                 <button
                                     onClick={handleLogoutClick}
-                                    className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors group mb-4"
+                                    className="flex items-center gap-3 w-full px-3 py-2.5 text-muted hover:bg-destructive-theme/10 hover:text-destructive-theme rounded-lg transition-colors group mb-4 font-black"
                                 >
-                                    <LogOut className="w-5 h-5 group-hover:text-red-500" />
+                                    <LogOut className="w-5 h-5 group-hover:text-destructive-theme" />
                                     <span>Sign Out</span>
                                 </button>
                             )}

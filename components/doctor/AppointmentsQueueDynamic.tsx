@@ -23,6 +23,7 @@ interface QueueProps {
     completedCount: number;
     estimatedMinutes: number;
     showQueue: boolean;
+    nextAppointmentId: string | null;
   }) => void;
 }
 
@@ -46,7 +47,7 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
       console.log('[Queue] Dashboard response:', response);
       console.log('[Queue] Appointments:', response?.appointments);
       console.log('[Queue] Appointments count:', response?.appointments?.length);
-      
+
       if (response?.appointments) {
         console.log('[Queue] Setting appointments:', response.appointments);
         setAppointments(response.appointments || []);
@@ -94,26 +95,28 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
   useEffect(() => {
     const completedCount = appointments.filter(apt => apt.status === 'completed').length;
     const estimatedMinutes = queueAppointments.length * 20;
-    
+    const nextAppointmentId = sortedAppointments.length > 0 ? sortedAppointments[0].id : null;
+
     if (onStatsChange) {
       onStatsChange({
         queueCount: queueAppointments.length,
         totalAppointments: appointments.length,
         completedCount,
         estimatedMinutes,
-        showQueue
+        showQueue,
+        nextAppointmentId
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointments.length, queueAppointments.length, showQueue]);
+  }, [appointments.length, queueAppointments.length, showQueue, sortedAppointments.length]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+    <div className="bg-card dark:bg-card rounded-2xl border border-border-theme dark:border-border-theme shadow-sm">
       {/* Header with Toggle */}
-      <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+      <div className="p-6 border-b border-border-theme dark:border-border-theme flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Today's Appointments</h2>
-          <p className="text-xs text-gray-400 mt-1">
+          <h2 className="text-lg font-bold text-foreground dark:text-foreground">Today's Appointments</h2>
+          <p className="text-xs text-muted mt-1">
             {showQueue ? (
               <>
                 {queueAppointments.length} patient{queueAppointments.length !== 1 ? 's' : ''} in queue
@@ -123,23 +126,20 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
             )}
           </p>
         </div>
-        
+
         {/* Queue Toggle */}
-        <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600">
-          <span className="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase">Queue</span>
+        <div className="flex items-center gap-3 bg-secondary-theme dark:bg-secondary-theme px-4 py-2 rounded-xl border border-border-theme dark:border-border-theme">
+          <span className="text-xs font-bold text-muted dark:text-muted uppercase">Queue</span>
           <button
             onClick={() => setShowQueue(!showQueue)}
-            className={`relative w-12 h-6 rounded-full transition-all ${
-              showQueue ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-            }`}
+            className={`relative w-12 h-6 rounded-full transition-all cursor-pointer ${showQueue ? 'bg-primary-theme' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
           >
-            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-              showQueue ? 'translate-x-6' : 'translate-x-0'
-            }`} />
+            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform cursor-pointer ${showQueue ? 'translate-x-6' : 'translate-x-0'
+              }`} />
           </button>
-          <span className={`text-[10px] font-black uppercase ${
-            showQueue ? 'text-blue-600' : 'text-gray-400'
-          }`}>
+          <span className={`text-[10px] font-black uppercase ${showQueue ? 'text-primary-theme' : 'text-muted'
+            }`}>
             {showQueue ? 'ON' : 'OFF'}
           </span>
         </div>
@@ -149,12 +149,20 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
       <div className="p-6">
         {loading ? (
           <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-400">Loading appointments...</p>
+            <Loader2 className="w-8 h-8 text-primary-theme animate-spin mx-auto mb-3" />
+            <p className="text-sm text-muted">Loading appointments...</p>
           </div>
         ) : showQueue ? (
           queueAppointments.length > 0 ? (
             <div className="space-y-3">
+              {/* Desktop Table Header (Visible on sm and up) */}
+              <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 border-b border-border-theme text-[10px] font-black text-muted uppercase tracking-widest">
+                <div className="col-span-1">#</div>
+                <div className="col-span-5">Patient Name & Type</div>
+                <div className="col-span-3 text-center">Wait/Time</div>
+                <div className="col-span-3 text-right">Actions</div>
+              </div>
+
               {sortedAppointments.map((apt, idx) => {
                 // Calculate estimated wait time (20 min per patient)
                 const estimatedWaitMinutes = idx * 20;
@@ -163,94 +171,103 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
                 const waitTime = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
                 return (
-                  <div
-                    key={apt.id}
-                    className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
-                  >
-                    {/* Queue Position */}
-                    <div className="shrink-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-black text-sm">
-                      {idx + 1}
+                  <React.Fragment key={apt.id}>
+                    {/* Desktop View Card (sm and up) */}
+                    <div className="hidden sm:flex items-center gap-4 p-4 bg-secondary-theme dark:bg-secondary-theme rounded-xl hover:opacity-80 transition-all group">
+                      <div className="shrink-0 w-10 h-10 bg-primary-theme rounded-full flex items-center justify-center text-primary-theme-foreground font-black text-sm">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-foreground dark:text-foreground text-sm truncate">
+                          {apt.patientName}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px] sm:text-xs">
+                          <span className="text-muted">{apt.type}</span>
+                          {idx > 0 && (
+                            <>
+                              <span className="text-border-theme">•</span>
+                              <span className="font-bold text-orange-600 flex items-center gap-1">
+                                <Clock size={12} /> Wait: {waitTime}
+                              </span>
+                            </>
+                          )}
+                          <span className="text-border-theme">•</span>
+                          <span className={`font-bold ${apt.status === 'confirmed' ? 'text-green-600' :
+                            apt.status === 'Booked' ? 'text-blue-600' : 'text-muted'
+                            }`}>
+                            {apt.status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-bold text-foreground">{apt.time}</p>
+                        <p className="text-xs text-muted">~20min</p>
+                      </div>
+                      <button
+                        onClick={() => router.push(`/doctor/appointment/${apt.id}`)}
+                        className="shrink-0 px-4 py-2 bg-primary-theme hover:opacity-90 text-primary-theme-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        <CheckCircle2 size={14} /> Start
+                      </button>
                     </div>
 
-                    {/* Patient Info */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-gray-900 dark:text-white text-sm truncate">
-                        {apt.patientName}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {apt.type}
-                        </span>
-                        {idx > 0 && (
-                          <>
-                            <span className="text-gray-300">•</span>
-                            <span className="text-xs font-bold text-orange-600 flex items-center gap-1">
-                              <Clock size={12} />
-                              Wait: {waitTime}
-                            </span>
-                          </>
-                        )}
-                        <span className="text-gray-300">•</span>
-                        <span className={`text-xs font-bold ${
-                          apt.status === 'confirmed' ? 'text-green-600' : 
-                          apt.status === 'Booked' ? 'text-blue-600' : 'text-gray-600'
-                        }`}>
-                          {apt.status}
-                        </span>
+                    {/* Mobile Table Row (xs only) */}
+                    <div className="sm:hidden grid grid-cols-12 gap-2 items-center p-3 py-4 bg-secondary-theme rounded-xl border border-border-theme/50">
+                      <div className="col-span-1 text-[11px] font-black text-primary-theme">
+                        {idx + 1}
+                      </div>
+                      <div className="col-span-5 min-w-0">
+                        <p className="text-[11px] font-black text-foreground truncate ">{apt.patientName}</p>
+                        <p className="text-[9px] text-muted font-bold truncate">{apt.type}</p>
+                      </div>
+                      <div className="col-span-3 text-center">
+                        <p className="text-[10px] font-black text-foreground">{apt.time}</p>
+                        <p className="text-[8px] text-muted font-bold">~20min</p>
+                      </div>
+                      <div className="col-span-3 text-right">
+                        <button
+                          onClick={() => router.push(`/doctor/appointment/${apt.id}`)}
+                          className="w-full py-2 bg-primary-theme text-primary-theme-foreground text-[10px] font-black rounded-lg shadow-sm"
+                        >
+                          Start
+                        </button>
                       </div>
                     </div>
-
-                    {/* Time & Actions */}
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white">
-                        {apt.time}
-                      </p>
-                      <p className="text-xs text-gray-400">~20min</p>
-                    </div>
-
-                    {/* Start Button */}
-                    <button
-                      onClick={() => router.push(`/doctor/appointment/${apt.id}`)}
-                      className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <CheckCircle2 size={14} />
-                      Start
-                    </button>
-                  </div>
+                  </React.Fragment>
                 );
               })}
 
-              {/* Total Estimated Time */}
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+              {/* Total Estimated Time Card */}
+              <div className="mt-4 p-4 bg-accent-theme dark:bg-accent-theme rounded-xl border border-border-theme">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-blue-900 dark:text-blue-100">
+                  <span className="text-sm max-sm:text-xs font-bold text-accent-theme-foreground">
                     Total Estimated Time
                   </span>
-                  <span className="text-lg font-black text-blue-600">
+                  <span className="text-lg max-sm:text-sm font-black text-primary-theme">
                     {Math.floor((queueAppointments.length * 20) / 60)}h {(queueAppointments.length * 20) % 60}m
                   </span>
                 </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                  {queueAppointments.length} appointments × 20 minutes each
+                <p className="text-xs max-sm:text-[10px] text-accent-theme-foreground mt-1 opacity-80">
+                  {queueAppointments.length} appointments × 20 min each
                 </p>
               </div>
             </div>
           ) : (
             <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-400">No appointments in queue</p>
-              <p className="text-xs text-gray-400 mt-1">All caught up!</p>
+              <Calendar className="w-12 h-12 text-muted mx-auto mb-3" />
+              <p className="text-sm font-medium text-muted">No appointments in queue</p>
+              <p className="text-xs text-muted mt-1">All caught up!</p>
             </div>
           )
         ) : (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 bg-secondary-theme dark:bg-secondary-theme rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="w-8 h-8 text-muted" />
             </div>
-            <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Queue View Disabled</p>
-            <p className="text-xs text-gray-400 mt-1">Toggle ON to see patient queue and wait times</p>
-            <div className="mt-4 text-4xl font-black text-gray-300">0</div>
-            <p className="text-xs text-gray-400 mt-1">Appointments visible</p>
+            <p className="text-sm font-bold text-muted dark:text-muted">Queue View Disabled</p>
+            <p className="text-xs text-muted mt-1">Toggle ON to see patient queue and wait times</p>
+            <div className="mt-4 text-4xl font-black text-border-theme">0</div>
+            <p className="text-xs text-muted mt-1">Appointments visible</p>
           </div>
         )}
       </div>

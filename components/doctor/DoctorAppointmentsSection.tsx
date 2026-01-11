@@ -24,9 +24,6 @@ export default function DoctorAppointmentsSection() {
       <div className="lg:col-span-1">
         <DoctorQueueStats 
           queueCount={queueStats.queueCount}
-          totalAppointments={queueStats.totalAppointments}
-          completedCount={queueStats.completedCount}
-          estimatedMinutes={queueStats.estimatedMinutes}
           showQueue={queueStats.showQueue}
         />
       </div>

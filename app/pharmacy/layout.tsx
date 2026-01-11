@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from '@/stores/authStore';
 import { useThemeStore } from '@/stores/themeStore';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
@@ -26,12 +26,14 @@ const pharmacyMenu: SidebarItem[] = [
 
 const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
+    const pathname = usePathname();
     const { user, logout, isAuthenticated, checkAuth, isInitialized, isLoading } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     const isPharma = user?.role === 'pharma-owner' || user?.role === 'pharmacy';
+    const isLoginPage = pathname === '/pharmacy/login';
 
     const pharmacyUser = user || {
         name: "Pharmacy User",
@@ -46,7 +48,7 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        if (isInitialized) {
+        if (!isLoginPage && isInitialized) {
             if (!isAuthenticated) {
                 router.push('/auth/login');
             } else if (!isPharma) {
@@ -61,7 +63,7 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
                 router.push(routeMap[user?.role || ''] || '/auth/login');
             }
         }
-    }, [isAuthenticated, isInitialized, user?.role, router, isPharma]);
+    }, [isAuthenticated, isInitialized, user?.role, router, isPharma, isLoginPage]);
 
     // Handle logout
     const handleLogout = async () => {
@@ -88,6 +90,10 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
             </div>
         );
+    }
+
+    if (isLoginPage) {
+        return <>{children}</>;
     }
 
     if (!isAuthenticated || !isPharma) {

@@ -33,13 +33,16 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
     };
 
     // Auth guard
+    // Check if on login page
+    const isLoginPage = pathname === '/lab/login';
+
     useEffect(() => {
         useAuthStore.getState().initEvents();
         checkAuth();
     }, []);
 
     useEffect(() => {
-        if (isInitialized) {
+        if (!isLoginPage && isInitialized) {
             if (!isAuthenticated) {
                 router.push('/auth/login');
             } else if (user?.role !== 'lab') {
@@ -55,7 +58,7 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                 router.push(routeMap[user?.role || ''] || '/auth/login');
             }
         }
-    }, [isAuthenticated, isInitialized, user?.role, router]);
+    }, [isAuthenticated, isInitialized, user?.role, router, isLoginPage]);
 
     const handleConfirmLogout = async () => {
         await logout();
@@ -81,6 +84,10 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
             </div>
         );
+    }
+
+    if (isLoginPage) {
+        return <>{children}</>;
     }
 
     if (!isAuthenticated || user?.role !== 'lab') return null;
