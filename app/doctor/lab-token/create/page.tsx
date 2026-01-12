@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  Plus, 
-  Trash2, 
-  ArrowLeft, 
-  Save, 
-  Loader2, 
-  Beaker, 
-  Printer, 
-  Clock, 
+import {
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Save,
+  Loader2,
+  Beaker,
+  Printer,
+  Clock,
   Activity,
-  CheckCircle 
+  CheckCircle
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { doctorService } from '@/lib/integrations/services/doctor.service';
@@ -26,15 +26,15 @@ export default function CreateLabTokenPage() {
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [tests, setTests] = useState([
-    { name: '', category: 'Blood Test', instructions: '', price: 0 }
+    { name: '', testId: '', category: 'Blood Test', instructions: '', price: 0 }
   ]);
   const [priority, setPriority] = useState<'routine' | 'urgent' | 'stat'>('routine');
   const [notes, setNotes] = useState('');
-  
+
   // Dynamic Data State
   const [availableTests, setAvailableTests] = useState<any[]>([]);
   const [testCategories, setTestCategories] = useState<string[]>([]);
-  
+
   // Search State for each row
   const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -42,10 +42,10 @@ export default function CreateLabTokenPage() {
   const [patientData, setPatientData] = useState<any>(null);
   const [doctorData, setDoctorData] = useState<any>(null);
   const [tokenNumber, setTokenNumber] = useState<string>('');
-  
+
   // Success State
   const [showSuccess, setShowSuccess] = useState(false);
-  const [generatedHtml, setGeneratedHtml] = useState<{labToken: string, billing: string} | null>(null);
+  const [generatedHtml, setGeneratedHtml] = useState<{ labToken: string, billing: string } | null>(null);
   const [subtotal, setSubtotal] = useState(0);
   const [tax, setTax] = useState(0);
   const [total, setTotal] = useState(0);
@@ -75,55 +75,56 @@ export default function CreateLabTokenPage() {
   // Fetch Lab Tests
   useEffect(() => {
     const fetchTests = async () => {
-        try {
-            const res = await doctorService.getLabTests();
-            if (res) {
-                setAvailableTests(res);
-                const categories = Array.from(new Set(res.map((t: any) => t.departmentId?.name || t.category || 'General')));
-                setTestCategories(categories as string[]);
-            }
-        } catch (err) {
-            console.error("Failed to fetch lab tests", err);
+      try {
+        const res = await doctorService.getLabTests();
+        if (res) {
+          setAvailableTests(res);
+          const categories = Array.from(new Set(res.map((t: any) => t.departmentId?.name || t.category || 'General')));
+          setTestCategories(categories as string[]);
         }
+      } catch (err) {
+        console.error("Failed to fetch lab tests", err);
+      }
     };
     fetchTests();
   }, []);
 
   const addTest = () => {
-    setTests([...tests, { name: '', category: 'Blood Test', instructions: '', price: 0 }]);
+    setTests([...tests, { name: '', testId: '', category: 'Blood Test', instructions: '', price: 0 }]);
   };
 
   // Handle Test Search
   const handleSearch = (query: string, index: number) => {
-      const updated = [...tests];
-      updated[index] = { ...updated[index], name: query };
-      setTests(updated);
+    const updated = [...tests];
+    updated[index] = { ...updated[index], name: query };
+    setTests(updated);
 
-      if (!query) {
-          setSearchResults([]);
-          return;
-      }
+    if (!query) {
+      setSearchResults([]);
+      return;
+    }
 
-      setActiveSearchIndex(index);
-      const filtered = availableTests.filter((t: any) => 
-          (t.testName || t.name).toLowerCase().includes(query.toLowerCase()) || 
-          (t.testCode || '').toLowerCase().includes(query.toLowerCase())
-      );
-      setSearchResults(filtered.slice(0, 10)); // Limit to 10
+    setActiveSearchIndex(index);
+    const filtered = availableTests.filter((t: any) =>
+      (t.testName || t.name).toLowerCase().includes(query.toLowerCase()) ||
+      (t.testCode || '').toLowerCase().includes(query.toLowerCase())
+    );
+    setSearchResults(filtered.slice(0, 10)); // Limit to 10
   };
 
   const selectTest = (test: any, index: number) => {
-      const updated = [...tests];
-      updated[index] = {
-          name: test.testName || test.name,
-          category: test.departmentId?.name || 'General',
-          instructions: '',
-          price: test.price || 0
-      };
-      setTests(updated);
-      setActiveSearchIndex(null);
-      setSearchResults([]);
-      calculateBilling(updated);
+    const updated = [...tests];
+    updated[index] = {
+      name: test.testName || test.name,
+      testId: test._id,
+      category: test.departmentId?.name || 'General',
+      instructions: '',
+      price: test.price || 0
+    };
+    setTests(updated);
+    setActiveSearchIndex(null);
+    setSearchResults([]);
+    calculateBilling(updated);
   };
 
 
@@ -159,7 +160,13 @@ export default function CreateLabTokenPage() {
       setIsSaving(true);
       const res = await doctorService.createLabToken({
         appointmentId,
-        tests: tests.filter(t => t.name.trim()),
+        tests: tests.filter(t => t.name.trim()).map(t => ({
+          name: t.name,
+          testId: t.testId, // Pass testId to backend
+          category: t.category,
+          instructions: t.instructions,
+          price: t.price
+        })),
         priority,
         notes
       });
@@ -167,7 +174,7 @@ export default function CreateLabTokenPage() {
       if (res.success) {
         const genTokenNumber = res.labToken?.tokenNumber || `LAB-${Date.now()}`;
         setTokenNumber(genTokenNumber);
-        
+
         // Calculate billing
         calculateBilling();
 
@@ -337,7 +344,7 @@ export default function CreateLabTokenPage() {
           billing: billingHtml
         });
         setShowSuccess(true);
-        toast.success('Lab Token Created Successfully!');
+        toast.success(res.labOrder ? 'Lab Order Sent Successfully!' : 'Lab Token Created Successfully!');
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to create lab token');
@@ -348,15 +355,15 @@ export default function CreateLabTokenPage() {
 
   const handlePrintDocument = (type: 'labToken' | 'billing') => {
     if (!generatedHtml) return;
-    
+
     const html = type === 'labToken' ? generatedHtml.labToken : generatedHtml.billing;
     const printWindow = window.open('', '_blank');
-    
+
     if (printWindow) {
       printWindow.document.write(html);
       printWindow.document.close();
       printWindow.focus();
-      
+
       // Trigger print after content loads
       setTimeout(() => {
         printWindow.print();
@@ -402,11 +409,10 @@ export default function CreateLabTokenPage() {
                 <button
                   key={p.value}
                   onClick={() => setPriority(p.value as any)}
-                  className={`p-4 rounded-xl border-2 font-bold transition-all text-sm ${
-                    priority === p.value
-                      ? `border-${p.color}-600 bg-${p.color}-50 dark:bg-${p.color}-900/20 text-${p.color}-700 dark:text-${p.color}-400`
-                      : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
-                  }`}
+                  className={`p-4 rounded-xl border-2 font-bold transition-all text-sm ${priority === p.value
+                    ? `border-${p.color}-600 bg-${p.color}-50 dark:bg-${p.color}-900/20 text-${p.color}-700 dark:text-${p.color}-400`
+                    : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'
+                    }`}
                 >
                   {p.label}
                 </button>
@@ -426,7 +432,7 @@ export default function CreateLabTokenPage() {
                 Add Test
               </button>
             </div>
-            
+
             <div className="space-y-4">
               {tests.map((test, index) => (
                 <div key={index} className="group relative bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 transition-all hover:border-purple-200 dark:hover:border-purple-900/50">
@@ -437,37 +443,37 @@ export default function CreateLabTokenPage() {
                           <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Test Name *</label>
                           <div className="relative">
                             <input
-                                type="text"
-                                value={test.name}
-                                onChange={(e) => handleSearch(e.target.value, index)}
-                                onFocus={() => handleSearch(test.name, index)}
-                                placeholder="Search test..."
-                                className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm font-medium"
+                              type="text"
+                              value={test.name}
+                              onChange={(e) => handleSearch(e.target.value, index)}
+                              onFocus={() => handleSearch(test.name, index)}
+                              placeholder="Search test..."
+                              className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm font-medium"
                             />
                             {activeSearchIndex === index && searchResults.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                                    {searchResults.map((res: any) => (
-                                        <button
-                                            key={res._id}
-                                            onClick={() => selectTest(res, index)}
-                                            className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex justify-between items-center group"
-                                        >
-                                            <div>
-                                                <div className="text-sm font-bold text-slate-700 group-hover:text-purple-600">{res.testName || res.name}</div>
-                                                <div className="text-xs text-slate-400">{res.departmentId?.name || 'General'}</div>
-                                            </div>
-                                            <div className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">
-                                                ₹{res.price}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
+                              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                {searchResults.map((res: any) => (
+                                  <button
+                                    key={res._id}
+                                    onClick={() => selectTest(res, index)}
+                                    className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex justify-between items-center group"
+                                  >
+                                    <div>
+                                      <div className="text-sm font-bold text-slate-700 group-hover:text-purple-600">{res.testName || res.name}</div>
+                                      <div className="text-xs text-slate-400">{res.departmentId?.name || 'General'}</div>
+                                    </div>
+                                    <div className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">
+                                      ₹{res.price}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
                             )}
                             {activeSearchIndex === index && (
-                                <div 
-                                    className="fixed inset-0 z-40 bg-transparent" 
-                                    onClick={() => setActiveSearchIndex(null)}
-                                />
+                              <div
+                                className="fixed inset-0 z-40 bg-transparent"
+                                onClick={() => setActiveSearchIndex(null)}
+                              />
                             )}
                           </div>
                         </div>
@@ -554,7 +560,7 @@ export default function CreateLabTokenPage() {
               ) : (
                 <>
                   <Save size={20} />
-                  Create & Print Documents
+                  Send Details to Lab
                 </>
               )}
             </button>
@@ -573,24 +579,34 @@ export default function CreateLabTokenPage() {
               <h2 className="text-2xl font-black text-gray-900">Lab Token Created!</h2>
               <p className="text-gray-500">Ready to print documents</p>
             </div>
-            
+
             <div className="grid gap-3">
-              <button 
+              <button
                 onClick={() => handlePrintDocument('labToken')}
                 className="w-full py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Printer size={18} /> Print Lab Token
               </button>
-              <button 
+              <button
                 onClick={() => handlePrintDocument('billing')}
                 className="w-full py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 <Printer size={18} /> Print Billing Receipt
               </button>
+              {/* Visual Confirmation */}
+              <div className="mt-2 p-3 bg-purple-50 rounded-xl border border-purple-100 flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 animate-pulse">
+                  <Activity size={16} />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-gray-800">Sent to Lab</p>
+                  <p className="text-[10px] text-gray-500">Lab staff has been notified instantly.</p>
+                </div>
+              </div>
             </div>
 
             <div className="pt-4 border-t border-gray-100">
-              <button 
+              <button
                 onClick={() => router.push(`/doctor/appointment/${appointmentId}`)}
                 className="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors"
               >

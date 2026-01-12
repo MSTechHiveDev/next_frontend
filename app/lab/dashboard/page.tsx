@@ -12,31 +12,84 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Microscope,
-    Network
+    Network,
+    Activity
 } from 'lucide-react';
 import { LabDashboardService, DashboardStats } from '@/lib/integrations/services/labDashboard.service';
+import { LabSampleService } from '@/lib/integrations/services/labSample.service';
+import { LabSample } from '@/lib/integrations/types/labSample';
 import { toast } from 'react-hot-toast';
+import { subscribeToSocket, unsubscribeFromSocket } from '@/lib/integrations/api/socket';
+import { useAuthStore } from '@/stores/authStore';
+import Link from 'next/link';
 
 export default function LabDashboard() {
     const [range, setRange] = useState('today');
     const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [activeTests, setActiveTests] = useState<LabSample[]>([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuthStore();
 
     useEffect(() => {
         const fetchStats = async () => {
             setLoading(true);
             try {
-                const data = await LabDashboardService.getStats(range);
-                setStats(data);
+                const [statsData, samplesData] = await Promise.all([
+                    LabDashboardService.getStats(range),
+                    LabSampleService.getSamples('Pending')
+                ]);
+                setStats(statsData);
+                setActiveTests(samplesData.slice(0, 5)); // Show top 5 pending
             } catch (error) {
                 console.error(error);
-                toast.error('Failed to load dashboard stats');
+                toast.error('Failed to load dashboard data');
             } finally {
                 setLoading(false);
             }
         };
         fetchStats();
     }, [range]);
+
+    // Socket Integration
+    useEffect(() => {
+        if (!user?.hospitalId) return;
+
+        const handleNewLabOrder = (newOrder: any) => {
+            // Add new order to top of active list
+            setActiveTests(prev => {
+                if (prev.some(s => s._id === newOrder._id)) return prev;
+
+                toast.custom((t) => (
+                    <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 border-indigo-500`}>
+                        <div className="flex-1 w-0 p-4">
+                            <div className="flex items-start">
+                                <div className="flex-shrink-0 pt-0.5">
+                                    <Microscope className="h-10 w-10 text-indigo-500" />
+                                </div>
+                                <div className="ml-3 flex-1">
+                                    <p className="text-sm font-bold text-gray-900 dark:text-white">New Active Test!</p>
+                                    <p className="mt-1 text-xs text-gray-500">Patient: {newOrder.patientDetails?.name}</p>
+                                    <p className="text-xs text-indigo-500 font-bold mt-1">Added to Dashboard</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ));
+
+                return [newOrder, ...prev].slice(0, 10); // Keep top 10
+            });
+
+            // Refresh stats silently
+            LabDashboardService.getStats(range).then(setStats).catch(() => { });
+        };
+
+        const channel = `hospital_${user.hospitalId}`;
+        subscribeToSocket(channel, 'new_lab_order', handleNewLabOrder);
+
+        return () => {
+            unsubscribeFromSocket(channel, 'new_lab_order', handleNewLabOrder);
+        };
+    }, [user?.hospitalId, range]);
 
     const StatCard = ({ title, value, icon: Icon, color, subValue }: any) => (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group transition-colors">
@@ -162,6 +215,79 @@ export default function LabDashboard() {
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Card Collection</p>
                         <h4 className="text-xl font-black text-gray-900 dark:text-white">₹{stats?.paymentBreakdown.Card.toLocaleString() || 0}</h4>
                     </div>
+                </div>
+            </div>
+
+            {/* Active Tests Section */}
+            <div className="mb-10">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                        <Activity className="text-rose-500 animate-pulse" />
+                        Active Patient Tests
+                        <span className="bg-rose-100 text-rose-600 text-xs px-2 py-1 rounded-full">{activeTests.length} Pending</span>
+                    </h2>
+                    <Link href="/lab/samples" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                        View All Samples <ArrowUpRight className="w-4 h-4" />
+                    </Link>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    {activeTests.length === 0 ? (
+                        <div className="p-8 text-center text-gray-400">
+                            <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                            <p className="font-medium">No active tests at the moment</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-400 font-black tracking-widest">
+                                    <tr>
+                                        <th className="p-4 pl-6">Token / ID</th>
+                                        <th className="p-4">Patient</th>
+                                        <th className="p-4">Tests</th>
+                                        <th className="p-4 text-center">Status</th>
+                                        <th className="p-4 text-right pr-6">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                    {activeTests.map((test) => (
+                                        <tr key={test._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <td className="p-4 pl-6">
+                                                <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm block">{test.tokenNumber || test.sampleId}</span>
+                                                <span className="text-[10px] text-gray-400">{new Date(test.createdAt).toLocaleTimeString()}</span>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="font-bold text-gray-900 dark:text-white text-sm">{test.patientDetails.name}</div>
+                                                <div className="text-[10px] text-gray-400 uppercase font-bold">{test.patientDetails.age}Y • {test.patientDetails.gender}</div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex flex-wrap gap-1">
+                                                    {test.tests.slice(0, 2).map((t, i) => (
+                                                        <span key={i} className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded text-[10px] font-bold border border-purple-100 dark:border-purple-800">
+                                                            {t.testName}
+                                                        </span>
+                                                    ))}
+                                                    {test.tests.length > 2 && (
+                                                        <span className="text-[10px] text-gray-400 font-bold self-center">+{test.tests.length - 2} more</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wide">
+                                                    {test.status}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-right pr-6">
+                                                <Link href={`/lab/samples`} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                                                    Collect Sample
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
 

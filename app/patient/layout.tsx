@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, User } from 'lucide-react';
+import { LayoutDashboard, FileText, User } from 'lucide-react';
 import Navbar from '@/components/navbar/Navbar';
 import Sidebar, { SidebarItem } from '@/components/slidebar/Sidebar';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,8 +10,10 @@ import LogoutModal from '@/components/auth/LogoutModal';
 
 const patientMenuItems: SidebarItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/patient' },
+    { icon: FileText, label: 'Medical Records', href: '/patient#medical-records' },
     // Add more patient-specific routes here as they are developed
 ];
+
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setSidebarOpen] = useState(false);
