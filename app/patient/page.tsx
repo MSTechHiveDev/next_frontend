@@ -1,6 +1,7 @@
 import React from 'react';
 import { getPatientProfileAction } from '@/lib/integrations';
 import PatientProfile from '@/components/patient/PatientProfile';
+import PatientDashboard from '@/components/patient/PatientDashboard';
 import { AlertCircle } from 'lucide-react';
 
 export default async function PatientPage() {
@@ -21,8 +22,25 @@ export default async function PatientPage() {
     }
 
     return (
-        <div className="container mx-auto py-10">
-            <PatientProfile profile={response.data} />
+        <div className="space-y-8">
+            {/* Medical Dashboard - Primary Section */}
+            <section>
+                <PatientDashboard />
+            </section>
+
+            {/* Patient Profile - Secondary Section */}
+            <section>
+                <div className="mb-6">
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic">
+                        Personal Profile
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        View and manage your personal information
+                    </p>
+                </div>
+                <PatientProfile profile={response.data} />
+            </section>
         </div>
     );
 }
+

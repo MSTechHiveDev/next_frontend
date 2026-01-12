@@ -25,6 +25,8 @@ export default function DoctorAppointmentsSection() {
         <DoctorQueueStats 
           queueCount={queueStats.queueCount}
           showQueue={queueStats.showQueue}
+          totalAppointments={queueStats.totalAppointments}
+          completedCount={queueStats.completedCount}
         />
       </div>
     </>

@@ -15,4 +15,21 @@ export const patientService = {
             method: 'PATCH',
             body: JSON.stringify(data),
         }),
+
+    // Patient Dashboard Data
+    getAppointments: () =>
+        apiClient<any>(PATIENT_ENDPOINTS.APPOINTMENTS),
+
+    getPrescriptions: () =>
+        apiClient<any>(PATIENT_ENDPOINTS.PRESCRIPTIONS),
+
+    getLabRecords: () =>
+        apiClient<any>(PATIENT_ENDPOINTS.LAB_RECORDS),
+
+    getHelpdeskPrescriptions: () =>
+        apiClient<any>(PATIENT_ENDPOINTS.HELPDESK_PRESCRIPTIONS),
+
+    getDashboardData: () =>
+        apiClient<any>(PATIENT_ENDPOINTS.DASHBOARD_DATA),
 };
+

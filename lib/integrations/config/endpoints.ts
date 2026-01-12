@@ -223,7 +223,13 @@ export const PATIENT_ENDPOINTS = {
   PROFILE: '/patients/profile',
   PROFILE_BY_ID: (id: string) => `/patients/profile/${id}`,
   UPDATE_PROFILE: '/patients/profile',
+  APPOINTMENTS: '/patients/appointments',
+  PRESCRIPTIONS: '/patients/prescriptions',
+  LAB_RECORDS: '/patients/lab-records',
+  HELPDESK_PRESCRIPTIONS: '/patients/helpdesk-prescriptions',
+  DASHBOARD_DATA: '/patients/dashboard-data',
 };
+
 
 export const SUPPORT_ENDPOINTS = {
   CREATE: '/support',
