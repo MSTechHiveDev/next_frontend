@@ -87,7 +87,7 @@ export default function DepartmentMasterPage() {
     );
 
     return (
-        <div className="p-6 h-full bg-gray-50 dark:bg-gray-900 flex flex-col items-center transition-colors duration-500">
+        <div className="p-6 h-full bg-gray-50 dark:bg-gray-900 flex flex-col items-center transition-colors duration-500 w-full max-w-[100vw] overflow-x-hidden">
             <div className="max-w-6xl w-full">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">

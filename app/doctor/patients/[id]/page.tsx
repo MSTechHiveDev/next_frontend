@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, User, Phone, Mail, Calendar, MapPin, Activity, FileText, Clock, CreditCard } from 'lucide-react';
+import { ArrowLeft, User, Phone, Mail, Calendar, MapPin, Activity, FileText, Clock, CreditCard, X, Printer, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { getDoctorPatientDetailsAction, getDoctorProfileAction, getAllAppointmentsAction } from '@/lib/integrations/actions/doctor.actions';
+import { doctorService } from '@/lib/integrations/services/doctor.service';
+import { PrescriptionDocument } from '@/components/documents/PrescriptionDocument';
 import toast from 'react-hot-toast';
 
 export default function PatientDetailsPage() {
@@ -14,6 +16,11 @@ export default function PatientDetailsPage() {
     const [appointments, setAppointments] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
+
+    // Prescription View State
+    const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
+    const [isPivoting, setIsPivoting] = useState(false);
+    const [isRxModalOpen, setIsRxModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchDoctorId = async () => {
@@ -62,6 +69,18 @@ export default function PatientDetailsPage() {
                     // Sort by date descending
                     filtered.sort((a: any, b: any) => new Date(b.date || b.startTime).getTime() - new Date(a.date || a.startTime).getTime());
 
+                    // Extract latest vitals for the dashboard display
+                    const latestWithVitals = filtered.find(a => a.vitals && Object.values(a.vitals).some(v => v !== null && v !== "" && v !== undefined));
+                    if (latestWithVitals) {
+                        const cleanVitals = Object.fromEntries(
+                            Object.entries(latestWithVitals.vitals).filter(([_, v]) => v)
+                        );
+                        setPatient((prev: any) => ({
+                            ...prev,
+                            ...cleanVitals
+                        }));
+                    }
+
                     setAppointments(filtered);
                 }
             } else {
@@ -72,6 +91,65 @@ export default function PatientDetailsPage() {
             toast.error("An error occurred while loading patient data.");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchPrescriptionDetails = async (visit: any) => {
+        const rxId = visit.prescriptionId || visit.prescription?._id || visit.prescription;
+
+        if (!rxId) {
+            toast.error("No prescription linked to this consultation.");
+            return;
+        }
+
+        setIsPivoting(true);
+        setIsRxModalOpen(true);
+        try {
+            const res = await doctorService.getPrescriptionById(rxId);
+            if (res.success && (res.prescription || res.data)) {
+                setSelectedPrescription(res.prescription || res.data);
+            } else {
+                toast.error(res.message || "Could not retrieve prescription details.");
+                setIsRxModalOpen(false);
+            }
+        } catch (error) {
+            console.error("RX Fetch Error:", error);
+            toast.error("Failed to load prescription.");
+            setIsRxModalOpen(false);
+        } finally {
+            setIsPivoting(false);
+        }
+    };
+
+    const handlePrintPrescription = () => {
+        const printWindow = window.open('', '_blank');
+        const content = document.querySelector('.print-prescription-container')?.innerHTML;
+
+        if (printWindow && content) {
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Prescription Print</title>
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <style>
+                            @media print {
+                                @page { size: A4; margin: 0; }
+                                body { margin: 0; -webkit-print-color-adjust: exact; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${content}
+                        <script>
+                            window.onload = () => {
+                                window.print();
+                                // window.close();
+                            }
+                        </script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
     };
 
@@ -198,15 +276,19 @@ export default function PatientDetailsPage() {
                         <div className="space-y-6">
                             {appointments.length > 0 ? (
                                 appointments.map((visit: any, idx: number, arr: any[]) => (
-                                    <div key={idx} className="flex gap-4 relative">
+                                    <div
+                                        key={idx}
+                                        className="flex gap-4 relative cursor-pointer group"
+                                        onClick={() => fetchPrescriptionDetails(visit)}
+                                    >
                                         {/* Timeline Line */}
                                         {idx !== arr.length - 1 && (
                                             <div className="absolute left-[19px] top-10 bottom-[-24px] w-0.5 bg-gray-200"></div>
                                         )}
-                                        <div className="w-10 h-10 rounded-full bg-blue-50 border-4 border-white shadow-sm flex items-center justify-center text-blue-600 shrink-0 z-10">
+                                        <div className="w-10 h-10 rounded-full bg-blue-50 border-4 border-white shadow-sm flex items-center justify-center text-blue-600 shrink-0 z-10 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                             <FileText size={18} />
                                         </div>
-                                        <div className="flex-1 bg-gray-50 rounded-xl p-4 border border-gray-100 hover:shadow-md transition-shadow">
+                                        <div className="flex-1 bg-gray-50 rounded-xl p-4 border border-gray-100 group-hover:shadow-md group-hover:bg-blue-50/30 group-hover:border-blue-100 transition-all">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
                                                     <h4 className="font-bold text-gray-900">{visit.reason || visit.symptoms?.[0] || 'General Consultation'}</h4>
@@ -216,8 +298,8 @@ export default function PatientDetailsPage() {
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1">
                                                     <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-lg ${visit.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                                                            visit.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                                                                'bg-yellow-100 text-yellow-700'
+                                                        visit.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                                            'bg-yellow-100 text-yellow-700'
                                                         }`}>
                                                         {visit.status || 'Pending'}
                                                     </span>
@@ -231,7 +313,17 @@ export default function PatientDetailsPage() {
                                             </div>
                                             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{visit.notes || visit.diagnosis || 'No notes recorded.'}</p>
                                             <div className="flex gap-2">
-                                                {/* <button className="text-xs font-bold text-blue-600 hover:underline">View Prescription</button> */}
+                                                {(visit.prescriptionId || visit.prescription || visit.prescription?._id) && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            fetchPrescriptionDetails(visit);
+                                                        }}
+                                                        className="text-xs font-bold text-blue-600 hover:text-blue-700 underline underline-offset-4 flex items-center gap-1"
+                                                    >
+                                                        <FileText size={12} /> View Full Prescription
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -246,6 +338,56 @@ export default function PatientDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Prescription Modal */}
+            {isRxModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Modal Header */}
+                        <div className="px-8 py-4 border-b flex items-center justify-between bg-gray-50/50">
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Prescription Node</h3>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Verified Multi-Role Registry</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {selectedPrescription && (
+                                    <button
+                                        onClick={handlePrintPrescription}
+                                        className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all flex items-center gap-2 text-xs font-black uppercase tracking-widest"
+                                    >
+                                        <Printer size={16} /> Print
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => { setIsRxModalOpen(false); setSelectedPrescription(null); }}
+                                    className="p-2.5 bg-white text-gray-400 rounded-xl hover:bg-red-50 hover:text-red-500 border border-gray-100 transition-all"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="flex-1 overflow-y-auto bg-gray-100/50 p-8 flex justify-center">
+                            {isPivoting ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Fetching Clinical Data...</p>
+                                </div>
+                            ) : selectedPrescription ? (
+                                <div className="print-prescription-container shadow-2xl bg-white">
+                                    <PrescriptionDocument prescription={selectedPrescription} patient={patient} />
+                                </div>
+                            ) : (
+                                <div className="text-center py-20 flex flex-col items-center gap-4">
+                                    <FileText size={48} className="text-gray-200" />
+                                    <p className="text-sm font-bold text-gray-400">Prescription details could not be loaded.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

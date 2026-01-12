@@ -18,6 +18,11 @@ export default function SampleCollectionPage() {
     const [filter, setFilter] = useState(searchParams.get('filter') || 'All Samples');
     const [printingSample, setPrintingSample] = useState<LabSample | null>(null);
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalSamples, setTotalSamples] = useState(0);
+
     const printRef = useRef<HTMLDivElement>(null);
     const handlePrint = useReactToPrint({
         contentRef: printRef,
@@ -76,11 +81,18 @@ export default function SampleCollectionPage() {
 
     }, [filter]);
 
-    const fetchSamples = async () => {
+    useEffect(() => {
+        fetchSamples(currentPage);
+    }, [currentPage]);
+
+    const fetchSamples = async (page = 1) => {
         setLoading(true);
         try {
-            const data = await LabSampleService.getSamples(filter);
-            setSamples(data);
+            const data = await LabSampleService.getSamplesPaginated(page, 10, filter);
+            setSamples(data.samples);
+            setTotalPages(data.totalPages);
+            setCurrentPage(data.currentPage);
+            setTotalSamples(data.totalSamples);
         } catch (error) {
             console.error(error);
         } finally {
@@ -126,7 +138,7 @@ export default function SampleCollectionPage() {
     const stats = getStats();
 
     return (
-        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-500">
+        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-500 w-full max-w-[100vw] overflow-x-hidden">
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
@@ -169,113 +181,138 @@ export default function SampleCollectionPage() {
 
             {/* Table */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-gray-50 dark:bg-gray-900 text-[10px] uppercase text-gray-400 font-black tracking-widest">
-                        <tr>
-                            <th className="p-4 border-b dark:border-gray-700">Sample ID</th>
-                            <th className="p-4 border-b dark:border-gray-700">Patient</th>
-                            <th className="p-4 border-b dark:border-gray-700">Sample Type</th>
-                            <th className="p-4 border-b dark:border-gray-700">Tests</th>
-                            <th className="p-4 border-b dark:border-gray-700 text-center">Status</th>
-                            <th className="p-4 border-b dark:border-gray-700 text-center">Time Taken</th>
-                            <th className="p-4 border-b dark:border-gray-700 text-right px-8">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="text-sm">
-                        {loading ? (
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[1000px] text-left border-collapse">
+                        <thead className="bg-gray-50 dark:bg-gray-900 text-[10px] uppercase text-gray-400 font-black tracking-widest">
                             <tr>
-                                <td colSpan={7} className="p-8 text-center text-gray-400">Loading samples...</td>
+                                <th className="p-4 border-b dark:border-gray-700">Sample ID</th>
+                                <th className="p-4 border-b dark:border-gray-700">Patient</th>
+                                <th className="p-4 border-b dark:border-gray-700">Sample Type</th>
+                                <th className="p-4 border-b dark:border-gray-700">Tests</th>
+                                <th className="p-4 border-b dark:border-gray-700 text-center">Status</th>
+                                <th className="p-4 border-b dark:border-gray-700 text-center">Time Taken</th>
+                                <th className="p-4 border-b dark:border-gray-700 text-right px-8">Action</th>
                             </tr>
-                        ) : samples.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="p-8 text-center text-gray-400">No samples found.</td>
-                            </tr>
-                        ) : (
-                            samples.map((sample) => (
-                                <tr key={sample._id} className="border-b dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                    <td className="p-4 font-bold text-indigo-600 dark:text-indigo-400">
-                                        {sample.sampleId}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="font-bold text-gray-900 dark:text-white">{sample.patientDetails.name}</div>
-                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">
-                                            {sample.patientDetails.age}Y • {sample.patientDetails.gender}
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className="px-2 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded text-[10px] uppercase font-black border border-purple-100 dark:border-purple-800">
-                                            {sample.sampleType || 'Not Specified'}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-gray-600 dark:text-gray-300 font-medium">
-                                        {sample.tests.map(t => t.testName).join(', ')}
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${sample.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                            sample.status === 'Pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
-                                                'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                                            }`}>
-                                            {sample.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-center font-bold text-xs text-gray-500 dark:text-gray-400">
-                                        {(() => {
-                                            if (sample.status === 'Pending' || !sample.collectionDate) return '-';
-                                            const start = new Date(sample.collectionDate).getTime();
-                                            const end = sample.status === 'Completed' && sample.reportDate
-                                                ? new Date(sample.reportDate).getTime()
-                                                : new Date().getTime();
+                        </thead>
+                        <tbody className="text-sm">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-gray-400">Loading samples...</td>
+                                </tr>
+                            ) : samples.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-gray-400">No samples found.</td>
+                                </tr>
+                            ) : (
+                                samples.map((sample) => (
+                                    <tr key={sample._id} className="border-b dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <td className="p-4 font-bold text-indigo-600 dark:text-indigo-400">
+                                            {sample.sampleId}
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="font-bold text-gray-900 dark:text-white">{sample.patientDetails.name}</div>
+                                            <div className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">
+                                                {sample.patientDetails.age}Y • {sample.patientDetails.gender}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="px-2 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded text-[10px] uppercase font-black border border-purple-100 dark:border-purple-800">
+                                                {sample.sampleType || 'Not Specified'}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-gray-600 dark:text-gray-300 font-medium">
+                                            {sample.tests.map(t => t.testName).join(', ')}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${sample.status === 'Completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                                sample.status === 'Pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                                                    'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                                                }`}>
+                                                {sample.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-center font-bold text-xs text-gray-500 dark:text-gray-400">
+                                            {(() => {
+                                                if (sample.status === 'Pending' || !sample.collectionDate) return '-';
+                                                const start = new Date(sample.collectionDate).getTime();
+                                                const end = sample.status === 'Completed' && sample.reportDate
+                                                    ? new Date(sample.reportDate).getTime()
+                                                    : new Date().getTime();
 
-                                            const diff = Math.max(0, end - start);
-                                            const hours = Math.floor(diff / (1000 * 60 * 60));
-                                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                                const diff = Math.max(0, end - start);
+                                                const hours = Math.floor(diff / (1000 * 60 * 60));
+                                                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-                                            if (hours > 0) return `${hours}h ${minutes}m`;
-                                            return `${minutes}m`;
-                                        })()}
-                                    </td>
-                                    <td className="p-4 text-right px-8">
-                                        <div className="flex justify-end gap-2 opacity-100 transition-opacity">
-                                            {sample.status === 'Pending' ? (
-                                                <button
-                                                    onClick={() => handleCollect(sample._id)}
-                                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95"
-                                                >
-                                                    Collect
-                                                </button>
-                                            ) : sample.status === 'In Processing' ? (
-                                                <Link
-                                                    href={`/lab/samples/${sample._id}`}
-                                                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95 whitespace-nowrap"
-                                                >
-                                                    Enter Sample Results
-                                                </Link>
-                                            ) : (
-                                                <>
+                                                if (hours > 0) return `${hours}h ${minutes}m`;
+                                                return `${minutes}m`;
+                                            })()}
+                                        </td>
+                                        <td className="p-4 text-right px-8">
+                                            <div className="flex justify-end gap-2 opacity-100 transition-opacity">
+                                                {sample.status === 'Pending' ? (
+                                                    <button
+                                                        onClick={() => handleCollect(sample._id)}
+                                                        className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95"
+                                                    >
+                                                        Collect
+                                                    </button>
+                                                ) : sample.status === 'In Processing' ? (
                                                     <Link
                                                         href={`/lab/samples/${sample._id}`}
-                                                        className="p-2 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-                                                        title="View Results"
+                                                        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-black uppercase tracking-widest transition-none shadow-sm active:scale-95 whitespace-nowrap"
                                                     >
-                                                        <Eye className="w-5 h-5" />
+                                                        Enter Sample Results
                                                     </Link>
-                                                    <button
-                                                        onClick={() => handleDownload(sample)}
-                                                        className="p-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40"
-                                                        title="Download Report"
-                                                    >
-                                                        <Download className="w-5 h-5" />
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                                ) : (
+                                                    <>
+                                                        <Link
+                                                            href={`/lab/samples/${sample._id}`}
+                                                            className="p-2 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
+                                                            title="View Results"
+                                                        >
+                                                            <Eye className="w-5 h-5" />
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleDownload(sample)}
+                                                            className="p-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40"
+                                                            title="Download Report"
+                                                        >
+                                                            <Download className="w-5 h-5" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && samples.length > 0 && (
+                <div className="flex justify-between items-center mt-6 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                        Previous
+                    </button>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
 
             {/* Hidden Print Area */}
             <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>

@@ -39,6 +39,39 @@ const BillingPage = () => {
 
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // Autocomplete & Validation States
+    const [recentPatients, setRecentPatients] = useState<{ name: string; phone: string }[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isMobileTouched, setIsMobileTouched] = useState(false);
+
+    // Fetch recent patients for autocomplete
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const res = await PharmacyBillingService.getBills(1, 100);
+                if (res.bills) {
+                    const patients = res.bills.reduce((acc: any[], bill) => {
+                        if (bill.patientName && bill.customerPhone && bill.customerPhone !== '-') {
+                            const exists = acc.find(p => p.name.toLowerCase() === bill.patientName.toLowerCase());
+                            if (!exists) {
+                                acc.push({ name: bill.patientName, phone: bill.customerPhone });
+                            }
+                        }
+                        return acc;
+                    }, []);
+                    setRecentPatients(patients);
+                }
+            } catch (error) {
+                console.error("Failed to fetch patient history", error);
+            }
+        };
+        fetchHistory();
+    }, []);
+
+    const filteredPatients = patientName.length > 0
+        ? recentPatients.filter(p => p.name.toLowerCase().includes(patientName.toLowerCase())).slice(0, 5)
+        : [];
+
     const subtotal = cart.reduce((sum, item: any) => sum + (item.total || 0), 0);
 
     const totalDiscount = discountType === '%' ? (subtotal * discount / 100) : discount;
@@ -254,25 +287,25 @@ const BillingPage = () => {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 text-gray-900 dark:text-white pb-20">
+        <div className="space-y-4 md:space-y-8 animate-in fade-in duration-500 text-gray-900 dark:text-white pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Terminal POS</h1>
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Terminal POS</h1>
                     <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Real-time Sales Processing & Inventorial Sync</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="px-5 py-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2">
+                    <div className="px-4 py-2 md:px-5 md:py-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                         <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Active Terminal</span>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8">
+                <div className="xl:col-span-2 space-y-4 md:space-y-8">
                     {/* Patient Context */}
-                    <div className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
                                 <User size={20} />
@@ -282,8 +315,8 @@ const BillingPage = () => {
                                 <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight">Patient Registry</h2>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="space-y-2 relative">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Legal Name</label>
                                 <input
                                     className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -291,24 +324,54 @@ const BillingPage = () => {
                                     onChange={e => {
                                         const val = e.target.value;
                                         if (val === '' || /^[a-zA-Z\s]*$/.test(val)) setPatientName(val);
+                                        setShowSuggestions(true);
                                     }}
+                                    onFocus={() => setShowSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                     placeholder="ENTER PATIENT NAME..."
+                                    autoComplete="off"
                                 />
+                                {showSuggestions && filteredPatients.length > 0 && (
+                                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1">
+                                        {filteredPatients.map((p, i) => (
+                                            <div
+                                                key={i}
+                                                className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b dark:border-gray-700 last:border-none"
+                                                onClick={() => {
+                                                    setPatientName(p.name);
+                                                    setMobileNumber(p.phone);
+                                                    setShowSuggestions(false);
+                                                }}
+                                            >
+                                                <p className="font-black text-xs text-gray-900 dark:text-white uppercase tracking-tight">{p.name}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{p.phone}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Contact Link</label>
-                                <input
-                                    className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
-                                    value={mobileNumber}
-                                    onChange={e => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                    placeholder="MOBILE (10 DIGITS)..."
-                                />
+                                <div className="space-y-1">
+                                    <input
+                                        className={`w-full bg-gray-50 dark:bg-gray-700/50 border rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:ring-2 dark:text-white ${isMobileTouched && mobileNumber.length > 0 && mobileNumber.length < 10 ? 'border-red-500 focus:ring-red-500' : 'border-transparent focus:ring-blue-500'}`}
+                                        value={mobileNumber}
+                                        onChange={e => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                        onBlur={() => setIsMobileTouched(true)}
+                                        placeholder="MOBILE (10 DIGITS)..."
+                                        type="tel"
+                                        inputMode="numeric"
+                                    />
+                                    {isMobileTouched && mobileNumber && mobileNumber.length < 10 && (
+                                        <p className="text-[10px] text-red-500 font-bold ml-1 animate-in fade-in slide-in-from-top-1">Phone number should be 10 digits</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* SKU Selection */}
-                    <div className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                                 <Plus size={20} />
@@ -353,7 +416,7 @@ const BillingPage = () => {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Magnitude (Qty)</label>
                                     <input
@@ -379,7 +442,7 @@ const BillingPage = () => {
                                 </div>
                                 <div className="flex items-end">
                                     <button
-                                        className="w-full bg-blue-600 text-white rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 dark:shadow-none"
+                                        className="w-full bg-blue-600 text-white rounded-2xl py-4 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 dark:shadow-none active:scale-95"
                                         onClick={handleAddItem}
                                     >
                                         <Plus className="w-5 h-5 font-black" /> Inject to Registry
@@ -390,8 +453,8 @@ const BillingPage = () => {
                     </div>
 
                     {/* Operational Registry */}
-                    <div className="bg-white dark:bg-gray-800 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                        <div className="bg-gray-50 dark:bg-black/10 px-8 py-5 border-b dark:border-gray-700 flex items-center justify-between">
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                        <div className="bg-gray-50 dark:bg-black/10 px-6 md:px-8 py-5 border-b dark:border-gray-700 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <ShoppingCart size={18} className="text-gray-400" />
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active manifest Items</span>
@@ -399,15 +462,15 @@ const BillingPage = () => {
                             <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-[9px] font-black text-gray-500 uppercase">{cart.length} SKUS</span>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full min-w-[600px]">
                                 <thead>
                                     <tr className="text-gray-400 text-[10px] font-black uppercase tracking-widest border-b dark:border-gray-700">
-                                        <th className="px-8 py-5 text-left">IDX</th>
-                                        <th className="px-8 py-5 text-left">Nomenclature</th>
-                                        <th className="px-8 py-5 text-center">Mag</th>
-                                        <th className="px-8 py-5 text-right">Tariff</th>
-                                        <th className="px-8 py-5 text-right">Total</th>
-                                        <th className="px-8 py-5 text-center">Audit</th>
+                                        <th className="px-6 md:px-8 py-5 text-left">IDX</th>
+                                        <th className="px-6 md:px-8 py-5 text-left">Nomenclature</th>
+                                        <th className="px-6 md:px-8 py-5 text-center">Mag</th>
+                                        <th className="px-6 md:px-8 py-5 text-right">Tariff</th>
+                                        <th className="px-6 md:px-8 py-5 text-right">Total</th>
+                                        <th className="px-6 md:px-8 py-5 text-center">Audit</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y dark:divide-gray-700/50">
@@ -424,11 +487,11 @@ const BillingPage = () => {
                                     ) : (
                                         cart.map((item, index) => (
                                             <tr key={index} className="text-xs hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
-                                                <td className="px-8 py-5 font-black text-gray-400">{(index + 1).toString().padStart(2, '0')}</td>
-                                                <td className="px-8 py-5">
-                                                    <span className="font-black text-gray-900 dark:text-white uppercase tracking-tight">{item.itemName}</span>
+                                                <td className="px-6 md:px-8 py-5 font-black text-gray-400">{(index + 1).toString().padStart(2, '0')}</td>
+                                                <td className="px-6 md:px-8 py-5">
+                                                    <span className="font-black text-gray-900 dark:text-white uppercase tracking-tight line-clamp-1">{item.itemName}</span>
                                                 </td>
-                                                <td className="px-8 py-5 text-center">
+                                                <td className="px-6 md:px-8 py-5 text-center">
                                                     <input
                                                         type="number"
                                                         className="w-16 bg-gray-50 dark:bg-gray-700 border-none rounded-xl px-2 py-2 text-center font-black outline-none ring-1 ring-gray-100 dark:ring-gray-600 focus:ring-2 focus:ring-blue-500"
@@ -442,9 +505,9 @@ const BillingPage = () => {
                                                         }}
                                                     />
                                                 </td>
-                                                <td className="px-8 py-5 text-right font-bold text-gray-500">₹{(item.rate || 0).toFixed(2)}</td>
-                                                <td className="px-8 py-5 text-right font-black text-blue-600 text-sm">₹{(item.total || item.amount || 0).toFixed(2)}</td>
-                                                <td className="px-8 py-5 text-center">
+                                                <td className="px-6 md:px-8 py-5 text-right font-bold text-gray-500">₹{(item.rate || 0).toFixed(2)}</td>
+                                                <td className="px-6 md:px-8 py-5 text-right font-black text-blue-600 text-sm">₹{(item.total || item.amount || 0).toFixed(2)}</td>
+                                                <td className="px-6 md:px-8 py-5 text-center">
                                                     <button
                                                         className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors"
                                                         onClick={() => removeItem(index)}
@@ -462,8 +525,8 @@ const BillingPage = () => {
                 </div>
 
                 {/* Economic Summary */}
-                <div className="space-y-8">
-                    <div className="bg-white dark:bg-gray-800 p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-8">
+                <div className="space-y-4 md:space-y-8">
+                    <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-6 md:space-y-8">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
                                 <CreditCard size={20} />
@@ -583,37 +646,37 @@ const BillingPage = () => {
                                 <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Aggregate Quantum</span>
                                 <div className="flex items-center justify-between">
                                     <Calculator size={24} className="text-gray-200" />
-                                    <span className="text-4xl font-black text-gray-900 dark:text-white italic tracking-tighter">₹{Math.round(grandTotal).toLocaleString()}</span>
+                                    <span className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white italic tracking-tighter">₹{Math.round(grandTotal).toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
 
+                        {/* Side Panel Buttons */}
+                        <div className="flex flex-col gap-3 pt-4">
+                            <button
+                                className="w-full bg-blue-600 text-white py-4 md:py-5 rounded-3xl font-black uppercase tracking-[3px] text-[10px] md:text-[11px] transition-all shadow-2xl shadow-blue-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 hover:bg-blue-700 dark:shadow-none"
+                                disabled={isGenerating}
+                                onClick={handleSaveAndPrint}
+                            >
+                                <Printer size={18} className="font-black" />
+                                {isGenerating ? 'GENERATING QUANTUM...' : 'COMMIT & PRINT'}
+                            </button>
+                            <button
+                                className="w-full bg-indigo-50 text-indigo-600 py-3 md:py-3.5 rounded-3xl font-black uppercase tracking-[2px] text-[10px] transition-all border border-indigo-100 dark:bg-indigo-900/10 dark:text-indigo-300 dark:border-indigo-800 flex items-center justify-center gap-2 hover:bg-indigo-100 disabled:opacity-50"
+                                disabled={isGenerating || cart.length === 0}
+                                onClick={handlePreview}
+                            >
+                                <Eye size={18} />
+                                Preview
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div className="flex gap-3">
-                    <button
-                        className="flex-1 bg-indigo-50 text-indigo-600 py-3.5 rounded-3xl font-black uppercase tracking-[2px] text-[10px] transition-all border border-indigo-100 dark:bg-indigo-900/10 dark:text-indigo-300 dark:border-indigo-800 flex items-center justify-center gap-2 hover:bg-indigo-100 disabled:opacity-50"
-                        disabled={isGenerating || cart.length === 0}
-                        onClick={handlePreview}
-                    >
-                        <Eye size={18} />
-                        Preview
-                    </button>
-                    <button
-                        className="flex-[2] bg-blue-600 text-white py-5 rounded-3xl font-black uppercase tracking-[3px] text-[11px] transition-all shadow-2xl shadow-blue-200 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 hover:bg-blue-700 dark:shadow-none"
-                        disabled={isGenerating}
-                        onClick={handleSaveAndPrint}
-                    >
-                        <Printer size={18} className="font-black" />
-                        {isGenerating ? 'GENERATING QUANTUM...' : 'COMMIT & PRINT'}
-                    </button>
                 </div>
             </div>
             {
                 isPreviewOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto relative">
+                        <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto relative">
                             <div className="sticky top-0 bg-white border-b z-10 p-4 flex justify-between items-center text-black">
                                 <h3 className="font-black uppercase tracking-wider text-sm">Invoice Preview</h3>
                                 <div className="flex gap-3">
@@ -631,8 +694,10 @@ const BillingPage = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="p-8 flex justify-center bg-gray-50">
-                                {tempBill && <PharmacyBillPrint billData={tempBill as PharmacyBill} shopDetails={shopDetails} />}
+                            <div className="p-4 md:p-8 flex justify-center bg-gray-50 overflow-x-auto">
+                                <div className="min-w-[600px] bg-white shadow-lg">
+                                    {tempBill && <PharmacyBillPrint billData={tempBill as PharmacyBill} shopDetails={shopDetails} />}
+                                </div>
                             </div>
                         </div>
                     </div>

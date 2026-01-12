@@ -8,7 +8,12 @@ import {
     Trash2,
     ChevronLeft,
     ChevronRight,
-    ArrowUpRight
+    ArrowUpRight,
+    Download,
+    Hash,
+    Calendar,
+    RefreshCcw,
+    FileText
 } from 'lucide-react';
 import { PharmacyBillingService } from '@/lib/integrations/services/pharmacyBilling.service';
 import { PharmacyBill } from '@/lib/integrations/types/pharmacyBilling';
@@ -17,7 +22,6 @@ import { useReactToPrint } from 'react-to-print';
 import { toast } from 'react-hot-toast';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { Download } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
 const TransactionsPage = () => {
@@ -33,6 +37,7 @@ const TransactionsPage = () => {
     const [isExporting, setIsExporting] = useState(false);
 
     const [selectedBill, setSelectedBill] = useState<PharmacyBill | null>(null);
+    const [billToPrint, setBillToPrint] = useState<PharmacyBill | null>(null);
     const printRef = useRef<HTMLDivElement>(null);
 
     const shopDetails: ShopDetails = {
@@ -47,7 +52,7 @@ const TransactionsPage = () => {
 
     const handlePrint = useReactToPrint({
         contentRef: printRef,
-        documentTitle: selectedBill ? `Invoice_${selectedBill.invoiceId}` : 'Invoice',
+        documentTitle: billToPrint ? `Invoice_${billToPrint.invoiceId}` : 'Invoice',
     });
 
     const fetchBills = async (page = 1) => {
@@ -84,10 +89,10 @@ const TransactionsPage = () => {
     }, [currentPage]);
 
     const onPrintClick = (bill: PharmacyBill) => {
-        setSelectedBill(bill);
+        setBillToPrint(bill);
         setTimeout(() => {
             handlePrint();
-        }, 300);
+        }, 500);
     };
 
     const handleDelete = async (id: string) => {
@@ -235,7 +240,7 @@ const TransactionsPage = () => {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 text-gray-900 dark:text-white">
+        <div className="space-y-8 animate-in fade-in duration-500 text-gray-900 dark:text-white w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
@@ -254,25 +259,25 @@ const TransactionsPage = () => {
                 </div>
             </div>
 
-            {/* Filter Hub */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-6">
-                <div className="flex flex-col md:flex-row gap-4 items-center">
-                    <div className="relative flex-1 w-full">
-                        <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            {/* Controller Area */}
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row w-full gap-4 items-center">
+
+                    {/* Date Filter */}
+                    <div className="relative w-full md:w-auto min-w-[160px]">
+                        <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl pl-11 pr-4 py-4 outline-none focus:ring-2 focus:ring-blue-500 text-xs font-bold dark:text-white"
-                            placeholder="Search by Invoice ID or Patient Name..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
+                            type="date"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
                         />
                     </div>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-6">
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Gateway Filter</p>
+                    {/* Payment Filter */}
+                    <div className="relative w-full md:w-auto min-w-[160px]">
                         <select
-                            className="bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 min-w-[180px] dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 dark:text-white cursor-pointer appearance-none"
                             value={paymentFilter}
                             onChange={e => setPaymentFilter(e.target.value)}
                         >
@@ -283,117 +288,125 @@ const TransactionsPage = () => {
                             <option>Mixed</option>
                             <option>Credit</option>
                         </select>
+                        <ChevronLeft className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 -rotate-90 pointer-events-none" />
                     </div>
 
-                    <div className="space-y-2">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Temporal Filter</p>
+                    <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden md:block" />
+
+                    {/* Search */}
+                    <div className="relative flex-1 w-full">
+                        <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input
-                            type="date"
-                            className="bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 dark:text-white"
-                            value={dateFilter}
-                            onChange={e => setDateFilter(e.target.value)}
-                            max={new Date().toISOString().split('T')[0]}
+                            type="text"
+                            placeholder="Search invoices by ID, patient name, or mobile..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
                         />
                     </div>
+
+                    {/* Refresh Button */}
+                    <button
+                        onClick={() => fetchBills(1)}
+                        className="p-3 w-full md:w-auto flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all border border-gray-100 dark:border-gray-700"
+                    >
+                        <RefreshCcw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
                 </div>
             </div>
 
-            {/* Invoices List Container */}
-            <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm relative">
-                {/* Custom Pagination Header */}
-                <div className="flex items-center justify-between px-8 py-6 border-b border-gray-50 dark:border-gray-700 bg-gray-50/30 dark:bg-black/10">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-                            <ArrowUpRight size={18} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dataset Magnitude</p>
-                            <p className="text-sm font-black text-gray-900 dark:text-white uppercase">{totalBills} Operations</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-white dark:hover:bg-gray-800 transition-all dark:text-white"
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <span className="text-xs font-black text-gray-900 dark:text-white">
-                            UNIT {currentPage} / {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
-                            className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-white dark:hover:bg-gray-800 transition-all dark:text-white"
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-                </div>
-
+            {/* Transactions Table */}
+            <div className="w-full max-w-full bg-white dark:bg-gray-800 rounded-3xl md:rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[1000px]">
                         <thead>
-                            <tr className="border-b border-gray-100 dark:border-gray-700">
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">ID Reference</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Operation Date</th>
-                                <th className="px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Entity Account</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Gateway</th>
-                                <th className="px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Quantum</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Validation</th>
-                                <th className="px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Audit</th>
+                            <tr className="bg-gray-50 dark:bg-gray-700/30 border-b border-gray-100 dark:border-gray-700">
+                                <th className="px-6 md:px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice ID</th>
+                                <th className="px-6 md:px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
+                                <th className="px-6 md:px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Patient</th>
+                                <th className="px-6 md:px-8 py-5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Items</th>
+                                <th className="px-6 md:px-8 py-5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
+                                <th className="px-6 md:px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 md:px-8 py-5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest md:w-32">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                             {loading ? (
-                                [...Array(5)].map((_, i) => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={7} className="px-8 py-6"><div className="h-14 bg-gray-50 dark:bg-gray-800 rounded-3xl w-full"></div></td>
-                                    </tr>
-                                ))
+                                <tr>
+                                    <td colSpan={7} className="px-8 py-12 text-center text-gray-400 text-xs font-bold animate-pulse">
+                                        Retrieving financial records...
+                                    </td>
+                                </tr>
+                            ) : bills.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="px-8 py-12 text-center">
+                                        <div className="flex flex-col items-center gap-3 text-gray-400">
+                                            <FileText className="w-12 h-12 opacity-10" />
+                                            <p className="text-xs font-black uppercase tracking-widest">No Records Found</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : (
                                 bills.map((bill) => (
-                                    <tr key={bill._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors group">
-                                        <td className="px-8 py-5">
-                                            <span className="font-black text-blue-600 text-[12px] tracking-tight hover:underline cursor-pointer uppercase">
-                                                #{bill.invoiceId}
+                                    <tr key={bill._id} className="group hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
+                                        <td className="px-6 md:px-8 py-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
+                                                    <Hash size={14} />
+                                                </div>
+                                                <span className="font-black text-xs text-gray-900 dark:text-white uppercase tracking-tight">{bill.invoiceId}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 md:px-8 py-5">
+                                            <span className="font-bold text-xs text-gray-500 uppercase">{bill.createdAt ? new Date(bill.createdAt).toLocaleDateString() : '-'}</span>
+                                            <span className="block text-[10px] font-black text-gray-400">{bill.createdAt ? new Date(bill.createdAt).toLocaleTimeString() : ''}</span>
+                                        </td>
+                                        <td className="px-6 md:px-8 py-5">
+                                            <div>
+                                                <p className="font-black text-xs text-gray-900 dark:text-white uppercase tracking-tight">{bill.patientName || 'Walk-in'}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{bill.customerPhone || '-'}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 md:px-8 py-5">
+                                            <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-[10px] font-black text-gray-500 uppercase">
+                                                {bill.items?.length || 0} SKUs
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-[12px] font-bold text-gray-400 uppercase">
-                                            {bill.createdAt ? new Date(bill.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                        <td className="px-6 md:px-8 py-5 text-right">
+                                            <p className="font-black text-sm text-gray-900 dark:text-white">₹{Math.round(bill.paymentSummary?.grandTotal || 0).toLocaleString()}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{bill.paymentSummary?.paymentMode || 'CASH'}</p>
                                         </td>
-                                        <td className="px-8 py-5">
-                                            <p className="text-[12px] font-black text-gray-700 dark:text-white tracking-tight uppercase">{bill.patientName || 'ANONYMOUS ENTITY'}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 tracking-widest">{bill.customerPhone || '-'}</p>
-                                        </td>
-                                        <td className="px-8 py-5 text-center">
-                                            <span className="px-4 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-2xl text-[9px] font-black uppercase tracking-widest">
-                                                {bill.paymentSummary.paymentMode || 'CASH'}
+                                        <td className="px-6 md:px-8 py-5 text-center">
+                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${bill.paymentSummary?.status === 'Paid'
+                                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-900/30'
+                                                : 'bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/30'
+                                                }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${bill.paymentSummary?.status === 'Paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                                {bill.paymentSummary?.status || 'PENDING'}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-right font-black text-gray-900 dark:text-white text-[14px]">
-                                            ₹{(bill.paymentSummary.grandTotal || 0).toLocaleString()}
-                                        </td>
-                                        <td className="px-8 py-5 text-center">
-                                            <span className={`px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest ${bill.paymentSummary.status === 'Paid' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                                {bill.paymentSummary.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5 text-center">
-                                            <div className="flex justify-center gap-4">
+                                        <td className="px-6 md:px-8 py-5 text-center">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <button
-                                                    onClick={() => onPrintClick(bill)}
-                                                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-blue-500 transition-all"
+                                                    onClick={() => setSelectedBill(bill)}
+                                                    className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+                                                    title="View Invoice"
                                                 >
-                                                    <Eye className="w-5 h-5" />
+                                                    <Eye size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(bill._id)}
-                                                    className="p-2.5 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-400 hover:text-red-500 transition-all"
+                                                    className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                                    title="Delete Invoice"
                                                 >
-                                                    <Trash2 className="w-5 h-5" />
+                                                    <Trash2 size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => onPrintClick(bill)}
+                                                    className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                                                    title="Print Invoice"
+                                                >
+                                                    <Printer size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -404,20 +417,95 @@ const TransactionsPage = () => {
                     </table>
                 </div>
 
-                {bills.length === 0 && !loading && (
-                    <div className="p-20 text-center">
-                        <p className="text-xl font-black text-gray-300 uppercase tracking-tighter italic">Log Void</p>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">No transaction records found in current temporal sector.</p>
+                {/* Pagination */}
+                {bills.length > 0 && (
+                    <div className="p-6 border-t border-gray-50 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center sm:text-left">
+                            Showing page {currentPage} of {totalPages}
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`w-8 h-8 rounded-xl text-[10px] font-black transition-all ${currentPage === page
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none'
+                                            : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                            }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
 
-            {/* Hidden Print Area */}
-            <div className="hidden">
+            {/* Hidden Print Component */}
+            <div style={{ display: 'none' }}>
                 <div ref={printRef}>
-                    {selectedBill && <PharmacyBillPrint billData={selectedBill} shopDetails={shopDetails} />}
+                    {billToPrint && (
+                        <PharmacyBillPrint
+                            billData={billToPrint}
+                            shopDetails={shopDetails || {
+                                name: 'Pharmacy Store',
+                                address: 'Main Road',
+                                mobileNumber: '',
+                                dlNumber: '',
+                                gstNumber: ''
+                            }}
+                        />
+                    )}
                 </div>
             </div>
+
+            {/* View Modal */}
+            {selectedBill && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto relative">
+                        <div className="sticky top-0 bg-white border-b z-10 p-4 flex justify-between items-center text-black">
+                            <h3 className="font-black uppercase tracking-wider text-sm">Invoice Details</h3>
+                            <button
+                                onClick={() => setSelectedBill(null)}
+                                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-black"
+                            >
+                                Close
+                            </button>
+                        </div>
+                        <div className="p-4 md:p-8 flex justify-center bg-gray-50 overflow-x-auto">
+                            <div className="min-w-[600px] bg-white shadow-lg">
+                                {/* Use PharmacyBillPrint for standardized viewing */}
+                                <PharmacyBillPrint
+                                    billData={selectedBill}
+                                    shopDetails={shopDetails || {
+                                        name: 'Pharmacy Store',
+                                        address: 'Main Road',
+                                        mobileNumber: '',
+                                        dlNumber: '',
+                                        gstNumber: ''
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

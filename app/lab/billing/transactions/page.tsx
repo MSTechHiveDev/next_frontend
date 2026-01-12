@@ -16,13 +16,14 @@ export default function TransactionsPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    const fetchBills = async (pageNum: number) => {
+    const fetchBills = async (pageNum = 1) => {
         setLoading(true);
         try {
-            const res = await LabBillingService.getBills(pageNum, 10, false, startDate, endDate);
-            setBills(res.bills);
-            setTotalPages(res.totalPages);
-            setPage(res.currentPage);
+            // Explicitly requesting 10 items per page
+            const data = await LabBillingService.getBills(pageNum, 10, false, startDate, endDate);
+            setBills(data.bills);
+            setTotalPages(data.totalPages);
+            setPage(data.currentPage);
         } catch (error) {
             console.error("Failed to fetch transactions", error);
         } finally {

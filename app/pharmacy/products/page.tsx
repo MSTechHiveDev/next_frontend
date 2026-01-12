@@ -29,6 +29,11 @@ const ProductsPage = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<PharmacyProduct | null>(null);
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalProducts, setTotalProducts] = useState(0);
+
     const searchParams = useSearchParams();
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -36,16 +41,23 @@ const ProductsPage = () => {
     const [supplierFilter, setSupplierFilter] = useState('All Suppliers');
     const [expiryStatusFilter, setExpiryStatusFilter] = useState(searchParams.get('expiryStatus') || 'All');
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (page = 1) => {
         setIsLoading(true);
         try {
-            const data = await ProductService.getProducts({
-                search: searchTerm,
-                status: statusFilter === 'All Stock' ? undefined : statusFilter,
-                supplier: supplierFilter === 'All Suppliers' ? undefined : supplierFilter,
-                expiryStatus: expiryStatusFilter === 'All' ? undefined : expiryStatusFilter
-            });
-            setProducts(data);
+            const data = await ProductService.getProductsPaginated(
+                page,
+                10, // Limit
+                {
+                    search: searchTerm,
+                    status: statusFilter === 'All Stock' ? undefined : statusFilter,
+                    supplier: supplierFilter === 'All Suppliers' ? undefined : supplierFilter,
+                    expiryStatus: expiryStatusFilter === 'All' ? undefined : expiryStatusFilter
+                }
+            );
+            setProducts(data.products);
+            setTotalPages(data.totalPages);
+            setCurrentPage(data.currentPage);
+            setTotalProducts(data.totalProducts);
         } catch (error) {
             console.error('Failed to fetch products:', error);
             toast.error('Failed to load inventory data');
@@ -56,11 +68,15 @@ const ProductsPage = () => {
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            fetchProducts();
+            fetchProducts(1);
         }, 300);
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm, statusFilter, supplierFilter, expiryStatusFilter]);
+
+    useEffect(() => {
+        fetchProducts(currentPage);
+    }, [currentPage]);
 
     const handleSaveProduct = async (data: PharmacyProductPayload) => {
         try {
@@ -181,31 +197,31 @@ const ProductsPage = () => {
     }))).filter(Boolean)];
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-20 w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Inventory Registry</h1>
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Inventory Registry</h1>
                     <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">SKU Management & Stock Oversight</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                     <button
                         onClick={() => setIsBulkModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30"
                     >
                         <FileSpreadsheet size={16} />
                         Bulk Manifest
                     </button>
                     <button
                         onClick={handleExportExcel}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm dark:bg-indigo-950/20 dark:border-indigo-900/30"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm dark:bg-indigo-950/20 dark:border-indigo-900/30"
                     >
                         <Download size={16} />
                         Export Audit
                     </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
                     >
                         <Plus size={16} />
                         Onboard SKU
@@ -214,7 +230,7 @@ const ProductsPage = () => {
             </div>
 
             {/* Controller Area */}
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center gap-4">
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center gap-4">
                 <div className="relative flex-1 w-full lg:w-auto">
                     <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
@@ -225,21 +241,21 @@ const ProductsPage = () => {
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
                     />
                 </div>
-                <div className="flex items-center gap-3 w-full lg:w-auto">
+                <div className="flex items-center gap-3 w-full md:w-auto">
                     <button
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className={`p-3 rounded-xl transition-all ${isFilterOpen ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-400 hover:text-blue-500'}`}
+                        className={`p-3 flex-1 md:flex-none flex justify-center rounded-xl transition-all ${isFilterOpen ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-400 hover:text-blue-500'}`}
                     >
                         <Filter className="w-5 h-5" />
                     </button>
                     <button
-                        onClick={fetchProducts}
-                        className="p-3 bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all"
+                        onClick={() => fetchProducts(currentPage)}
+                        className="p-3 flex-1 md:flex-none flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all"
                     >
                         <RefreshCcw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                     </button>
                     <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden md:block mx-1" />
-                    <button className="p-3 bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all">
+                    <button className="p-3 flex-1 md:flex-none flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all">
                         <LayoutGrid className="w-5 h-5" />
                     </button>
                 </div>
@@ -288,14 +304,35 @@ const ProductsPage = () => {
             )}
 
             {/* Registry List */}
-            <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
-                <ProductTable
-                    products={products}
-                    onEdit={handleEditProduct}
-                    onDelete={handleDeleteProduct}
-                    isLoading={isLoading}
-                />
-            </div>
+            <ProductTable
+                products={products}
+                onEdit={handleEditProduct}
+                onDelete={handleDeleteProduct}
+                isLoading={isLoading}
+            />
+
+            {/* Pagination Controls */}
+            {!isLoading && products.length > 0 && (
+                <div className="flex justify-between items-center mt-6 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                        Previous
+                    </button>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
 
             {/* Modals */}
             <AddProductModal

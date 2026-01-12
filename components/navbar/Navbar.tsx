@@ -120,7 +120,7 @@ export default function Navbar({
                     <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-200 dark:shadow-none">
                         M
                     </div>
-                    <span className="text-xl font-black text-gray-900 dark:text-white tracking-tighter">
+                    <span className="text-sm md:text-xl font-black text-gray-900 dark:text-white tracking-tighter">
                         {title}
                     </span>
                 </Link>

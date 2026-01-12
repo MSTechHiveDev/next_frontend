@@ -127,7 +127,7 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers, onEdit, onDele
     return (
         <div className="w-full bg-white dark:bg-gray-900 rounded-[32px] border dark:border-gray-800 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[1000px]">
                     <thead>
                         <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b dark:border-gray-800">
                             <th className="px-8 py-5 text-[11px] font-black text-gray-400 uppercase tracking-widest">Supplier Name</th>
@@ -141,8 +141,8 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers, onEdit, onDele
                             <React.Fragment key={supplier._id}>
                                 <tr className={`hover:bg-gray-50/50 dark:hover:bg-gray-800/40 transition-colors group ${expandedId === supplier._id ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
                                     <td className="px-8 py-6">
-                                        <div 
-                                            className="font-black text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors text-base tracking-tight cursor-pointer flex items-center gap-2" 
+                                        <div
+                                            className="font-black text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors text-base tracking-tight cursor-pointer flex items-center gap-2"
                                             onClick={() => toggleExpand(supplier._id)}
                                         >
                                             {supplier.name}
@@ -175,14 +175,14 @@ const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers, onEdit, onDele
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center justify-center gap-3">
-                                            <button 
+                                            <button
                                                 onClick={() => onEdit(supplier)}
                                                 className="p-2.5 text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl hover:bg-indigo-100 transition-all"
                                                 title="Edit Supplier"
                                             >
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => onDelete(supplier._id)}
                                                 className="p-2.5 text-red-600 bg-red-50 dark:bg-red-500/10 rounded-xl hover:bg-red-100 transition-all"
                                                 title="Delete Supplier"

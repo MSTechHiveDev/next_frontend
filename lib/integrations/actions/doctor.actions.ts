@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { apiServer } from '../api/apiServer';
 import { DOCTOR_ENDPOINTS, COMMON_ENDPOINTS, BOOKING_ENDPOINTS } from '../config';
-import { DoctorDashboardData, DoctorQuickNote, DoctorPatient } from '../types/doctor';
+import { DoctorDashboardData, DoctorQuickNote, DoctorPatient, PaginationData } from '../types/doctor';
 
 
 
@@ -81,9 +81,25 @@ export async function getDoctorProfileAction(): Promise<{ success: boolean; data
   }
 }
 
-export async function getAllAppointmentsAction(): Promise<{ success: boolean; data?: any[]; error?: string }> {
+export async function getAllAppointmentsAction(params?: { page?: number; limit?: number; sort?: string; search?: string; status?: string; date?: string }): Promise<{ success: boolean; data?: any[]; pagination?: PaginationData; error?: string }> {
   try {
-    const data = await apiServer<any[]>(BOOKING_ENDPOINTS.MY_APPOINTMENTS);
+    const queryParams = new URLSearchParams();
+    if (params) {
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (params.sort) queryParams.append('sort', params.sort);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.date) queryParams.append('date', params.date);
+    }
+
+    const res = await apiServer<any>(`${BOOKING_ENDPOINTS.MY_APPOINTMENTS}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`);
+
+    // Support both old and new response formats
+    const rawData = res.data || res;
+    const pagination = res.pagination;
+
+    const data = Array.isArray(rawData) ? rawData : [];
 
     // Normalize data for UI
     const normalizedData = (Array.isArray(data) ? data : []).map(item => {
@@ -114,11 +130,16 @@ export async function getAllAppointmentsAction(): Promise<{ success: boolean; da
         patientId: item.patient?.mrn || item.mrn || 'N/A',
         time: rawTime,
         symptoms: item.symptoms || [],
+        prescription: item.prescription,
         status: item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : 'Pending'
       };
     });
 
-    return { success: true, data: normalizedData };
+    return {
+      success: true,
+      data: normalizedData,
+      pagination
+    };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to fetch appointments' };
   }
@@ -142,49 +163,29 @@ export async function getDoctorReportsAction(): Promise<{ success: boolean; data
   }
 }
 
-export async function getDoctorPatientsAction(): Promise<{ success: boolean; data?: DoctorPatient[]; error?: string }> {
+export async function getDoctorPatientsAction(params?: { page?: number; limit?: number; sort?: string; search?: string }): Promise<{ success: boolean; data?: DoctorPatient[]; pagination?: PaginationData; error?: string }> {
   try {
-    // Backend may restrict MY_PATIENTS, so we use MY_APPOINTMENTS and derive unique patients
-    const res = await apiServer<any[]>(BOOKING_ENDPOINTS.MY_APPOINTMENTS);
-    const appointments = Array.isArray(res) ? res : [];
+    const queryParams = new URLSearchParams();
+    if (params) {
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (params.sort) queryParams.append('sort', params.sort);
+      if (params.search) queryParams.append('search', params.search);
+    }
 
-    const uniquePatientsMap = new Map<string, DoctorPatient>();
+    const res = await apiServer<any>(`${DOCTOR_ENDPOINTS.MY_PATIENTS}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`);
 
-    appointments.forEach((apt) => {
-      if (!apt.patient) return;
+    // Backend returns { data, pagination }
+    if (res && res.data) {
+      return {
+        success: true,
+        data: res.data,
+        pagination: res.pagination
+      };
+    }
 
-      // Handle patient being an object or id
-      const p = apt.patient;
-      const pId = p._id || p.id || (typeof p === 'string' ? p : null);
-
-      if (!pId) return;
-
-      // Verify doctor ownership logic if needed, but appointments are already filtered by doctor context in backend.
-
-      if (!uniquePatientsMap.has(pId)) {
-        uniquePatientsMap.set(pId, {
-          id: pId,
-          name: p.name || apt.patientDetails?.name || 'Unknown',
-          mrn: p.mrn || apt.patientDetails?.mrn || 'N/A',
-          age: p.age || apt.patientDetails?.age,
-          gender: p.gender || apt.patientDetails?.gender,
-          lastVisit: apt.date || apt.startTime,
-          condition: apt.reason || apt.symptoms?.[0] || 'Regular Checkup'
-        });
-      } else {
-        // Update last visit if more recent
-        const existing = uniquePatientsMap.get(pId)!;
-        const newDate = new Date(apt.date || apt.startTime).getTime();
-        const oldDate = new Date(existing.lastVisit).getTime();
-        if (newDate > oldDate) {
-          existing.lastVisit = apt.date || apt.startTime;
-          existing.condition = apt.reason || apt.symptoms?.[0] || existing.condition;
-        }
-      }
-    });
-
-    const normalizedPatients = Array.from(uniquePatientsMap.values());
-    return { success: true, data: normalizedPatients };
+    // Fallback for legacy or unexpected response
+    return { success: true, data: Array.isArray(res) ? res : [] };
   } catch (error: any) {
     return { success: false, error: error.message || 'Failed to fetch patients' };
   }

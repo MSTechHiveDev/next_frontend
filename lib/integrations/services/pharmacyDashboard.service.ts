@@ -23,16 +23,27 @@ export interface DashboardStats {
 }
 
 export const PharmacyDashboardService = {
-    getStats: async (): Promise<DashboardStats> => {
-        const response: any = await apiClient<any>(PHARMACY_ENDPOINTS.BILLS.STATS);
+    getStats: async (range?: string, startDate?: string, endDate?: string): Promise<DashboardStats> => {
+        let url = PHARMACY_ENDPOINTS.BILLS.STATS;
+        const params = new URLSearchParams();
+        if (range) params.append('range', range);
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+
+        if (params.toString()) {
+            url += `?${params.toString()}`;
+        }
+
+        const response: any = await apiClient<any>(url);
         const data = response.data;
+        const rangeData = data.requestedRange || data.today;
 
         return {
             todayStats: {
-                revenue: data.today.totalRevenue || 0,
-                billCount: data.today.totalInvoices || 0,
-                avgBillValue: data.today.totalInvoices > 0
-                    ? data.today.totalRevenue / data.today.totalInvoices
+                revenue: rangeData.totalRevenue || 0,
+                billCount: rangeData.totalInvoices || 0,
+                avgBillValue: rangeData.totalInvoices > 0
+                    ? rangeData.totalRevenue / rangeData.totalInvoices
                     : 0
             },
             inventoryStats: {
