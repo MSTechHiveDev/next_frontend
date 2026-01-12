@@ -9,7 +9,7 @@ export default function HelpdeskTicketDetailPage({ params }: { params: Promise<{
     const resolvedParams = React.use(params);
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="p-8 max-w-5xl mx-auto space-y-8">
             <TicketDetailView
                 ticketId={resolvedParams.id}
                 isAdmin={false}

@@ -2,6 +2,7 @@
     "symptoms_data": [
         {
             "symptom": "Headache (Tension)",
+            "keywords": ["head pain", "throbbing", "migraine", "cephalgia", "head hurts"],
             "medicine": [
                 "Paracetamol 500 mg (every 6–8 hrs, max 3/day)",
                 "Ibuprofen 200–400 mg (every 8 hrs, after food)"
@@ -22,6 +23,7 @@
         },
         {
             "symptom": "Migraine",
+            "keywords": ["one sided head pain", "aura", "pulsating", "nausea headache"],
             "medicine": [
                 "Naproxen 500 mg (at onset)",
                 "Sumatriptan (if prescribed)",
@@ -43,6 +45,7 @@
         },
         {
             "symptom": "Fever",
+            "keywords": ["temperature", "hot", "chills", "feverish", "high temp"],
             "medicine": [
                 "Paracetamol 500 mg (every 6 hrs)",
                 "Ibuprofen 200–400 mg (if fever not relieved by paracetamol)"
@@ -65,6 +68,7 @@
         },
         {
             "symptom": "Cold & Runny Nose",
+            "keywords": ["blocked nose", "congestion", "sneezing", "sneeze", "rhinitis", "coryza"],
             "medicine": [
                 "Cetirizine 10 mg (night)",
                 "Loratadine 10 mg (day)",
@@ -88,6 +92,7 @@
         },
         {
             "symptom": "Sinusitis",
+            "keywords": ["sinus", "facial pain", "blocked nose severe", "post nasal drip"],
             "medicine": [
                 "Saline nasal spray",
                 "Steam inhalation",
@@ -108,6 +113,7 @@
         },
         {
             "symptom": "Sore Throat",
+            "keywords": ["throat pain", "pain swimming", "difficult swallowing", "scratchy throat"],
             "medicine": [
                 "Paracetamol 500 mg (for pain)",
                 "Throat lozenges (as per pack)",
@@ -130,6 +136,7 @@
         },
         {
             "symptom": "Cough (Dry)",
+            "keywords": ["hacking cough", "tickle throat", "no sputum", "coughing"],
             "medicine": [
                 "Dextromethorphan 10–20 mg (every 6 hrs)",
                 "Cetirizine 10 mg (at night)"
@@ -150,6 +157,7 @@
         },
         {
             "symptom": "Cough (Productive)",
+            "keywords": ["wet cough", "phlegm", "mucus", "sputum", "chest congestion"],
             "medicine": [
                 "Guaifenesin 200 mg (every 6 hrs)",
                 "Ambroxol 30 mg (every 8 hrs)"
@@ -169,28 +177,8 @@
             ]
         },
         {
-            "symptom": "Bronchitis",
-            "medicine": [
-                "Bronchodilators (if wheezing)",
-                "Cough suppressants (at night)",
-                "Anti-inflammatory meds"
-            ],
-            "diet_advice": [
-                "Plenty of fluids",
-                "Honey"
-            ],
-            "suggested_tests": [
-                "Spirometry",
-                "Chest X-ray"
-            ],
-            "follow_up": "If breathing difficulty worsens",
-            "avoid": [
-                "Smoke",
-                "Pollutants"
-            ]
-        },
-        {
             "symptom": "Stomach Pain (Indigestion)",
+            "keywords": ["abdominal pain", "tummy ache", "gas", "bloating", "dyspepsia"],
             "medicine": [
                 "Antacids (as per pack)",
                 "Omeprazole 20 mg (once daily for 3–5 days)",
@@ -213,6 +201,7 @@
         },
         {
             "symptom": "Acidity / Heartburn",
+            "keywords": ["burning chest", "gerd", "acid reflux", "sour taste"],
             "medicine": [
                 "Antacids (as needed)",
                 "Famotidine 20 mg (twice daily)",
@@ -236,6 +225,7 @@
         },
         {
             "symptom": "Vomiting",
+            "keywords": ["puking", "emesis", "nausea", "throwing up"],
             "medicine": [
                 "Ondansetron 4 mg (every 8 hrs)",
                 "ORS (as per pack)",
@@ -259,6 +249,7 @@
         },
         {
             "symptom": "Diarrhea",
+            "keywords": ["loose motions", "watery stool", "trots", "dysentery"],
             "medicine": [
                 "ORS (frequently)",
                 "Loperamide 2 mg (only for non-infectious diarrhea)",
@@ -281,6 +272,7 @@
         },
         {
             "symptom": "Constipation",
+            "keywords": ["hard stool", "cant poop", "irregular bowel"],
             "medicine": [
                 "Psyllium husk 1–2 tsp (daily)",
                 "Lactulose 15–30 ml (night)",
@@ -301,6 +293,7 @@
         },
         {
             "symptom": "Back Pain (Muscle Strain)",
+            "keywords": ["lumbago", "lower back pain", "spine pain", "stiff back"],
             "medicine": [
                 "Ibuprofen 200–400 mg (every 8 hrs)",
                 "Paracetamol 500 mg",
@@ -323,6 +316,7 @@
         },
         {
             "symptom": "Joint Pain (Arthritis/Mild)",
+            "keywords": ["knee pain", "elbow pain", "arthralgia", "stiff joints"],
             "medicine": [
                 "Ibuprofen 200–400 mg",
                 "Naproxen 250 mg (every 12 hrs)",
@@ -346,6 +340,7 @@
         },
         {
             "symptom": "Allergic Reaction (Mild)",
+            "keywords": ["allergy", "hives", "urticaria", "itching"],
             "medicine": [
                 "Cetirizine 10 mg",
                 "Loratadine 10 mg",
@@ -365,28 +360,8 @@
             ]
         },
         {
-            "symptom": "Skin Rash (Mild)",
-            "medicine": [
-                "Hydrocortisone cream 1% (2–3 times/day)",
-                "Cetirizine 10 mg (if itchy)",
-                "Aloe vera gel"
-            ],
-            "diet_advice": [
-                "Light foods",
-                "Hydration"
-            ],
-            "suggested_tests": [
-                "Allergy test"
-            ],
-            "follow_up": "If spreads or itchy severely",
-            "avoid": [
-                "Scratching",
-                "Hot showers",
-                "Harsh soaps"
-            ]
-        },
-        {
             "symptom": "Acne",
+            "keywords": ["pimples", "zits", "breakout", "blackheads"],
             "medicine": [
                 "Benzoyl peroxide 2.5–5% (once daily)",
                 "Salicylic acid 1–2% (face wash)",
@@ -409,6 +384,7 @@
         },
         {
             "symptom": "Insomnia",
+            "keywords": ["sleeplessness", "cant sleep", "awake night", "sleep trouble"],
             "medicine": [
                 "Melatonin 3 mg (30 mins before sleep)",
                 "Chamomile tea (evening)"
@@ -429,7 +405,8 @@
             ]
         },
         {
-            "symptom": "Dizziness",
+            "symptom": "Dizziness/Vertigo",
+            "keywords": ["spinning", "lightheaded", "faint", "giddy"],
             "medicine": [
                 "ORS (as needed)",
                 "Meclizine 25 mg (if vertigo)",
@@ -452,250 +429,126 @@
             ]
         },
         {
-            "symptom": "Ear Pain",
+            "symptom": "Fungal Infection (Ringworm)",
+            "keywords": ["ringworm", "tinea", "itchy patch", "jock itch", "athletes foot"],
             "medicine": [
-                "Ibuprofen 200–400 mg",
-                "Warm compress",
-                "Ear drops (only if prescribed)"
+                "Clotrimazole cream (apply 2-3 times daily)",
+                "Terbinafine cream (apply once daily)",
+                "Fluconazole 150 mg (single dose - consult doctor)"
             ],
             "diet_advice": [
-                "Warm fluids"
+                "Low sugar diet (fungus thrives on sugar)",
+                "Probiotics"
             ],
             "suggested_tests": [
-                "Ear exam"
+                "Skin scraping KOH mount"
             ],
-            "follow_up": "If fever or discharge",
+            "follow_up": "If not clearing in 2 weeks",
             "avoid": [
-                "Using earbuds inside ear",
-                "Water entering ear"
+                "Tight clothes",
+                "Sharing towels",
+                "Moisture/sweat accumulation"
             ]
         },
         {
-            "symptom": "Eye Redness (Conjunctivitis)",
+            "symptom": "Dandruff",
+            "keywords": ["flaky scalp", "itchy scalp", "seborrhea"],
             "medicine": [
-                "Artificial tears (every 3–4 hrs)",
-                "Antibiotic eye drops (if bacterial, consult doctor)",
-                "Cool compress"
+                "Ketoconazole 2% Shampoo (twice weekly)",
+                "Zinc pyrithione shampoo",
+                "Selenium sulfide wash"
             ],
             "diet_advice": [
-                "Hygiene"
+                "Omega-3 fatty acids",
+                "Less sugar"
             ],
             "suggested_tests": [
-                "Eye exam"
+                "Dermatology consult"
             ],
-            "follow_up": "If pain or vision changes",
+            "follow_up": "If severe inflammation occurs",
             "avoid": [
-                "Screens",
-                "Rubbing eyes",
-                "Contact lenses"
+                "Oiling scalp excessively",
+                "Scratching scalp"
             ]
         },
         {
-            "symptom": "Tooth Pain",
+            "symptom": "Sunburn",
+            "keywords": ["red skin sun", "sun burn", "uv burn", "peeling skin"],
             "medicine": [
-                "Ibuprofen 200–400 mg",
-                "Paracetamol 500 mg",
-                "Clove oil (apply externally, small amount)"
+                "Aloe Vera Gel (soothing)",
+                "Calamine Lotion",
+                "Ibuprofen (for pain redness)",
+                "Hydrocortisone 1% cream"
             ],
             "diet_advice": [
-                "Soft foods",
-                "Avoid chewing on affected side"
+                "Lots of water",
+                "Vitamin C and E"
             ],
-            "suggested_tests": [
-                "Dental X-ray"
-            ],
-            "follow_up": "Dental visit required immediately",
+            "suggested_tests": [],
+            "follow_up": "If blistering occurs",
             "avoid": [
-                "Sugar",
-                "Very hot/cold foods"
+                "Sun exposure",
+                "Peeling skin manually"
             ]
         },
         {
-            "symptom": "Chest Congestion",
+            "symptom": "Motion Sickness",
+            "keywords": ["car sick", "sea sick", "travel sickness", "nausea travel"],
             "medicine": [
-                "Guaifenesin 200 mg (every 6 hrs)",
-                "Steam inhalation"
+                "Dimenhydrinate 50mg (30 mins before travel)",
+                "Promethazine (if prescribed)"
             ],
             "diet_advice": [
-                "Warm fluids"
+                "Light meal before travel",
+                "Ginger candies"
             ],
-            "suggested_tests": [
-                "Chest X-ray"
-            ],
-            "follow_up": "If breathing difficulty occurs",
+            "suggested_tests": [],
+            "follow_up": "N/A",
             "avoid": [
-                "Cold air",
-                "Smoking"
+                "Reading while moving",
+                "Heavy meals pre-travel"
             ]
         },
         {
-            "symptom": "Anxiety (Mild)",
+            "symptom": "Mouth Ulcer",
+            "keywords": ["canker sore", "mouth sore", "stomatitis"],
             "medicine": [
-                "Chamomile tea",
-                "Magnesium 200–300 mg (if deficient)",
-                "Deep breathing exercises"
+                "Triamcinolone dental paste",
+                "Choline salicylate gel",
+                "B-Complex vitamins"
             ],
             "diet_advice": [
-                "Avoid caffeine",
-                "Complex carbs"
+                "Soft bland diet",
+                "Cold fluids"
             ],
             "suggested_tests": [
-                "Thyroid function test"
+                "Vitamin B12/Iron levels"
             ],
-            "follow_up": "If persistent for weeks",
+            "follow_up": "If >2 weeks (exclude other causes)",
             "avoid": [
-                "Stimulants",
-                "Alcohol"
+                "Spicy foods",
+                "Acidic foods (citrus)"
             ]
         },
         {
-            "symptom": "Fatigue",
+            "symptom": "Hemorrhoids (Piles)",
+            "keywords": ["piles", "rectal pain", "blood stool", "anal fissure"],
             "medicine": [
-                "Multivitamin (daily)",
-                "Iron 30–60 mg (ONLY if iron deficiency suspected)",
-                "Vitamin D"
+                "Lignocaine gel (topical)",
+                "Calcium Dobesilate (if prescribed)",
+                "Laxatives (Stool softeners)"
             ],
             "diet_advice": [
-                "Balanced meals",
-                "Hydration",
-                "Leafy greens"
+                "High fiber diet",
+                "Plenty of water"
             ],
             "suggested_tests": [
-                "CBC",
-                "Thyroid test",
-                "Vitamin D/B12 levels"
+                "Proctoscopy"
             ],
-            "follow_up": "If long-term",
+            "follow_up": "If bleeding persists",
             "avoid": [
-                "Skipping meals",
-                "Sugar crashes"
-            ]
-        },
-        {
-            "symptom": "Dehydration",
-            "medicine": [
-                "ORS (regular sipping)",
-                "Electrolyte solution"
-            ],
-            "diet_advice": [
-                "Coconut water",
-                "Fruits (Watermelon)"
-            ],
-            "suggested_tests": [
-                "Electrolytes",
-                "Kidney function (if severe)"
-            ],
-            "follow_up": "If vomiting/diarrhea persists",
-            "avoid": [
-                "Caffeine",
-                "Alcohol"
-            ]
-        },
-        {
-            "symptom": "Urinary Tract Infection (UTI)",
-            "medicine": [
-                "Antibiotics (Nitrofurantoin/Ciprofloxacin - MUST consult doctor)",
-                "Cranberry juice/extract",
-                "Urinary alkalizer syrup"
-            ],
-            "diet_advice": [
-                "Drink plenty of water",
-                "Avoid caffeine/alcohol"
-            ],
-            "suggested_tests": [
-                "Urine Routine & Microscopy",
-                "Urine Culture"
-            ],
-            "follow_up": "If fever or back pain (kidney involvement)",
-            "avoid": [
-                "Holding urine",
-                "Perfumed hygiene products"
-            ]
-        },
-        {
-            "symptom": "Hypertension (High BP) - Management",
-            "medicine": [
-                "Consult Doctor for Antihypertensives (Amlodipine/Telmisartan)",
-                "Regular monitoring"
-            ],
-            "diet_advice": [
-                "DASH diet",
-                "Low salt (<5g/day)",
-                "Potassium rich foods"
-            ],
-            "suggested_tests": [
-                "Lipid Profile",
-                "ECG",
-                "Kidney function"
-            ],
-            "follow_up": "Regular follow-ups (every 3-6 months)",
-            "avoid": [
-                "Processed foods",
-                "Stress",
-                "Smoking"
-            ]
-        },
-        {
-            "symptom": "Diabetes (Type 2) - Management",
-            "medicine": [
-                "Metformin (if prescribed)",
-                "Insulin (if prescribed)",
-                "Regular sugar monitoring"
-            ],
-            "diet_advice": [
-                "Low glycemic index foods",
-                "Fiber rich foods",
-                "Portion control"
-            ],
-            "suggested_tests": [
-                "HbA1c (every 3 months)",
-                "Fasting/PP Blood Sugar"
-            ],
-            "follow_up": "Diabetologist visit regularly",
-            "avoid": [
-                "Sugary drinks",
-                "Refined carbs",
-                "Skipping meals"
-            ]
-        },
-        {
-            "symptom": "Sprain (Ankle/Wrist)",
-            "medicine": [
-                "RICE Protocol (Rest, Ice, Compression, Elevation)",
-                "Ibuprofen (for pain)",
-                "Crepe bandage"
-            ],
-            "diet_advice": [
-                "Protein for repair"
-            ],
-            "suggested_tests": [
-                "X-ray (to rule out fracture)"
-            ],
-            "follow_up": "If unable to bear weight",
-            "avoid": [
-                "Massage (initially)",
-                "Heat (initially)"
-            ]
-        },
-        {
-            "symptom": "Nausea",
-            "medicine": [
-                "Ginger supplements",
-                "Ondansetron (if severe)",
-                "Vitamin B6"
-            ],
-            "diet_advice": [
-                "Crackers",
-                "Small frequent meals",
-                "Ginger tea"
-            ],
-            "suggested_tests": [
-                "Liver function test (if chronic)"
-            ],
-            "follow_up": "If persistent or vomiting blood",
-            "avoid": [
-                "Strong smells",
-                "Greasy foods"
+                "Straining at stool",
+                "Spicy food"
             ]
         }
     ]

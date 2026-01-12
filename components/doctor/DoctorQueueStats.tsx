@@ -6,17 +6,18 @@ import { Users, Clock, TrendingUp, Calendar, ArrowRight, UserCheck } from 'lucid
 interface DoctorQueueStatsProps {
   queueCount: number;
   showQueue: boolean;
+  totalAppointments: number;
+  completedCount: number;
 }
 
-export default function DoctorQueueStats({ queueCount, showQueue }: DoctorQueueStatsProps) {
-  // Mock data for demonstration - in real app this would come from API
-  const stats = {
-    totalAppointments: 45,
-    completedCount: 28,
-    completionRate: 62,
-    avgTime: "12 mins",
-    estimatedTime: queueCount * 12
-  };
+export default function DoctorQueueStats({ 
+    queueCount, 
+    showQueue, 
+    totalAppointments = 0, 
+    completedCount = 0 
+}: DoctorQueueStatsProps) {
+  
+  const estimatedTime = queueCount * 20; // 20 mins per patient avg
 
   const formatEstimatedTime = (minutes: number) => {
     if (minutes < 60) return `${minutes} mins`;
@@ -26,7 +27,7 @@ export default function DoctorQueueStats({ queueCount, showQueue }: DoctorQueueS
   };
 
   return (
-    <div className="space-y-8 max-sm:space-y-4">
+    <div className="space-y-4">
       {/* Today's Summary Card */}
       <div className="bg-card dark:bg-card p-6 max-sm:p-4 rounded-2xl border border-border-theme dark:border-border-theme shadow-sm">
         <div className="flex items-center justify-between mb-6 max-sm:mb-4">
@@ -44,12 +45,12 @@ export default function DoctorQueueStats({ queueCount, showQueue }: DoctorQueueS
 
         <div className="grid grid-cols-2 gap-4 max-sm:gap-2">
           <div className="p-4 max-sm:p-3 bg-secondary-theme dark:bg-secondary-theme rounded-xl border border-border-theme">
-            <p className="text-[10px] max-sm:text-[8px] font-black text-muted uppercase tracking-wider mb-1">Total Booked</p>
-            <p className="text-2xl max-sm:text-lg font-black text-foreground">{stats.totalAppointments}</p>
+            <p className="text-[10px] max-sm:text-[8px] font-black text-muted uppercase tracking-wider mb-1">Today's Total</p>
+            <p className="text-2xl max-sm:text-lg font-black text-foreground">{totalAppointments}</p>
           </div>
           <div className="p-4 max-sm:p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
             <p className="text-[10px] max-sm:text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Completed</p>
-            <p className="text-2xl max-sm:text-lg font-black text-emerald-600 dark:text-emerald-400">{stats.completedCount}</p>
+            <p className="text-2xl max-sm:text-lg font-black text-emerald-600 dark:text-emerald-400">{completedCount}</p>
           </div>
         </div>
       </div>
@@ -68,7 +69,7 @@ export default function DoctorQueueStats({ queueCount, showQueue }: DoctorQueueS
           </div>
 
           <div className="flex items-end gap-2 mb-4 max-sm:mb-3">
-            <p className="text-2xl max-sm:text-lg font-black text-foreground dark:text-orange-400">{formatEstimatedTime(stats.estimatedTime)}</p>
+            <p className="text-2xl max-sm:text-lg font-black text-foreground dark:text-orange-400">{formatEstimatedTime(estimatedTime)}</p>
             <p className="text-sm max-sm:text-[10px] font-bold text-muted dark:text-orange-400 mb-1">Total</p>
           </div>
 

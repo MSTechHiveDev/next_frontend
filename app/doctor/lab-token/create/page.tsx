@@ -31,6 +31,14 @@ export default function CreateLabTokenPage() {
   const [priority, setPriority] = useState<'routine' | 'urgent' | 'stat'>('routine');
   const [notes, setNotes] = useState('');
   
+  // Dynamic Data State
+  const [availableTests, setAvailableTests] = useState<any[]>([]);
+  const [testCategories, setTestCategories] = useState<string[]>([]);
+  
+  // Search State for each row
+  const [activeSearchIndex, setActiveSearchIndex] = useState<number | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+
   const [patientData, setPatientData] = useState<any>(null);
   const [doctorData, setDoctorData] = useState<any>(null);
   const [tokenNumber, setTokenNumber] = useState<string>('');
@@ -41,18 +49,6 @@ export default function CreateLabTokenPage() {
   const [subtotal, setSubtotal] = useState(0);
   const [tax, setTax] = useState(0);
   const [total, setTotal] = useState(0);
-
-  const testCategories = [
-    'Blood Test',
-    'Urine Test',
-    'X-Ray',
-    'CT Scan',
-    'MRI',
-    'ECG',
-    'Ultrasound',
-    'Biopsy',
-    'Other'
-  ];
 
   useEffect(() => {
     if (appointmentId) {
@@ -76,9 +72,60 @@ export default function CreateLabTokenPage() {
     fetchProfile();
   }, []);
 
+  // Fetch Lab Tests
+  useEffect(() => {
+    const fetchTests = async () => {
+        try {
+            const res = await doctorService.getLabTests();
+            if (res) {
+                setAvailableTests(res);
+                const categories = Array.from(new Set(res.map((t: any) => t.departmentId?.name || t.category || 'General')));
+                setTestCategories(categories as string[]);
+            }
+        } catch (err) {
+            console.error("Failed to fetch lab tests", err);
+        }
+    };
+    fetchTests();
+  }, []);
+
   const addTest = () => {
     setTests([...tests, { name: '', category: 'Blood Test', instructions: '', price: 0 }]);
   };
+
+  // Handle Test Search
+  const handleSearch = (query: string, index: number) => {
+      const updated = [...tests];
+      updated[index] = { ...updated[index], name: query };
+      setTests(updated);
+
+      if (!query) {
+          setSearchResults([]);
+          return;
+      }
+
+      setActiveSearchIndex(index);
+      const filtered = availableTests.filter((t: any) => 
+          (t.testName || t.name).toLowerCase().includes(query.toLowerCase()) || 
+          (t.testCode || '').toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(filtered.slice(0, 10)); // Limit to 10
+  };
+
+  const selectTest = (test: any, index: number) => {
+      const updated = [...tests];
+      updated[index] = {
+          name: test.testName || test.name,
+          category: test.departmentId?.name || 'General',
+          instructions: '',
+          price: test.price || 0
+      };
+      setTests(updated);
+      setActiveSearchIndex(null);
+      setSearchResults([]);
+      calculateBilling(updated);
+  };
+
 
   const removeTest = (index: number) => {
     setTests(tests.filter((_, i) => i !== index));
@@ -89,12 +136,12 @@ export default function CreateLabTokenPage() {
     updated[index] = { ...updated[index], [field]: value };
     setTests(updated);
     if (field === 'price') {
-      calculateBilling();
+      calculateBilling(updated);
     }
   };
 
-  const calculateBilling = () => {
-    const sub = tests.reduce((sum, test) => sum + (parseFloat(String(test.price)) || 0), 0);
+  const calculateBilling = (currentTests = tests) => {
+    const sub = currentTests.reduce((sum, test) => sum + (parseFloat(String(test.price)) || 0), 0);
     const taxAmt = sub * 0.18;
     const tot = sub + taxAmt;
     setSubtotal(sub);
@@ -151,7 +198,7 @@ export default function CreateLabTokenPage() {
           <body>
             <div class="header">
               <h1 style="color: #9333ea; margin: 0; font-size: 24px;">LAB REQUISITION</h1>
-              <h2 style="margin: 8px 0; font-size: 18px;">RIMS Government General Hospital Kadapa</h2>
+              <h2 style="margin: 8px 0; font-size: 18px;">${doctorData?.hospital?.name || 'RIMS Government General Hospital Kadapa'}</h2>
               <p style="margin: 4px 0; font-size: 12px; color: #6b7280;">Department of Pathology & Radiodiagnosis</p>
               <div class="token-badge" style="margin-top: 12px;">
                 <p style="margin: 0; font-size: 10px; opacity: 0.7;">TOKEN</p>
@@ -388,13 +435,41 @@ export default function CreateLabTokenPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Test Name *</label>
-                          <input
-                            type="text"
-                            value={test.name}
-                            onChange={(e) => updateTest(index, 'name', e.target.value)}
-                            placeholder="e.g. CBC, Lipid Profile"
-                            className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm font-medium"
-                          />
+                          <div className="relative">
+                            <input
+                                type="text"
+                                value={test.name}
+                                onChange={(e) => handleSearch(e.target.value, index)}
+                                onFocus={() => handleSearch(test.name, index)}
+                                placeholder="Search test..."
+                                className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm font-medium"
+                            />
+                            {activeSearchIndex === index && searchResults.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                    {searchResults.map((res: any) => (
+                                        <button
+                                            key={res._id}
+                                            onClick={() => selectTest(res, index)}
+                                            className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 flex justify-between items-center group"
+                                        >
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-700 group-hover:text-purple-600">{res.testName || res.name}</div>
+                                                <div className="text-xs text-slate-400">{res.departmentId?.name || 'General'}</div>
+                                            </div>
+                                            <div className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">
+                                                ₹{res.price}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {activeSearchIndex === index && (
+                                <div 
+                                    className="fixed inset-0 z-40 bg-transparent" 
+                                    onClick={() => setActiveSearchIndex(null)}
+                                />
+                            )}
+                          </div>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Category</label>

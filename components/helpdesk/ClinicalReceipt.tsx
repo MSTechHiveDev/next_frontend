@@ -51,6 +51,14 @@ export default function ClinicalReceipt({ hospital, patient, appointment, paymen
     window.print();
   };
 
+  React.useEffect(() => {
+    // Auto-trigger print after a short delay to ensure rendering is complete
+    const timer = setTimeout(() => {
+      handlePrint();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
       {/* Print-specific styles */}
@@ -65,6 +73,7 @@ export default function ClinicalReceipt({ hospital, patient, appointment, paymen
             margin: 0 !important;
             padding: 0 !important;
             height: auto !important;
+            background: white !important;
           }
           
           * {
@@ -94,303 +103,217 @@ export default function ClinicalReceipt({ hospital, patient, appointment, paymen
             padding: 10mm 8mm !important;
             background: white !important;
             box-sizing: border-box !important;
+            color: #0f172a !important; /* text-slate-900 */
           }
           
           /* Compact table cells */
           #clinical-bill-print table td,
           #clinical-bill-print table th {
-            padding: 3px 6px !important;
-            font-size: 10px !important;
-            line-height: 1.25 !important;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+            border-color: #f1f5f9 !important; /* border-slate-100 */
+          }
+
+          #clinical-bill-print table th {
+            background-color: #f8fafc !important; /* bg-slate-50 */
           }
           
           /* Compact headings */
           #clinical-bill-print h1 {
-            font-size: 16px !important;
-            margin-bottom: 2px !important;
-            line-height: 1.2 !important;
+            font-size: 20px !important;
+            margin-bottom: 4px !important;
+            color: #0d9488 !important; /* text-teal-600 */
           }
           
           #clinical-bill-print h2 {
-            font-size: 14px !important;
-            margin-bottom: 2px !important;
-            line-height: 1.2 !important;
+            font-size: 16px !important;
+            margin-bottom: 4px !important;
+            color: #0d9488 !important; /* text-teal-600 */
           }
           
-          #clinical-bill-print h3 {
-            font-size: 11px !important;
-            padding: 2px 6px !important;
-            margin: 0 !important;
-            line-height: 1.2 !important;
-          }
-          
-          /* Minimal section spacing */
-          #clinical-bill-print > div {
-            margin-bottom: 3px !important;
-          }
-          
-          /* Minimal text spacing */
-          #clinical-bill-print p {
-            margin: 0.5px 0 !important;
-            line-height: 1.25 !important;
-          }
-          
-          /* Compact borders */
           #clinical-bill-print .border-b-2 {
-            padding-bottom: 2px !important;
-            margin-bottom: 2px !important;
-            border-width: 1px !important;
-          }
-          
-          /* Reduce text sizes globally */
-          #clinical-bill-print .text-sm {
-            font-size: 9px !important;
-          }
-          
-          #clinical-bill-print .text-base {
-            font-size: 10px !important;
-          }
-          
-          #clinical-bill-print .text-lg {
-            font-size: 11px !important;
-          }
-          
-          #clinical-bill-print .text-xs {
-            font-size: 8px !important;
-          }
-          
-          body {
-            background: white !important;
-            margin: 0;
-            padding: 0;
+            border-color: #0d9488 !important;
           }
           
           .no-print {
             display: none !important;
             visibility: hidden !important;
           }
-          
-          /* Remove modal styling for print */
-          .clinical-receipt-modal {
-            position: static !important;
-            background: transparent !important;
-            padding: 0 !important;
-            inset: 0 !important;
-            z-index: 0 !important;
-          }
-          
-          .print-content {
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            max-width: 100% !important;
-            max-height: none !important;
-            overflow: visible !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
         }
       `}} />
 
-      <div className="clinical-receipt-modal fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
         {/* Action Buttons - Hidden in Print */}
-        <div className="absolute top-4 right-4 flex gap-3 no-print z-[100000]">
+        <div className="absolute top-4 right-4 flex gap-3 no-print z-50">
           <button 
             onClick={handlePrint}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-xl transition-all"
+            className="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95"
           >
-            <Printer size={18} /> Print Bill
+            <Printer size={18} /> Print Record
           </button>
           <button 
             onClick={onClose}
-            className="p-3 bg-white hover:bg-gray-100 text-gray-700 rounded-xl shadow-xl transition-all"
+            className="p-3 bg-white hover:bg-slate-50 text-slate-500 rounded-xl shadow-lg transition-all active:scale-95"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Bill Content */}
-        <div className="print-content bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div id="clinical-bill-print" className="p-8 print:p-6">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto no-scrollbar">
+          <div id="clinical-bill-print" className="p-10 text-slate-900">
             
             {/* Hospital Header */}
-            <div className="text-center border-b-2 border-gray-800 pb-4 mb-6 print:pb-3 print:mb-4">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 print:text-2xl print:mb-1">{hospital.name}</h1>
-              <p className="text-base text-gray-700 mb-1 print:text-sm">{hospital.address}</p>
-              <div className="flex items-center justify-center gap-8 text-sm text-gray-600 mt-2 print:text-xs print:gap-4">
-                <span><strong>Phone:</strong> {hospital.contact}</span>
-                <span><strong>Email:</strong> {hospital.email}</span>
+            <div className="text-center border-b-2 border-teal-600 pb-6 mb-8">
+              <h1 className="text-4xl font-black text-slate-900 mb-2 italic tracking-tighter uppercase">{hospital.name}</h1>
+              <p className="text-sm font-medium text-slate-400 mb-1">{hospital.address}</p>
+              <div className="flex items-center justify-center gap-8 text-xs font-bold text-teal-600 mt-3 uppercase tracking-widest">
+                <span>Phone: {hospital.contact}</span>
+                <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                <span>Email: {hospital.email}</span>
               </div>
             </div>
 
-            {/* Bill Type & Date */}
-            <div className="flex justify-between items-start mb-6 print:mb-4">
+            {/* Bill Info */}
+            <div className="flex justify-between items-end mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 print:text-xl">PATIENT REGISTRATION BILL</h2>
-                <p className="text-sm text-gray-600 mt-1 print:text-xs">Appointment Receipt</p>
+                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Clinical Manifest</h2>
+                <p className="text-xl font-bold text-slate-900 uppercase">Patient Registration Bill</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-600 print:text-xs">Bill Date:</p>
-                <p className="text-base font-semibold print:text-sm">{new Date().toLocaleDateString('en-IN')}</p>
-                <p className="text-sm text-gray-600 mt-2 print:text-xs print:mt-1">Bill No:</p>
-                <p className="text-base font-semibold print:text-sm">{appointment.appointmentId}</p>
+                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Reference # {appointment.appointmentId}</p>
+                <p className="text-sm font-bold text-teal-600 mt-1">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
               </div>
             </div>
 
-            {/* Patient Details Section */}
-            <div className="mb-4 print:mb-3">
-              <div className="bg-gray-100 px-4 py-2 mb-3 print:mb-2 print:py-1">
-                <h3 className="text-lg font-bold text-gray-900 print:text-base">PATIENT DETAILS</h3>
-              </div>
-              <table className="w-full border border-gray-300">
-                <tbody>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm w-1/4">MRN / Patient ID:</td>
-                    <td className="px-4 py-2 text-base font-bold">{patient.mrn}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm w-1/4">Blood Group:</td>
-                    <td className="px-4 py-2 text-base">{patient.bloodGroup !== "N/A" ? patient.bloodGroup : "-"}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Patient Name:</td>
-                    <td className="px-4 py-2 text-base font-semibold">{patient.name}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Date of Birth:</td>
-                    <td className="px-4 py-2 text-base">
-                      {patient.dateOfBirth && patient.dateOfBirth !== "N/A" 
-                        ? new Date(patient.dateOfBirth).toLocaleDateString('en-IN') 
-                        : "-"}
-                    </td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Age / Gender:</td>
-                    <td className="px-4 py-2 text-base">{patient.age} Years / {patient.gender}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Mobile:</td>
-                    <td className="px-4 py-2 text-base">{patient.mobile}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Email:</td>
-                    <td className="px-4 py-2 text-base">{patient.email !== "N/A" ? patient.email : "-"}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Emergency Contact:</td>
-                    <td className="px-4 py-2 text-base">{patient.emergencyContact !== "N/A" ? patient.emergencyContact : "-"}</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Address:</td>
-                    <td colSpan={3} className="px-4 py-2 text-base">{patient.address !== "N/A" ? patient.address : "-"}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            {/* Sections Mapping */}
+            <div className="space-y-8">
+                {/* 1. Patient Data */}
+                <section>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <div className="w-4 h-px bg-slate-200" /> Patient Profile
+                    </h3>
+                    <table className="w-full border-collapse">
+                        <tbody>
+                            <tr>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase w-1/4 border border-slate-100">Patient Name</td>
+                                <td className="py-3 px-4 text-sm font-bold text-slate-900 border border-slate-100">{patient.name}</td>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase w-1/4 border border-slate-100">MRN ID</td>
+                                <td className="py-3 px-4 text-sm font-bold text-teal-600 border border-slate-100">{patient.mrn}</td>
+                            </tr>
+                            <tr>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border border-slate-100">Age / Gender</td>
+                                <td className="py-3 px-4 text-sm font-bold text-slate-900 border border-slate-100">{patient.age}Y • {patient.gender}</td>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border border-slate-100">Mobile</td>
+                                <td className="py-3 px-4 text-sm font-bold text-slate-900 border border-slate-100">{patient.mobile}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
 
-            {/* Doctor & Appointment Details */}
-            <div className="mb-4 print:mb-3">
-              <div className="bg-gray-100 px-4 py-2 mb-3 print:mb-2 print:py-1">
-                <h3 className="text-lg font-bold text-gray-900 print:text-base">APPOINTMENT DETAILS</h3>
-              </div>
-              <table className="w-full border border-gray-300">
-                <tbody>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm w-1/4">Consulting Doctor:</td>
-                    <td className="px-4 py-2 text-base font-semibold">{appointment.doctorName}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm w-1/4">Appointment Date:</td>
-                    <td className="px-4 py-2 text-base">{appointment.date}</td>
-                  </tr>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Qualification:</td>
-                    <td className="px-4 py-2 text-base">{appointment.degree || "MBBS"}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Appointment Time:</td>
-                    <td className="px-4 py-2 text-base">{appointment.time}</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Specialization:</td>
-                    <td className="px-4 py-2 text-base">{appointment.specialization || "-"}</td>
-                    <td className="px-4 py-2 bg-gray-50 font-semibold text-sm">Visit Type:</td>
-                    <td className="px-4 py-2 text-base">{appointment.type}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                {/* 2. Clinical Data */}
+                <section>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <div className="w-4 h-px bg-slate-200" /> Appointment Logic
+                    </h3>
+                    <table className="w-full border-collapse">
+                        <tbody>
+                            <tr>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase w-1/4 border border-slate-100">Assigned Doctor</td>
+                                <td className="py-3 px-4 text-sm font-bold text-slate-900 border border-slate-100">{appointment.doctorName}</td>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase w-1/4 border border-slate-100">Department</td>
+                                <td className="py-3 px-4 text-sm font-bold text-teal-600 border border-slate-100">{appointment.specialization || "General Medicine"}</td>
+                            </tr>
+                            <tr>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border border-slate-100">Schedule</td>
+                                <td className="py-3 px-4 text-sm font-bold text-slate-900 border border-slate-100">{appointment.date} @ {appointment.time}</td>
+                                <td className="py-3 px-4 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase border border-slate-100">Visit Type</td>
+                                <td className="py-3 px-4 text-sm font-bold text-slate-900 border border-slate-100 uppercase">{appointment.type}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
 
-            {/* Vitals Section */}
-            {patient.vitals && (
-              <div className="mb-4 print:mb-3">
-                <div className="bg-gray-100 px-4 py-2 mb-3 print:mb-2 print:py-1">
-                  <h3 className="text-lg font-bold text-gray-900 print:text-base">VITAL SIGNS</h3>
-                </div>
-                <table className="w-full border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-2 text-left font-semibold text-sm border-r border-gray-300">Temperature</th>
-                      <th className="px-4 py-2 text-left font-semibold text-sm border-r border-gray-300">Blood Pressure</th>
-                      <th className="px-4 py-2 text-left font-semibold text-sm border-r border-gray-300">Pulse Rate</th>
-                      <th className="px-4 py-2 text-left font-semibold text-sm border-r border-gray-300">Weight</th>
-                      <th className="px-4 py-2 text-left font-semibold text-sm">SpO2</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="px-4 py-3 text-base border-r border-gray-300">{patient.vitals.temp || "-"} °C</td>
-                      <td className="px-4 py-3 text-base border-r border-gray-300">{patient.vitals.bp || "-"}</td>
-                      <td className="px-4 py-3 text-base border-r border-gray-300">{patient.vitals.pulse || "-"} bpm</td>
-                      <td className="px-4 py-3 text-base border-r border-gray-300">{patient.vitals.weight || "-"} kg</td>
-                      <td className="px-4 py-3 text-base">{patient.vitals.spo2 || "-"}%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+                {/* 3. Vitals */}
+                {patient.vitals && (
+                    <section>
+                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <div className="w-4 h-px bg-slate-200" /> Vital Statistics
+                        </h3>
+                        <div className="grid grid-cols-5 gap-2">
+                            {[
+                                { l: 'Temp', v: patient.vitals.temp || '-', u: '°F' },
+                                { l: 'BP', v: patient.vitals.bp || '-', u: '' },
+                                { l: 'Pulse', v: patient.vitals.pulse || '-', u: 'BPM' },
+                                { l: 'Weight', v: patient.vitals.weight || '-', u: 'KG' },
+                                { l: 'SpO2', v: patient.vitals.spo2 || '-', u: '%' },
+                            ].map((v, i) => (
+                                <div key={i} className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">{v.l}</p>
+                                    <p className="text-sm font-bold text-slate-900">{v.v} <span className="text-[10px] text-slate-400 font-medium">{v.u}</span></p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
-            {/* Payment Details */}
-            <div className="mb-4 print:mb-3">
-              <div className="bg-gray-100 px-4 py-2 mb-3 print:mb-2 print:py-1">
-                <h3 className="text-lg font-bold text-gray-900 print:text-base">PAYMENT SUMMARY</h3>
-              </div>
-              <table className="w-full border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2 text-left font-semibold text-sm border-r border-gray-300">Description</th>
-                    <th className="px-4 py-2 text-right font-semibold text-sm w-32">Amount (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-300">
-                    <td className="px-4 py-3 text-base">Consultation Fee (OPD)</td>
-                    <td className="px-4 py-3 text-base text-right">{payment.amount.toFixed(2)}</td>
-                  </tr>
-                  <tr className="bg-gray-50 font-bold">
-                    <td className="px-4 py-3 text-base">TOTAL AMOUNT</td>
-                    <td className="px-4 py-3 text-lg text-right">₹ {payment.amount.toFixed(2)}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div className="mt-3 flex justify-between items-center px-4 print:mt-2 print:px-2">
-                <div className="text-sm print:text-xs">
-                  <p className="font-semibold">Payment Method: <span className="font-normal uppercase">{payment.method}</span></p>
-                  <p className="font-semibold mt-1 print:mt-0">Payment Status: 
-                    <span className={`ml-2 px-2 py-1 rounded text-xs font-bold ${
-                      payment.status.toLowerCase() === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {payment.status}
-                    </span>
-                  </p>
-                </div>
-              </div>
+                {/* 4. Billing */}
+                <section>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <div className="w-4 h-px bg-slate-200" /> Revenue Summary
+                    </h3>
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    <th className="py-3 px-6 text-left">Description</th>
+                                    <th className="py-3 px-6 text-right">Amount (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-b border-slate-100">
+                                    <td className="py-4 px-6 text-sm font-bold text-slate-700">Registration & Consultation Fee</td>
+                                    <td className="py-4 px-6 text-sm font-bold text-slate-900 text-right">{payment.amount.toFixed(2)}</td>
+                                </tr>
+                                <tr className="bg-slate-900 font-bold">
+                                    <td className="py-4 px-6 text-sm text-white uppercase">Gross Total</td>
+                                    <td className="py-4 px-6 text-xl text-teal-400 text-right tracking-tight">₹ {payment.amount.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="mt-4 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-white p-2">
+                        <p>Status: <span className="text-emerald-500 font-bold">{payment.status}</span></p>
+                        <p>Gateway: <span className="text-teal-600 font-bold">{payment.method}</span></p>
+                    </div>
+                </section>
             </div>
 
             {/* Footer */}
-            <div className="border-t-2 border-gray-300 pt-4 print:pt-3">
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-xs text-gray-600 mb-1 print:text-[10px]">This is a computer-generated receipt and does not require a signature.</p>
-                  <p className="text-xs text-gray-600 print:text-[10px]">Generated on: {new Date().toLocaleString('en-IN')}</p>
+            <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between items-end">
+                <div className="space-y-1">
+                    <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Digital Healthcare Protocol v3.0</p>
+                    <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">System Timestamp: {new Date().toLocaleString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-700 print:text-xs">Authorized Signatory</p>
-                  <div className="border-b border-gray-400 w-48 mt-6 mb-1 print:w-32 print:mt-3"></div>
-                  <p className="text-xs text-gray-600 print:text-[10px]">{hospital.name}</p>
+                    <div className="w-48 border-b border-slate-200 mb-2 ml-auto" />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Authorized Registrar</p>
                 </div>
-              </div>
             </div>
 
           </div>
         </div>
+        
+        <style jsx global>{`
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        `}</style>
       </div>
     </>
   );

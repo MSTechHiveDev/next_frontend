@@ -1,6 +1,14 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { 
+    Loader2, 
+    ArrowLeft, 
+    RefreshCw, 
+    Clock, 
+    Activity, 
+    Navigation, 
+    Siren 
+} from "lucide-react";
+import Link from "next/link";
 import { helpdeskEmergencyService } from "@/lib/integrations/services/helpdesk-emergency.service";
 import { EmergencyRequest } from "@/lib/integrations/types/emergency";
 
@@ -97,245 +105,125 @@ export default function EmergencyRequestsPage() {
         }
     };
 
-    const pendingRequests = requests.filter((r) => r.status === "pending");
-    const respondedRequests = requests.filter((r) => r.status !== "pending");
+    const pendingRequests = requests.filter((r: EmergencyRequest) => r.status === "pending");
+    const respondedRequests = requests.filter((r: EmergencyRequest) => r.status !== "pending");
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading emergency requests...</p>
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 text-rose-600 animate-spin" />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Critical Signal...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-center">
+        <div className="space-y-8">
+            
+            {/* PROFESSIONAL HEADER SECTION */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6 max-w-7xl mx-auto">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Emergency Requests</h1>
-                    <p className="text-gray-600">Manage incoming ambulance emergency requests</p>
+                    <div className="flex items-center gap-2 mb-2">
+                        <Link href="/helpdesk" className="p-1.5 bg-slate-100 rounded-lg text-slate-400 hover:text-rose-600 transition-all">
+                            <ArrowLeft size={16} />
+                        </Link>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Protocol Delta / Emergency Flux</span>
+                    </div>
+                    <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                        Clinical Response Queue
+                    </h1>
+                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-1">Hospital Node / Critical Admission Control</p>
                 </div>
-                <button
-                    onClick={loadRequests}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                    <svg
-                        className="w-5 h-5 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={loadRequests}
+                        className="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-teal-600 hover:border-teal-100 transition-all shadow-sm"
+                        aria-label="Refresh Grid"
                     >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                    </svg>
-                </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Pending</p>
-                            <p className="text-3xl font-bold text-orange-600">
-                                {pendingRequests.length}
-                            </p>
-                        </div>
-                        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <svg
-                                className="w-6 h-6 text-orange-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Accepted</p>
-                            <p className="text-3xl font-bold text-green-600">
-                                {requests.filter((r) => r.status === "accepted").length}
-                            </p>
-                        </div>
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg
-                                className="w-6 h-6 text-green-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Total Requests</p>
-                            <p className="text-3xl font-bold text-gray-900">{requests.length}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg
-                                className="w-6 h-6 text-blue-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                                />
-                            </svg>
-                        </div>
-                    </div>
+                        <RefreshCw size={18} />
+                    </button>
                 </div>
             </div>
 
-            {/* Pending Requests */}
+            {/* STATS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <MetricTile label="Pending Admission" value={pendingRequests.length} color="amber" icon={<Clock size={20} />} />
+                <MetricTile label="Active Responses" value={requests.filter((r: EmergencyRequest) => r.status === "accepted").length} color="teal" icon={<Activity size={20} />} />
+                <MetricTile label="Mission Lifetime" value={requests.length} color="slate" icon={<Navigation size={20} />} />
+            </div>
+
+            {/* LIVE ALERT FEED */}
             {pendingRequests.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900">
-                            Pending Requests ({pendingRequests.length})
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 bg-rose-50 border-b border-rose-100 flex items-center justify-between">
+                        <h2 className="text-xs font-bold text-rose-700 uppercase tracking-widest flex items-center gap-2">
+                             <Siren size={16} className="animate-pulse" /> Active Emergency Alerts ({pendingRequests.length})
                         </h2>
                     </div>
-                    <div className="divide-y divide-gray-200">
-                        {pendingRequests.map((request) => (
-                            <div key={request._id} className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">
-                                            {request.patientName}
-                                        </h3>
-                                        <p className="text-sm text-gray-600">
-                                            {request.patientAge} years, {request.patientGender}
-                                            {request.patientMobile && ` • ${request.patientMobile}`}
-                                        </p>
+                    <div className="divide-y divide-slate-100">
+                        {pendingRequests.map((request: EmergencyRequest) => (
+                            <div key={request._id} className="p-8">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-2xl uppercase shadow-inner">
+                                            {request.patientName?.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
+                                                {request.patientName}
+                                            </h3>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                {request.patientAge}Y • {request.patientGender}
+                                                {request.patientMobile && ` • TEL: ${request.patientMobile}`}
+                                            </p>
+                                        </div>
                                     </div>
                                     <span
-                                        className={`px-3 py-1 rounded-full text-xs font-medium border ${getSeverityColor(
+                                        className={`px-3 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-widest ${getSeverityColor(
                                             request.severity
                                         )}`}
                                     >
-                                        {request.severity.toUpperCase()}
+                                        {request.severity}
                                     </span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <p className="text-xs text-gray-500">Emergency Type</p>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {request.emergencyType}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-500">Current Location</p>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {request.currentLocation}
-                                        </p>
-                                    </div>
-                                    {request.eta && (
-                                        <div>
-                                            <p className="text-xs text-gray-500">ETA</p>
-                                            <p className="text-sm font-medium text-gray-900">
-                                                {request.eta} minutes
-                                            </p>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <p className="text-xs text-gray-500">Ambulance</p>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {request.ambulancePersonnel.vehicleNumber}
-                                        </p>
-                                    </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                                    <StatusItem label="Index Case" value={request.emergencyType} color="rose" />
+                                    <StatusItem label="Location" value={request.currentLocation} color="slate" />
+                                    <StatusItem label="Arrival ETA" value={request.eta ? `${request.eta} MINS` : 'URGENT'} color="amber" />
+                                    <StatusItem label="Field Asset" value={request.ambulancePersonnel?.vehicleNumber} color="teal" />
                                 </div>
 
-                                <div className="mb-4">
-                                    <p className="text-xs text-gray-500 mb-1">Description</p>
-                                    <p className="text-sm text-gray-700">{request.description}</p>
+                                <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Field Observation</p>
+                                    <p className="text-sm text-slate-700 italic font-medium">"{request.description}"</p>
                                 </div>
 
                                 {request.vitals && (
-                                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                        <p className="text-xs font-medium text-gray-700 mb-2">Vitals</p>
-                                        <div className="grid grid-cols-4 gap-3 text-xs">
-                                            {request.vitals.bloodPressure && (
-                                                <div>
-                                                    <span className="text-gray-500">BP:</span>{" "}
-                                                    <span className="font-medium">
-                                                        {request.vitals.bloodPressure}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {request.vitals.heartRate && (
-                                                <div>
-                                                    <span className="text-gray-500">HR:</span>{" "}
-                                                    <span className="font-medium">
-                                                        {request.vitals.heartRate} bpm
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {request.vitals.temperature && (
-                                                <div>
-                                                    <span className="text-gray-500">Temp:</span>{" "}
-                                                    <span className="font-medium">
-                                                        {request.vitals.temperature}°F
-                                                    </span>
-                                                </div>
-                                            )}
-                                            {request.vitals.oxygenLevel && (
-                                                <div>
-                                                    <span className="text-gray-500">SpO2:</span>{" "}
-                                                    <span className="font-medium">
-                                                        {request.vitals.oxygenLevel}%
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
+                                    <div className="mb-6 p-4 bg-teal-50 border border-teal-100 rounded-xl grid grid-cols-4 gap-4">
+                                        <VitalMini label="BP" value={request.vitals.bloodPressure} />
+                                        <VitalMini label="HR" value={request.vitals.heartRate ? `${request.vitals.heartRate} BPM` : null} />
+                                        <VitalMini label="TEMP" value={request.vitals.temperature ? `${request.vitals.temperature}°F` : null} />
+                                        <VitalMini label="SPO2" value={request.vitals.oxygenLevel ? `${request.vitals.oxygenLevel}%` : null} />
                                     </div>
                                 )}
 
-                                <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                                    <p className="text-xs text-gray-500">
-                                        Received: {new Date(request.createdAt).toLocaleString()}
+                                <div className="flex justify-between items-center pt-6 border-t border-slate-100">
+                                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                        Relayed: {new Date(request.createdAt).toLocaleTimeString()}
                                     </p>
-                                    <div className="flex space-x-3">
+                                    <div className="flex gap-3">
                                         <button
                                             onClick={() => {
                                                 setSelectedRequest(request);
                                                 setShowRejectModal(true);
                                             }}
                                             disabled={processingId === request._id}
-                                            className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                                            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-rose-200 hover:text-rose-600 transition-all active:scale-95"
                                         >
-                                            Reject
+                                            Defer
                                         </button>
                                         <button
                                             onClick={() => {
@@ -343,9 +231,9 @@ export default function EmergencyRequestsPage() {
                                                 setShowAcceptModal(true);
                                             }}
                                             disabled={processingId === request._id}
-                                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                                            className="px-8 py-2.5 bg-rose-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-rose-700 transition-all active:scale-95 shadow-lg shadow-rose-900/20"
                                         >
-                                            Accept Patient
+                                            Commit Admission
                                         </button>
                                     </div>
                                 </div>
@@ -355,40 +243,33 @@ export default function EmergencyRequestsPage() {
                 </div>
             )}
 
-            {/* Responded Requests */}
+            {/* RESPONDED LOG */}
             {respondedRequests.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900">
-                            Request History ({respondedRequests.length})
-                        </h2>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Response History ({respondedRequests.length})</h2>
                     </div>
-                    <div className="divide-y divide-gray-200">
-                        {respondedRequests.map((request) => (
-                            <div key={request._id} className="p-6 bg-gray-50">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900">
-                                            {request.patientName}
-                                        </h3>
-                                        <p className="text-sm text-gray-600">
-                                            {request.emergencyType} • {request.currentLocation}
-                                        </p>
-                                    </div>
+                    <div className="divide-y divide-slate-100">
+                        {respondedRequests.map((request: EmergencyRequest) => (
+                            <div key={request._id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-all">
+                                <div>
+                                    <h3 className="text-xs font-bold text-slate-900 uppercase">
+                                        {request.patientName}
+                                    </h3>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                        {request.emergencyType} • {request.currentLocation}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(request.createdAt).toLocaleDateString()}</p>
                                     <span
-                                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                        className={`px-3 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest border ${getStatusColor(
                                             request.status
                                         )}`}
                                     >
-                                        {request.status.toUpperCase()}
+                                        {request.status}
                                     </span>
                                 </div>
-                                {request.notes && (
-                                    <p className="text-sm text-gray-700 mt-2">Notes: {request.notes}</p>
-                                )}
-                                <p className="text-xs text-gray-500 mt-2">
-                                    {new Date(request.createdAt).toLocaleString()}
-                                </p>
                             </div>
                         ))}
                     </div>
@@ -396,112 +277,129 @@ export default function EmergencyRequestsPage() {
             )}
 
             {requests.length === 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                    <svg
-                        className="w-16 h-16 text-gray-300 mx-auto mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                    </svg>
-                    <p className="text-gray-600">No emergency requests</p>
+                <div className="bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 p-20 text-center">
+                    <Activity size={32} className="text-slate-200 mx-auto mb-3" />
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sector Clear. No Active Critical Signals.</p>
                 </div>
             )}
 
-            {/* Accept Modal */}
+            {/* MODALS */}
             {showAcceptModal && selectedRequest && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Accept Emergency Request
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Are you sure you want to accept this patient? The ambulance will be
-                            notified immediately.
+                <Modal 
+                    title="Commit Emergency Admission" 
+                    onClose={() => setShowAcceptModal(false)}
+                    onConfirm={handleAccept}
+                    confirmLabel={processingId ? "Relaying..." : "Confirm Deployment"}
+                    confirmColor="rose"
+                >
+                    <div className="space-y-4">
+                        <p className="text-xs font-medium text-slate-500 leading-relaxed uppercase">
+                            Verify arrival protocols and preparation status. Mission assets will be notified of clearance.
                         </p>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Notes (Optional)
-                            </label>
-                            <textarea
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                rows={3}
-                                placeholder="Add any preparation notes..."
-                            />
-                        </div>
-                        <div className="flex space-x-3">
-                            <button
-                                onClick={() => {
-                                    setShowAcceptModal(false);
-                                    setNotes("");
-                                    setSelectedRequest(null);
-                                }}
-                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleAccept}
-                                disabled={!!processingId}
-                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                            >
-                                {processingId ? "Accepting..." : "Accept"}
-                            </button>
-                        </div>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-rose-500 transition-all"
+                            rows={3}
+                            placeholder="PRE-ADMISSION NOTES..."
+                        />
                     </div>
-                </div>
+                </Modal>
             )}
 
-            {/* Reject Modal */}
             {showRejectModal && selectedRequest && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Reject Emergency Request
-                        </h3>
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Rejection Reason
-                            </label>
-                            <textarea
-                                value={rejectionReason}
-                                onChange={(e) => setRejectionReason(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                                rows={3}
-                                placeholder="e.g., No beds available, Facility not equipped..."
-                                required
-                            />
-                        </div>
-                        <div className="flex space-x-3">
-                            <button
-                                onClick={() => {
-                                    setShowRejectModal(false);
-                                    setRejectionReason("");
-                                    setSelectedRequest(null);
-                                }}
-                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleReject}
-                                disabled={!!processingId || !rejectionReason.trim()}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-                            >
-                                {processingId ? "Rejecting..." : "Reject"}
-                            </button>
-                        </div>
+                <Modal 
+                    title="Deflect Critical Signal" 
+                    onClose={() => setShowRejectModal(false)}
+                    onConfirm={handleReject}
+                    confirmLabel={processingId ? "Deflecting..." : "Confirm Deferral"}
+                    confirmColor="slate"
+                    disabled={!rejectionReason.trim()}
+                >
+                    <div className="space-y-4">
+                        <textarea
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-rose-500 transition-all"
+                            rows={3}
+                            placeholder="MANDATORY DEFERRAL REASON..."
+                            required
+                        />
                     </div>
-                </div>
+                </Modal>
             )}
+        </div>
+    );
+}
+
+// COMPONENTS
+function MetricTile({ label, value, color, icon }: any) {
+    const colors: any = {
+        rose: 'bg-rose-50 text-rose-600',
+        amber: 'bg-amber-50 text-amber-600',
+        teal: 'bg-teal-50 text-teal-600',
+        slate: 'bg-slate-50 text-slate-600'
+    };
+    return (
+        <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors[color]}`}>
+                {icon}
+            </div>
+            <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+                <p className="text-2xl font-bold text-slate-900 tracking-tight">{value}</p>
+            </div>
+        </div>
+    );
+}
+
+function StatusItem({ label, value, color }: any) {
+    const textColors: any = {
+        rose: 'text-rose-600',
+        teal: 'text-teal-600',
+        amber: 'text-amber-600',
+        slate: 'text-slate-600'
+    };
+    return (
+        <div>
+            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-1">{label}</p>
+            <p className={`text-sm font-bold uppercase truncate ${textColors[color]}`}>{value || 'N/A'}</p>
+        </div>
+    );
+}
+
+function VitalMini({ label, value }: any) {
+    if (!value) return null;
+    return (
+        <div>
+            <p className="text-[8px] font-bold text-teal-400 uppercase tracking-widest">{label}</p>
+            <p className="text-sm font-bold text-teal-900">{value}</p>
+        </div>
+    );
+}
+
+function Modal({ title, children, onClose, onConfirm, confirmLabel, confirmColor, disabled }: any) {
+    const colors: any = {
+        rose: 'bg-rose-600 hover:bg-rose-700 shadow-rose-900/20',
+        teal: 'bg-teal-600 hover:bg-teal-700 shadow-teal-900/20',
+        slate: 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20'
+    };
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 uppercase tracking-tight italic">{title}</h3>
+                <div className="mb-8">{children}</div>
+                <div className="flex gap-3">
+                    <button onClick={onClose} className="flex-1 px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200">Abort</button>
+                    <button 
+                        onClick={onConfirm} 
+                        disabled={disabled}
+                        className={`flex-2 px-6 py-3 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg transition-all active:scale-95 disabled:opacity-50 ${colors[confirmColor]}`}
+                    >
+                        {confirmLabel}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

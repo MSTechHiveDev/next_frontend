@@ -139,55 +139,138 @@ export default function ConsultationPage({ params }: ConsultationPageProps) {
             </div>
 
             {/* Patient Details */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Patient Name</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    {appointment?.patient?.name}
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Patient Name</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white uppercase truncate">
+                    {(appointment?.patient?.honorific || appointment?.patient?.profile?.honorific || '')} {appointment?.patient?.name}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Age / Gender</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    {appointment?.patient?.age || 'N/A'} / {appointment?.patient?.gender || 'N/A'}
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Age / Gender</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white uppercase">
+                    {appointment?.patient?.age || appointment?.patient?.profile?.age || 'N/A'} / {appointment?.patient?.gender || appointment?.patient?.profile?.gender || 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">Contact</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    {appointment?.patient?.mobile}
-                  </p>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Blood Group</p>
+                   <p className="text-sm font-black text-rose-500 uppercase">
+                     {appointment?.patient?.bloodGroup || appointment?.patient?.profile?.bloodGroup || 'N/A'}
+                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-gray-500 uppercase">MRN</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">
-                    {appointment?.patient?.mrn || 'N/A'}
-                  </p>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">MRN</p>
+                   <p className="text-sm font-black text-gray-900 dark:text-white uppercase">
+                     {appointment?.patient?.mrn || appointment?.patient?.profile?.mrn || 'N/A'}
+                   </p>
                 </div>
               </div>
 
-              {/* Vitals if available */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Contact</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white">
+                    {appointment?.patient?.mobile || appointment?.patient?.contactNumber || appointment?.patient?.profile?.contactNumber}
+                  </p>
+                </div>
+                <div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Emergency Contact</p>
+                   <p className="text-sm font-black text-gray-900 dark:text-white">
+                     {appointment?.patient?.emergencyContact || appointment?.patient?.profile?.alternateNumber || appointment?.patient?.profile?.emergencyContact || 'N/A'}
+                   </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Location</p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white truncate" title={appointment?.patient?.address || appointment?.patient?.profile?.address || 'N/A'}>
+                    {appointment?.patient?.address || appointment?.patient?.profile?.address || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Payment</p>
+                   <div className="flex items-center gap-2">
+                      <span className={`inline-flex px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
+                          (appointment?.paymentStatus || 'paid') === 'paid' 
+                          ? 'bg-emerald-100 text-emerald-700' 
+                          : 'bg-rose-100 text-rose-700'
+                      }`}>
+                          {appointment?.paymentStatus || 'PAID'}
+                      </span>
+                      <span className="text-xs font-bold text-gray-900">₹{appointment?.amount || (appointment?.type === 'consultation' ? '500' : '200')}</span>
+                   </div>
+                </div>
+              </div>
+
+               <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                <div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Medical History</p>
+                   <p className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                     {(() => {
+                        const history = appointment?.patient?.medicalHistory || appointment?.patient?.profile?.medicalHistory || appointment?.patient?.profile?.conditions || '';
+                        return Array.from(new Set(history.split(',').map((s: string) => s.trim()).filter(Boolean))).join(', ') || 'No history recorded';
+                     })()}
+                   </p>
+                </div>
+                <div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Allergies</p>
+                   <p className="text-xs font-bold text-rose-500">
+                     {(() => {
+                        const raw = appointment?.patient?.allergies || appointment?.patient?.profile?.allergies;
+                        if (Array.isArray(raw)) return Array.from(new Set(raw)).join(', ') || 'None';
+                        return Array.from(new Set((raw || '').split(',').map((s: string) => s.trim()).filter(Boolean))).join(', ') || 'None';
+                     })()}
+                   </p>
+                </div>
+               </div>
+
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Primary Complaints / Symptoms</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                    {appointment?.notes || appointment?.reason || 'No symptoms described'}
+                  </p>
+              </div>
+
+              {/* Vitals */}
               {appointment?.vitals && (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-xs font-bold text-gray-500 uppercase mb-3">Vital Signs</p>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <p className="text-lg font-black text-blue-600">{appointment.vitals.bloodPressure || 'N/A'}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">BP</p>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-lg font-black text-green-600">{appointment.vitals.pulse || 'N/A'}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Pulse</p>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <p className="text-lg font-black text-orange-600">{appointment.vitals.temperature || 'N/A'}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Temp</p>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <p className="text-lg font-black text-purple-600">{appointment.vitals.weight || 'N/A'}</p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Weight</p>
-                    </div>
+                <div className="pt-6 border-t border-gray-100 dark:border-gray-700/50">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-4">Clinical Vitals</p>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                    <VitalCard 
+                        label="BP" 
+                        value={appointment.vitals.bp || appointment.vitals.bloodPressure} 
+                        unit="mmHg" 
+                        color="blue" 
+                    />
+                     <VitalCard 
+                        label="Pulse" 
+                        value={appointment.vitals.pulse} 
+                        unit="bpm" 
+                        color="emerald" 
+                    />
+                     <VitalCard 
+                        label="Temp" 
+                        value={appointment.vitals.temperature || appointment.vitals.temp} 
+                        unit="°F" 
+                        color="rose" 
+                    />
+                     <VitalCard 
+                        label="SpO2" 
+                        value={appointment.vitals.spo2 || appointment.vitals.spO2} 
+                        unit="%" 
+                        color="cyan" 
+                    />
+                    <VitalCard 
+                        label="Weight" 
+                        value={appointment.vitals.weight} 
+                        unit="kg" 
+                        color="violet" 
+                    />
+                    <VitalCard 
+                        label="Height" 
+                        value={appointment.vitals.height} 
+                        unit="cm" 
+                        color="amber" 
+                    />
                   </div>
                 </div>
               )}
@@ -243,6 +326,31 @@ export default function ConsultationPage({ params }: ConsultationPageProps) {
           </div>
         </div>
       </div>
+
+    </div>
+  );
+}
+
+function VitalCard({ label, value, unit, color }: { label: string, value: string | undefined, unit: string, color: string }) {
+  const colors: Record<string, string> = {
+    blue: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
+    emerald: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20',
+    rose: 'text-rose-600 bg-rose-50 dark:bg-rose-900/20',
+    cyan: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-900/20',
+    violet: 'text-violet-600 bg-violet-50 dark:bg-violet-900/20',
+    amber: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20',
+  };
+
+  const selectedColor = colors[color] || colors.blue;
+
+  return (
+    <div className={`flex flex-col items-center justify-center p-3 rounded-2xl border border-transparent ${selectedColor.split(' ')[1]} ${selectedColor.split(' ')[2]}`}>
+      <span className={`text-lg font-black ${selectedColor.split(' ')[0]}`}>
+        {value || '-'}
+      </span>
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">
+        {label} <span className="opacity-50 lowercase">({unit})</span>
+      </span>
     </div>
   );
 }

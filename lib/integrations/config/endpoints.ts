@@ -140,6 +140,7 @@ export const HELPDESK_ENDPOINTS = {
   CREATE_DOCTOR: '/helpdesk/doctor',
   PATIENTS_SEARCH: '/helpdesk/patients/search',
   PATIENT_DETAILS: (id: string) => `/helpdesk/patients/${id}`,
+  UPDATE_PATIENT: (id: string) => `/helpdesk/patients/${id}`,
   REGISTER_PATIENT: '/helpdesk/patients/register',
   APPOINTMENTS: '/helpdesk/appointments',
   APPOINTMENT_STATUS: (id: string) => `/helpdesk/appointments/${id}/status`,
@@ -173,6 +174,7 @@ export const DOCTOR_ENDPOINTS = {
   GET_PRESCRIPTION: (id: string) => `/doctor/prescriptions/${id}`,
   GET_LAB_TOKEN: (id: string) => `/doctor/lab-tokens/${id}`,
   UPLOAD_PHOTO: '/doctors/upload-photo',
+  SEARCH_MEDICINES: '/doctor/medicines/search',
 };
 
 export const TRANSIT_ENDPOINTS = {

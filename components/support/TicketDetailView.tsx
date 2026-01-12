@@ -87,59 +87,65 @@ export default function TicketDetailView({ ticketId, isAdmin, onBack }: TicketDe
     if (!ticket) return <div className="p-20 text-center text-red-400">Ticket not found</div>;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500">
             {viewImage && <ImageViewer src={viewImage} onClose={() => setViewImage(null)} />}
 
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors text-sm font-bold uppercase tracking-wider">
-                    <ArrowLeft size={16} /> Back
-                </button>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+                <div>
+                   <div className="flex items-center gap-2 mb-1">
+                        <button onClick={onBack} className="p-1.5 bg-slate-100 rounded-lg text-slate-400 hover:text-teal-600 transition-all">
+                            <ArrowLeft size={16} />
+                        </button>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Support Operations / Assistance Node</span>
+                    </div>
+                    <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                        Clinical Assistance Stream
+                    </h1>
+                </div>
                 <div className="flex items-center gap-4">
-                    <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${ticket.status === 'open' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                        {ticket.status === 'open' ? <Clock size={14} /> : <CheckCircle size={14} />}
+                    <span className={`px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${ticket.status === 'open' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                        {ticket.status === 'open' ? <Clock size={12} /> : <CheckCircle size={12} />}
                         {ticket.status}
                     </span>
                     {isAdmin && (
                         <button
                             onClick={() => handleStatusChange(ticket.status === 'resolved' ? 'open' : 'resolved')}
                             disabled={resolving}
-                            className={`px-5 py-2 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 ${ticket.status === 'resolved'
-                                ? 'bg-orange-500 hover:bg-orange-600'
-                                : 'bg-green-600 hover:bg-green-700'
+                            className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50 text-white ${ticket.status === 'resolved'
+                                ? 'bg-slate-900 hover:bg-slate-800'
+                                : 'bg-teal-600 hover:bg-teal-700 font-sans'
                                 }`}
                         >
-                            {resolving ? 'Updating...' : (ticket.status === 'resolved' ? 'Re-open Ticket' : 'Mark Resolved')}
+                            {resolving ? 'Syncing...' : (ticket.status === 'resolved' ? 'Re-open Channel' : 'Mark Resolved')}
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Ticket Info Card */}
-            <div className="p-8 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem] border border-gray-100 dark:border-gray-700 space-y-6">
+            <div className="p-8 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-8">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-2">{ticket.subject}</h1>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span className="font-mono">ID: #{ticket._id.slice(-6).toUpperCase()}</span>
+                    <h2 className="text-xl font-bold text-slate-900 tracking-tight uppercase mb-2">{ticket.subject}</h2>
+                    <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        <span className="font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">ID: #{ticket._id.slice(-6).toUpperCase()}</span>
                         <span>•</span>
-                        <span className="uppercase">{ticket.category}</span>
+                        <span>CATEGORY: {ticket.category}</span>
                         <span>•</span>
                         <span>{format(new Date(ticket.createdAt), 'PPP p')}</span>
                     </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-6 bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700/50 shadow-sm">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-600">
+                <div className="flex items-start gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm relative font-sans">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-teal-600 shadow-sm">
                         <User size={20} />
                     </div>
-                    <div className="space-y-2 flex-1">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">{ticket.requester?.name || ticket.name || 'Unknown User'}</p>
-                                <p className="text-[10px] uppercase text-gray-400 font-bold">{ticket.requester?.role || ticket.role || 'N/A'}</p>
-                            </div>
+                    <div className="space-y-3 flex-1">
+                        <div>
+                            <p className="text-xs font-bold text-slate-900 uppercase tracking-tight">{ticket.requester?.name || ticket.name || 'Unknown User'}</p>
+                            <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">{ticket.requester?.role || ticket.role || 'N/A'}</p>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{ticket.message}</p>
+                        <p className="text-slate-600 text-[11px] font-medium leading-relaxed whitespace-pre-wrap">{ticket.message}</p>
 
                         {ticket.attachments && ticket.attachments.length > 0 && (
                             <div className="pt-4 flex gap-4 overflow-x-auto pb-2">
@@ -147,7 +153,7 @@ export default function TicketDetailView({ ticketId, isAdmin, onBack }: TicketDe
                                     <button
                                         key={i}
                                         onClick={() => setViewImage(url)}
-                                        className="block w-24 h-24 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:ring-2 hover:ring-blue-500 transition-all cursor-zoom-in flex-shrink-0"
+                                        className="block w-24 h-24 rounded-xl overflow-hidden border border-slate-200 hover:border-teal-500 transition-all cursor-zoom-in shrink-0"
                                     >
                                         <img src={url} alt="attachment" className="w-full h-full object-cover" />
                                     </button>
@@ -159,40 +165,38 @@ export default function TicketDetailView({ ticketId, isAdmin, onBack }: TicketDe
             </div>
 
             {/* Conversation History */}
-            <div className="space-y-6">
+            <div className="space-y-6 px-4">
                 {ticket.replies?.map((reply, index) => {
                     const isSupportReply = ['admin', 'super-admin'].includes(reply.sender?.role || '');
-                    // If I am Admin (viewing as Admin), Support replies are "Me" (Right).
-                    // If I am User (viewing as User), Non-Support replies (my replies) are "Me" (Right).
                     const isMe = isAdmin ? isSupportReply : !isSupportReply;
 
                     return (
-                        <div key={index} className={`flex gap-4 ${isMe ? 'flex-row-reverse' : ''}`}>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${itemRoleColor(reply.sender?.role || 'user')} text-white shadow-md`}>
+                        <div key={index} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${itemRoleColor(reply.sender?.role || 'user')} text-white shadow-sm`}>
                                 {isSupportReply ? <ShieldCheck size={14} /> : <User size={14} />}
                             </div>
-                            <div className={`max-w-[80%] p-6 rounded-3xl shadow-sm ${isMe
-                                ? 'bg-blue-600 text-white rounded-tr-sm'
-                                : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-tl-sm'
+                            <div className={`max-w-[85%] p-5 rounded-2xl shadow-sm font-sans ${isMe
+                                ? 'bg-slate-900 text-white rounded-tr-none'
+                                : 'bg-white border border-slate-200 rounded-tl-none'
                                 }`}>
                                 <div className="flex justify-between items-center gap-8 mb-2">
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${isMe ? 'text-blue-200' : 'text-gray-400'}`}>
+                                    <span className={`text-[9px] font-bold uppercase tracking-widest ${isMe ? 'text-slate-400' : 'text-slate-400'}`}>
                                         {reply.sender?.name || 'Unknown'} ({reply.sender?.role || 'N/A'})
                                     </span>
-                                    <span className={`text-[10px] ${isMe ? 'text-blue-200' : 'text-gray-400'}`}>
+                                    <span className={`text-[9px] font-bold ${isMe ? 'text-slate-500' : 'text-slate-400'}`}>
                                         {format(new Date(reply.createdAt), 'MMM dd, p')}
                                     </span>
                                 </div>
-                                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isMe ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+                                <p className={`text-[11px] font-medium leading-relaxed whitespace-pre-wrap ${isMe ? 'text-slate-100' : 'text-slate-600'}`}>
                                     {reply.message}
                                 </p>
                                 {reply.attachments && reply.attachments.length > 0 && (
-                                    <div className={`mt-3 flex flex-wrap gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`mt-4 flex flex-wrap gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
                                         {reply.attachments.map((url, i) => (
                                             <button
                                                 key={i}
                                                 onClick={() => setViewImage(url)}
-                                                className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${isMe ? 'border-white/30' : 'border-gray-200'} transition-transform hover:scale-105`}
+                                                className={`w-16 h-16 rounded-lg overflow-hidden border ${isMe ? 'border-slate-800' : 'border-slate-100'} transition-transform hover:scale-105`}
                                             >
                                                 <img src={url} alt="attachment" className="w-full h-full object-cover" />
                                             </button>
@@ -257,8 +261,8 @@ export default function TicketDetailView({ ticketId, isAdmin, onBack }: TicketDe
 
                         <input
                             type="text"
-                            className="flex-1 bg-transparent border-none outline-none text-sm font-medium p-2 dark:text-white"
-                            placeholder="Type your reply..."
+                            className="flex-1 bg-transparent border-none outline-none text-xs font-bold p-2 text-slate-900 uppercase tracking-tight"
+                            placeholder="Type your clinical update..."
                             value={replyMessage}
                             onChange={e => setReplyMessage(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleReply(e)}
@@ -266,9 +270,9 @@ export default function TicketDetailView({ ticketId, isAdmin, onBack }: TicketDe
                         <button
                             onClick={handleReply}
                             disabled={sending || (!replyMessage.trim() && replyFiles.length === 0)}
-                            className="p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors disabled:opacity-50 active:scale-95 shadow-lg shadow-blue-500/20"
+                            className="p-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all disabled:opacity-50 active:scale-95 shadow-lg shadow-teal-900/20"
                         >
-                            {sending ? <Clock size={20} className="animate-spin" /> : <Send size={20} />}
+                            {sending ? <Clock size={18} className="animate-spin" /> : <Send size={18} />}
                         </button>
                     </div>
                 </div>
@@ -282,10 +286,10 @@ function isAdminRole(role: string) {
 }
 
 function itemRoleColor(role: string) {
-    if (isAdminRole(role)) return 'bg-blue-600';
-    if (role === 'doctor') return 'bg-teal-500';
-    if (role === 'hospital-admin') return 'bg-purple-600';
-    return 'bg-gray-500';
+    if (isAdminRole(role)) return 'bg-slate-900';
+    if (role === 'doctor') return 'bg-teal-600';
+    if (role === 'hospital-admin') return 'bg-indigo-600';
+    return 'bg-slate-400';
 }
 
 interface ImageViewerProps {
@@ -296,7 +300,7 @@ interface ImageViewerProps {
 function ImageViewer({ src, onClose }: ImageViewerProps) {
     if (!src) return null;
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/30 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
             <div className="relative max-w-5xl max-h-[90vh] w-full p-4 flex items-center justify-center">
                 <button
                     onClick={onClose}

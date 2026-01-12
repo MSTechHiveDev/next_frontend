@@ -1,4 +1,4 @@
-import { HELPDESK_ENDPOINTS, BOOKING_ENDPOINTS, DOCTOR_ENDPOINTS } from '../config';
+import { HELPDESK_ENDPOINTS, BOOKING_ENDPOINTS, DOCTOR_ENDPOINTS, TRANSIT_ENDPOINTS } from '../config';
 import { apiClient } from '../api';
 import { calculateEffectiveSlot } from '../../utils/time-slots';
 import type {
@@ -77,8 +77,8 @@ export const helpdeskService = {
    * Search for patients by name or mobile
    * @param query Search query
    */
-  searchPatients: (query: string) =>
-    apiClient<any[]>(`${HELPDESK_ENDPOINTS.PATIENTS_SEARCH}?q=${encodeURIComponent(query)}`),
+  searchPatients: (query: string, page: number = 1, limit: number = 10) =>
+    apiClient<any>(`${HELPDESK_ENDPOINTS.PATIENTS_SEARCH}?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`),
 
   /**
    * Get patient details by ID
@@ -86,6 +86,17 @@ export const helpdeskService = {
    */
   getPatientById: (patientId: string) =>
     apiClient<any>(HELPDESK_ENDPOINTS.PATIENT_DETAILS(patientId)),
+
+  /**
+   * Update patient information
+   * @param patientId Patient ID
+   * @param data Updated patient data
+   */
+  updatePatient: (patientId: string, data: any) =>
+    apiClient<any>(HELPDESK_ENDPOINTS.UPDATE_PATIENT(patientId), {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 
   // ==================== Appointments ====================
   /**
@@ -162,15 +173,15 @@ export const helpdeskService = {
    * Get all appointments for the helpdesk
    * @returns List of appointments
    */
-  getAppointments: () =>
-    apiClient<any[]>(HELPDESK_ENDPOINTS.APPOINTMENTS),
+  getAppointments: (page: number = 1, limit: number = 10) =>
+    apiClient<any>(`${HELPDESK_ENDPOINTS.APPOINTMENTS}?page=${page}&limit=${limit}`),
 
   /**
    * Get all transactions/payments
    * @returns List of transactions
    */
-  getTransactions: () =>
-    apiClient<any[]>(HELPDESK_ENDPOINTS.TRANSACTIONS),
+  getTransactions: (page: number = 1, limit: number = 10, range?: string, nopage?: boolean) =>
+    apiClient<any>(`${HELPDESK_ENDPOINTS.TRANSACTIONS}?page=${page}&limit=${limit}${range ? `&range=${range}` : ''}${nopage ? `&nopage=true` : ''}`),
 
   // ==================== Transits ====================
   /**
@@ -190,4 +201,3 @@ export const helpdeskService = {
     }),
 };
 
-import { TRANSIT_ENDPOINTS } from '../config';

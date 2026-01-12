@@ -46,6 +46,7 @@ const doctorMenu = [
     {
         group: "System",
         items: [
+            { icon: <Bell size={20} />, label: "Announcements", path: "/doctor/announcements" },
             { icon: <Settings size={20} />, label: "Support & Feedback", path: "/doctor/support" },
         ]
     }

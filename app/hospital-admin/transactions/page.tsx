@@ -27,21 +27,34 @@ export default function HospitalAdminTransactions() {
   const fetchTransactions = async () => {
     try {
       const data = await hospitalAdminService.getTransactions();
-      setTransactions(data || []);
+      // Ensure we always set an array - handle both array and object responses
+      if (Array.isArray(data)) {
+        setTransactions(data);
+      } else if (data && typeof data === 'object' && 'transactions' in data) {
+        setTransactions((data as any).transactions || []);
+      } else {
+        setTransactions([]);
+      }
     } catch (error: any) {
       console.error("Failed to fetch transactions:", error);
       toast.error(error.message || "Failed to load transactions");
+      setTransactions([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTransactions = transactions.filter(t => 
-    t.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    t.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Safety check: ensure transactions is an array before filtering
+  const filteredTransactions = Array.isArray(transactions) 
+    ? transactions.filter(t => 
+        t.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        t.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
   
-  const totalRevenue = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  const totalRevenue = Array.isArray(transactions) 
+    ? transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    : 0;
 
   if (loading) {
     return (
@@ -115,6 +128,7 @@ export default function HospitalAdminTransactions() {
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-700">
                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Patient Identity</th>
+                <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Type/Source</th>
                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Method</th>
                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
                 <th className="p-6 text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</th>
@@ -127,10 +141,22 @@ export default function HospitalAdminTransactions() {
                 <tr key={tx.id} className="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <td className="p-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-100 dark:shadow-none">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-100 dark:shadow-none">
                         {tx.patientName?.charAt(0).toUpperCase()}
                       </div>
                       <span className="font-bold text-gray-900 dark:text-white text-sm">{tx.patientName}</span>
+                    </div>
+                  </td>
+                  <td className="p-6">
+                    <div className="flex flex-col gap-1">
+                      <span className={`inline-flex items-center w-fit gap-1 px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${
+                        tx.source === 'Helpdesk' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20' :
+                        tx.source === 'Laboratory' ? 'bg-purple-50 text-purple-600 dark:bg-purple-900/20' :
+                        'bg-teal-50 text-teal-600 dark:bg-teal-900/20'
+                      }`}>
+                        {tx.type || tx.source}
+                      </span>
+                      <span className="text-[9px] text-gray-400 font-bold">{tx.source}</span>
                     </div>
                   </td>
                   <td className="p-6">

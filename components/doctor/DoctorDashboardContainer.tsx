@@ -3,14 +3,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User } from 'lucide-react';
+import { User, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
-import DoctorDashboardCharts from './DoctorDashboardCharts';
 import QuickNotesInput from './QuickNotesInput';
 import DoctorNotesList from './DoctorNotesList';
 import AppointmentsQueueDynamic from './AppointmentsQueueDynamic';
-import DoctorQueueStats from './DoctorQueueStats';
 import DoctorStatsCards from './DoctorStatsCards';
+import DoctorCalendar from './DoctorCalendar';
+import CurrentSessionCard from './CurrentSessionCard';
+import EstimatedWaitCard from './EstimatedWaitCard';
 
 interface DoctorDashboardContainerProps {
     doctorName: string;
@@ -32,7 +33,8 @@ export default function DoctorDashboardContainer({
         completedCount: 0,
         estimatedMinutes: 0,
         showQueue: true,
-        nextAppointmentId: null as string | null
+        nextAppointmentId: null as string | null,
+        currentAppointmentId: null as string | null
     });
 
     const handleNextPatient = () => {
@@ -45,62 +47,93 @@ export default function DoctorDashboardContainer({
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card dark:bg-card p-6 rounded-2xl shadow-sm border border-border-theme dark:border-border-theme">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-card p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-border-theme">
                 <div>
-                    <h1 className="text-2xl max-sm:text-[14px] font-bold text-foreground dark:text-foreground uppercase tracking-tighter">Welcome, {doctorName.startsWith('Dr.') ? doctorName : `Dr. ${doctorName}`}</h1>
-                    <p className="text-muted dark:text-muted text-sm mt-1 max-sm:text-[12px]">Here's your upcoming care and quick actions.</p>
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground uppercase tracking-tight">
+                        Welcome, {doctorName.startsWith('Dr.') ? doctorName : `Dr. ${doctorName}`}
+                    </h1>
+                    <p className="text-muted text-xs sm:text-sm mt-1">Your dashboard and quick actions</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleNextPatient}
-                        className="px-5 py-2.5 bg-primary-theme text-primary-theme-foreground text-sm font-bold rounded-xl shadow-lg shadow-blue-200 dark:shadow-none hover:opacity-90 transition-all flex items-center gap-2 cursor-pointer"
-                    >
-                        <User size={16} /> Next Patient
-                    </button>
-                </div>
+                <button
+                    onClick={handleNextPatient}
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 bg-primary-theme text-primary-theme-foreground text-xs sm:text-sm font-bold rounded-lg sm:rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                    <User size={16} /> Next Patient
+                </button>
             </div>
 
             {/* Stats Cards */}
             <DoctorStatsCards stats={stats} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                {/* Main Content Column (2/3) */}
-                <div className="lg:col-span-2 space-y-8">
-                    {/* Consultation Analysis Chart */}
-                    <div className="bg-card dark:bg-card p-5 rounded-[2.5rem] shadow-sm border border-border-theme dark:border-border-theme">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                            <div>
-                                <h3 className="text-xl max-sm:text-[14px] font-black text-foreground dark:text-foreground">Consultation Flow Analysis</h3>
+            {/* Queue & Session Section */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+                {/* Appointments Queue */}
+                <div className="h-[500px] sm:h-[550px] md:h-[600px]">
+                    <AppointmentsQueueDynamic onStatsChange={setQueueStats as any} />
+                </div>
+
+                {/* Session & Calendar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4 h-[500px] sm:h-[550px] md:h-[600px]">
+                    {/* Current Session */}
+                    <div className="h-full">
+                        <CurrentSessionCard 
+                            currentAppointmentId={queueStats.currentAppointmentId}
+                        />
+                    </div>
+
+                    {/* Calendar */}
+                    <div className="h-full">
+                        <DoctorCalendar />
+                    </div>
+                </div>
+            </div>
+
+            {/* Notes & Stats Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                {/* Left: Quick Notes & Stats */}
+                <div className="space-y-4 md:space-y-6">
+                    {/* Quick Notes */}
+                    <QuickNotesInput />
+                    
+                    {/* Today Summary */}
+                    <div className="bg-card p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border border-border-theme shadow-sm">
+                        <div className="flex items-center justify-between mb-4 sm:mb-6">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <Calendar className="text-white" size={16} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm sm:text-base font-bold text-foreground">Today Summary</h3>
+                                    <p className="text-[10px] sm:text-xs text-muted font-medium">Progress overview</p>
+                                </div>
                             </div>
-                            <div className="flex bg-secondary-theme dark:bg-secondary-theme p-1 rounded-xl">
-                                <button className="px-4 py-1.5 bg-card dark:bg-card shadow-sm text-xs font-black rounded-lg cursor-pointer text-foreground">Weekly</button>
-                                <button className="px-4 py-1.5 text-xs font-black text-muted cursor-pointer">Monthly</button>
-                            </div>
+                            <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[9px] sm:text-[10px] font-bold rounded-full uppercase">Live</span>
                         </div>
-                        <div className="h-[300px]">
-                            <DoctorDashboardCharts type="area" data={chartData} />
+
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                            <div className="p-3 sm:p-4 bg-secondary-theme rounded-lg sm:rounded-xl border border-border-theme">
+                                <p className="text-[10px] sm:text-xs font-bold text-muted uppercase mb-1">Today's Total</p>
+                                <p className="text-xl sm:text-2xl font-bold text-foreground">{queueStats.totalAppointments}</p>
+                            </div>
+                            <div className="p-3 sm:p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg sm:rounded-xl border border-emerald-100 dark:border-emerald-800">
+                                <p className="text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1">Completed</p>
+                                <p className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">{queueStats.completedCount}</p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Quick Notes Input */}
-                    <QuickNotesInput />
-
-                    {/* Appointments Queue */}
-                    <AppointmentsQueueDynamic onStatsChange={setQueueStats} />
-                </div>
-
-                {/* Sidebar Column (1/3) */}
-                <div className="lg:col-span-1 space-y-8">
-                    {/* My Notes */}
-                    <DoctorNotesList initialNotes={initialNotes} />
-
-                    {/* Today's Summary & Estimated Wait Stats */}
-                    <DoctorQueueStats
+                    {/* Estimated Wait */}
+                    <EstimatedWaitCard 
                         queueCount={queueStats.queueCount}
                         showQueue={queueStats.showQueue}
                     />
+                </div>
+
+                {/* Right: My Notes */}
+                <div>
+                    <DoctorNotesList initialNotes={initialNotes} />
                 </div>
             </div>
         </div>

@@ -237,9 +237,86 @@ export const hospitalAdminService = {
       method: 'DELETE',
     }),
 
-  // Transactions
-  getTransactions: () =>
-    apiClient<any[]>(HOSPITAL_ADMIN_ENDPOINTS.TRANSACTIONS),
+  // Transactions - Fetch from all revenue sources
+  getTransactions: async () => {
+    try {
+      // Fetch from all sources in parallel
+      const [appointmentsResponse, labResponse, pharmacyResponse] = await Promise.allSettled([
+        apiClient<any>('/helpdesk/appointments').catch(() => ({ appointments: [] })),
+        apiClient<any>('/lab/transactions').catch(() => ({ transactions: [] })),
+        apiClient<any>('/pharmacy/transactions').catch(() => ({ transactions: [] }))
+      ]);
+
+      const transactions: any[] = [];
+
+      // Process appointments (helpdesk)
+      if (appointmentsResponse.status === 'fulfilled' && appointmentsResponse.value) {
+        const appointments = Array.isArray(appointmentsResponse.value) 
+          ? appointmentsResponse.value 
+          : appointmentsResponse.value.appointments || [];
+        
+        appointments.forEach((apt: any) => {
+          if (apt.payment?.amount) {
+            transactions.push({
+              id: apt._id || apt.id,
+              patientName: apt.patient?.name || apt.patientName || 'Unknown Patient',
+              amount: apt.payment.amount,
+              paymentMethod: apt.payment.method || 'cash',
+              transactionTime: apt.payment.paidAt || apt.date || apt.createdAt,
+              type: 'Appointment',
+              source: 'Helpdesk'
+            });
+          }
+        });
+      }
+
+      // Process lab transactions
+      if (labResponse.status === 'fulfilled' && labResponse.value) {
+        const labTxns = Array.isArray(labResponse.value) 
+          ? labResponse.value 
+          : labResponse.value.transactions || [];
+        
+        labTxns.forEach((tx: any) => {
+          transactions.push({
+            id: tx._id || tx.id,
+            patientName: tx.patientName || 'Unknown Patient',
+            amount: tx.amount || tx.totalAmount,
+            paymentMethod: tx.paymentMethod || 'cash',
+            transactionTime: tx.transactionTime || tx.createdAt,
+            type: 'Lab Test',
+            source: 'Laboratory'
+          });
+        });
+      }
+
+      // Process pharmacy transactions
+      if (pharmacyResponse.status === 'fulfilled' && pharmacyResponse.value) {
+        const pharmaTxns = Array.isArray(pharmacyResponse.value) 
+          ? pharmacyResponse.value 
+          : pharmacyResponse.value.transactions || [];
+        
+        pharmaTxns.forEach((tx: any) => {
+          transactions.push({
+            id: tx._id || tx.id,
+            patientName: tx.patientName || tx.customerName || 'Unknown Patient',
+            amount: tx.amount || tx.totalAmount,
+            paymentMethod: tx.paymentMethod || 'cash',
+            transactionTime: tx.transactionTime || tx.createdAt,
+            type: 'Pharmacy',
+            source: 'Pharmacy'
+          });
+        });
+      }
+
+      // Sort by date (newest first)
+      return transactions.sort((a, b) => 
+        new Date(b.transactionTime).getTime() - new Date(a.transactionTime).getTime()
+      );
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      return [];
+    }
+  },
 
   // Shifts
   getShifts: () =>

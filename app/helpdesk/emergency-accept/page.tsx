@@ -1,190 +1,196 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
-import { AlertTriangle, Siren, MapPin, Clock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { 
+    AlertTriangle, 
+    Siren, 
+    MapPin, 
+    Clock, 
+    CheckCircle, 
+    XCircle, 
+    Loader2, 
+    ArrowLeft, 
+    RefreshCw,
+    Activity,
+    ShieldAlert
+} from "lucide-react";
 import { helpdeskEmergencyService } from "@/lib/integrations/services/helpdesk-emergency.service";
 import { EmergencyRequest } from "@/lib/integrations/types/emergency";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 export default function EmergencyAccept() {
   const [emergencies, setEmergencies] = useState<EmergencyRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'active'>('pending');
 
-  useEffect(() => {
-    fetchEmergencies();
-    // Poll for new emergencies every 15 seconds
-    const interval = setInterval(fetchEmergencies, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchEmergencies = async () => {
     try {
-      // Don't show full loader on background refreshes
       const response = await helpdeskEmergencyService.getHospitalEmergencyRequests();
       setEmergencies(response.requests);
     } catch (error: any) {
-      console.error("Failed to fetch emergencies:", error);
-      // Only show toast on first load or if it's a persistent error
-      if (loading) toast.error("Failed to sync emergency data");
+      if (loading) toast.error("Emergency Grid Offline");
     } finally {
-      setLoading(false);
+      if (loading) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchEmergencies();
+    const interval = setInterval(fetchEmergencies, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleStatusUpdate = async (id: string, status: string) => {
     try {
       if (status === 'accepted') {
         await helpdeskEmergencyService.acceptRequest(id, "Accepted from Response Center");
-        toast.success("Emergency case accepted and dispatched");
+        toast.success("Deployment Confirmed");
       } else if (status === 'rejected') {
         await helpdeskEmergencyService.rejectRequest(id, "Deferred by Helpdesk");
-        toast.success("Emergency case deferred");
+        toast.success("Request Deferred");
       }
       fetchEmergencies();
     } catch (error: any) {
-      toast.error(error.message || "Operation failed");
+      toast.error("Operation Sequence Interrupted");
     }
   };
 
   if (loading && emergencies.length === 0) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-            <Loader2 className="w-10 h-10 text-rose-600 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest animate-pulse text-rose-500">Connecting to Emergency Grid...</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-rose-600 animate-spin" />
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Awaiting Critical Signal...</p>
         </div>
+      </div>
     );
   }
 
   const pendingRequests = emergencies.filter(e => e.status === 'pending');
-  // In the new system, we consider 'accepted' as active responses for the hospital
   const activeResponses = emergencies.filter(e => e.status === 'accepted');
-
   const displayList = activeTab === 'pending' ? pendingRequests : activeResponses;
 
-  const getSeverityStyle = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'critical': return 'bg-red-100 text-red-600 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-600 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-600 border-yellow-200';
-      default: return 'bg-blue-100 text-blue-600 border-blue-200';
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      
+      {/* PROFESSIONAL HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6 max-w-7xl mx-auto">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white uppercase tracking-tighter italic flex items-center gap-2">
-            <Siren className="text-red-600 animate-pulse" size={28} /> EMERGENCY RESPONSE CENTER
+          <div className="flex items-center gap-2 mb-2">
+            <Link href="/helpdesk" className="p-1.5 bg-slate-100 rounded-lg text-slate-400 hover:text-teal-600 transition-all">
+                <ArrowLeft size={16} />
+            </Link>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Protocol Delta / Case Reception</span>
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+             {activeTab === 'pending' ? 'Emergency Reception' : 'Active Deployments'}
           </h1>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Immediate action required for priority protocols</p>
+          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-1">Hospital Node / Critical Dispatch Control</p>
         </div>
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
-          <button 
-            onClick={() => setActiveTab('pending')}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pending' ? 'bg-white dark:bg-gray-700 shadow-sm text-red-600' : 'text-gray-500'}`}
-          >
-            Pending Requests ({pendingRequests.length})
-          </button>
-          <button 
-            onClick={() => setActiveTab('active')}
-            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'active' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900' : 'text-gray-500'}`}
-          >
-            Active ({activeResponses.length})
-          </button>
+        <div className="flex items-center gap-3">
+             <div className="flex p-1 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <button
+                    onClick={() => setActiveTab('pending')}
+                    className={`px-5 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
+                        activeTab === 'pending' 
+                        ? 'bg-rose-600 text-white shadow-lg shadow-rose-900/20' 
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                >
+                    Pending ({pendingRequests.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('active')}
+                    className={`px-5 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
+                        activeTab === 'active' 
+                        ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20' 
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                >
+                    Active ({activeResponses.length})
+                </button>
+            </div>
+            <button onClick={fetchEmergencies} className="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-teal-600 transition-all shadow-sm" aria-label="Refresh Grid">
+                <RefreshCw size={18} />
+            </button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {displayList.length > 0 ? (
-          displayList.map((req) => (
-            <div key={req._id} className="bg-white dark:bg-[#111] border-2 border-red-500/20 rounded-3xl p-6 shadow-lg shadow-red-500/5 hover:border-red-500/40 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-8 group">
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${getSeverityStyle(req.severity)}`}>
-                    {req.severity} Priority
-                  </span>
-                  <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                    <Clock size={12} /> {new Date(req.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-                
-                <div>
-                  <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{req.patientName}</h2>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{req.patientAge} years • {req.patientGender}</p>
-                  <p className="text-lg text-red-600 dark:text-red-400 font-black uppercase tracking-tight mt-1">{req.emergencyType}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">{req.description}</p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-6 pt-2">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <MapPin size={18} className="text-blue-500" />
-                    <span className="text-xs font-black uppercase tracking-widest">{req.currentLocation}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Siren size={18} className="text-rose-500" />
-                    <span className="text-xs font-black uppercase tracking-widest italic">
-                      Ambulance: {req.ambulancePersonnel?.vehicleNumber || 'UNIT-01'}
-                    </span>
-                  </div>
-                  {req.eta && (
-                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Clock size={18} className="text-amber-500" />
-                      <span className="text-xs font-black uppercase tracking-widest italic">ETA: {req.eta} Mins</span>
+      {/* EMERGENCY MANIFEST GRID */}
+      <div className="max-w-7xl mx-auto space-y-4">
+        {displayList.length > 0 ? displayList.map((req) => (
+            <div key={req._id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all group flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:border-rose-200">
+                <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-4">
+                        <div className={`px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest rounded-md border ${
+                            req.severity === 'critical' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                        }`}>
+                            Priority: {req.severity}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <Clock size={12} /> Live Pulse: {new Date(req.createdAt).toLocaleTimeString()}
+                        </div>
                     </div>
-                  )}
+
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">{req.patientName || "IDENTITY-PENDING"}</h2>
+                        <div className="flex items-center gap-2 mt-1">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{req.patientAge}Y • {req.patientGender}</span>
+                            <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                            <span className="text-xs font-bold text-rose-600 uppercase tracking-tight">{req.emergencyType}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
+                        <StatusBox icon={<MapPin size={14} className="text-slate-400" />} label="Location" value={req.currentLocation} />
+                        <StatusBox icon={<Siren size={14} className="text-rose-600" />} label="Field Asset" value={req.ambulancePersonnel?.vehicleNumber} />
+                        <StatusBox icon={<Activity size={14} className="text-teal-600" />} label="Real-time Vitals" value={req.vitals ? `${req.vitals.bloodPressure || '-'} BP` : 'NO LINK'} />
+                    </div>
                 </div>
 
-                {req.vitals && (
-                  <div className="flex flex-wrap gap-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-                    {req.vitals.bloodPressure && (
-                      <div className="text-[10px] font-bold uppercase tracking-tight"><span className="text-gray-400 mr-1">BP:</span> {req.vitals.bloodPressure}</div>
+                <div className="lg:w-72 space-y-2">
+                    {req.status === 'pending' ? (
+                        <div className="flex flex-col gap-2">
+                            <button 
+                                onClick={() => handleStatusUpdate(req._id, 'accepted')}
+                                className="w-full py-4 bg-rose-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-rose-700 transition-all active:scale-95 shadow-lg shadow-rose-900/20 flex items-center justify-center gap-2"
+                            >
+                                <CheckCircle size={16} /> Authorize Admission
+                            </button>
+                            <button 
+                                onClick={() => handleStatusUpdate(req._id, 'rejected')}
+                                className="w-full py-2 bg-white border border-slate-200 text-slate-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:border-rose-200 hover:text-rose-600 transition-all active:scale-95"
+                            >
+                                Defer Signal
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="w-full py-4 bg-teal-50 border border-teal-100 text-teal-600 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 italic">
+                             <CheckCircle size={16} /> Asset Committed
+                        </div>
                     )}
-                    {req.vitals.heartRate && (
-                      <div className="text-[10px] font-bold uppercase tracking-tight"><span className="text-gray-400 mr-1">HR:</span> {req.vitals.heartRate} bpm</div>
-                    )}
-                    {req.vitals.oxygenLevel && (
-                      <div className="text-[10px] font-bold uppercase tracking-tight"><span className="text-gray-400 mr-1">SpO2:</span> {req.vitals.oxygenLevel}%</div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 lg:w-72">
-                {req.status === 'pending' ? (
-                  <>
-                    <button 
-                      onClick={() => handleStatusUpdate(req._id, 'rejected')}
-                      className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-600 dark:text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all flex items-center justify-center gap-2"
-                    >
-                      <XCircle size={20} /> Defer
-                    </button>
-                    <button 
-                      onClick={() => handleStatusUpdate(req._id, 'accepted')}
-                      className="flex-1 py-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-xl shadow-red-600/20 flex items-center justify-center gap-2 transform active:scale-95 transition-all"
-                    >
-                      <CheckCircle size={20} /> Dispatch
-                    </button>
-                  </>
-                ) : (
-                  <div className="w-full py-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 text-emerald-600 font-black uppercase tracking-widest text-[10px] rounded-2xl flex items-center justify-center gap-2 italic">
-                    <CheckCircle size={20} /> Request Handled
-                  </div>
-                )}
-              </div>
+                </div>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-20 bg-gray-50 dark:bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800">
-             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle size={32} className="text-gray-300" />
-             </div>
-             <p className="text-gray-500 font-black uppercase tracking-widest text-[10px]">No active emergency alerts in this sector.</p>
-          </div>
+        )) : (
+            <div className="py-24 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                <Activity size={32} className="text-slate-200 mx-auto mb-3" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Grid Operational. No active critical vectors.</p>
+            </div>
         )}
       </div>
+
     </div>
   );
 }
 
+function StatusBox({ icon, label, value }: any) {
+    return (
+        <div className="space-y-1">
+            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                {icon} {label}
+            </p>
+            <p className="text-[10px] font-bold text-slate-700 uppercase truncate">{value}</p>
+        </div>
+    );
+}

@@ -14,12 +14,15 @@ import {
     AlertCircle, 
     ChevronRight,
     Loader2,
-    Activity
+    Activity,
+    ArrowLeft,
+    RefreshCw
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import { helpdeskService } from '@/lib/integrations/services/helpdesk.service';
 import DocumentPreviewModal from '@/components/common/DocumentPreviewModal';
+import Link from 'next/link';
 
 export default function TransitsPage() {
   const [loading, setLoading] = useState(true);
@@ -33,14 +36,16 @@ export default function TransitsPage() {
   const [previewTitle, setPreviewTitle] = useState('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  useEffect(() => {
-    fetchTransits();
-    fetchProfile();
-    
-    // Auto-refresh fallback
-    const interval = setInterval(fetchTransits, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  const fetchTransits = async () => {
+    try {
+      const data = await helpdeskService.getTransits();
+      setTransits(data.transits || []);
+    } catch (error: any) {
+      console.error('Failed to fetch transits:', error);
+    } finally {
+      if (loading) setLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -52,84 +57,39 @@ export default function TransitsPage() {
                 setupSocket(typeof hospitalId === 'string' ? hospitalId : (hospitalId as any)._id);
             }
         }
-    } catch (error) {
-        console.error("Failed to fetch profile", error);
-    }
+    } catch (error) {}
   };
+
+  useEffect(() => {
+    fetchTransits();
+    fetchProfile();
+    const interval = setInterval(fetchTransits, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const setupSocket = (hospitalId: string) => {
     if (!hospitalId) return;
-    
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5002', {
-        withCredentials: true
-    });
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5002', { withCredentials: true });
 
     socket.on('connect', () => {
-        console.log('Connected to socket server');
-        socket.emit('join_room', { 
-            role: 'helpdesk', 
-            userId: profile?._id, 
-            hospitalId 
-        });
+        socket.emit('join_room', { role: 'helpdesk', userId: profile?._id, hospitalId });
     });
 
     socket.on('new_transit', (data) => {
-        toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-3xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border border-blue-50`}>
-              <div className="flex-1 w-0 p-5">
-                <div className="flex items-start">
-                  <div className="shrink-0 pt-0.5">
-                    <div className="h-12 w-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white">
-                        <Navigation size={24} className="animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight">New Transit Arrived</p>
-                    <p className="mt-1 text-sm font-bold text-gray-500">{data.patientName}</p>
-                    <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1">MRN: {data.patientMRN}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex border-l border-gray-100">
-                <button
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    fetchTransits();
-                  }}
-                  className="w-full border border-transparent rounded-none rounded-r-3xl p-4 flex items-center justify-center text-sm font-black text-blue-600 hover:text-blue-500 focus:outline-none"
-                >
-                  Refresh
-                </button>
-              </div>
-            </div>
-        ), { duration: 5000 });
+        toast.success(`NEW TRANSIT: ${data.patientName}`);
         fetchTransits();
     });
 
-    return () => {
-        socket.disconnect();
-    };
-  };
-
-  const fetchTransits = async () => {
-    try {
-      const data = await helpdeskService.getTransits();
-      setTransits(data.transits || []);
-    } catch (error: any) {
-      console.error('Failed to fetch transits:', error);
-      toast.error(error.message || 'Failed to load transits');
-    } finally {
-      setLoading(false);
-    }
+    return () => { socket.disconnect(); };
   };
 
   const handleCollect = async (appointmentId: string) => {
       try {
           await helpdeskService.collectTransit(appointmentId);
-          toast.success('Patient documents marked as collected');
+          toast.success('Collection Verified');
           fetchTransits();
       } catch (error) {
-          toast.error("Failed to mark collection");
+          toast.error("Collection error");
       }
   };
 
@@ -142,205 +102,137 @@ export default function TransitsPage() {
 
   const handlePrint = (transit: any, type: 'prescription' | 'lab') => {
     const url = type === 'prescription' ? transit.cloudinaryDocumentUrl : transit.cloudinaryLabTokenUrl;
-
-    if (!url) {
-        toast.error('Document URL not found. Please sync again.');
-        return;
-    }
-
-    // Open document directly in new tab for printing
-    toast.success('Opening document for printing...', { duration: 2000 });
+    if (!url) { toast.error('URL missing'); return; }
     window.open(url, '_blank');
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-                 <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-blue-600 rounded-xl text-white">
-                        <Navigation size={24} />
-                    </div>
-                    <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Patient Transits</h1>
-                 </div>
-                 <p className="text-gray-500 font-medium">Manage and print clinical documents for completed consultations</p>
-            </div>
-
-            <div className="flex items-center gap-4">
-                <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" size={20} />
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search by Patient Name or MRN..."
-                        className="pl-12 pr-6 py-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-500/10 outline-none w-full md:w-80 transition-all font-medium text-sm"
-                    />
-                </div>
-            </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw className="w-8 h-8 text-teal-600 animate-spin" />
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Synchronizing Transits...</p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Filters & Quick Stats */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
-            <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+  return (
+    <div className="space-y-8">
+      
+      {/* PROFESSIONAL HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6 max-w-7xl mx-auto">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Link href="/helpdesk" className="p-1.5 bg-slate-100 rounded-lg text-slate-400 hover:text-teal-600 transition-all">
+                <ArrowLeft size={16} />
+            </Link>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medical Logistics / Transits</span>
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            Clinical Document Transits
+          </h1>
+          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-1">Hospital Node / Distribution Center</p>
+        </div>
+        <div className="flex items-center gap-3">
+            <div className="relative w-full sm:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Reference / Patient Index..."
+                    className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-tight outline-none shadow-sm focus:border-teal-500 transition-all"
+                />
+            </div>
+            <button onClick={fetchTransits} className="p-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-teal-600 hover:border-teal-100 transition-all shadow-sm" aria-label="Refresh Transits">
+                <RefreshCw size={18} />
+            </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto space-y-8">
+            {/* FILTER BAR */}
+            {/* FILTER BAR / SEGMENTED SWITCH */}
+            <div className="flex items-center gap-1.5 p-1 bg-white border border-slate-100 rounded-xl shadow-sm max-w-fit">
                 {[
-                    { value: 'all', label: 'All Document Transits', icon: Navigation },
-                    { value: 'prescription', label: 'Prescriptions Only', icon: FileText },
-                    { value: 'lab', label: 'Lab Tokens Only', icon: Beaker }
+                    { value: 'all', label: 'All Transits', icon: Navigation },
+                    { value: 'prescription', label: 'Prescriptions', icon: FileText },
+                    { value: 'lab', label: 'Lab Tokens', icon: Beaker }
                 ].map((f) => (
                     <button
                         key={f.value}
                         onClick={() => setFilter(f.value as any)}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                        className={`flex items-center gap-2 px-5 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
                             filter === f.value
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20'
+                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                         }`}
                     >
-                        <f.icon size={16} />
+                        <f.icon size={12} />
                         {f.label}
                     </button>
                 ))}
             </div>
 
-            <div className="flex items-center gap-6 px-6 py-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100/50">
-                <div className="flex items-center gap-2">
-                    <Activity size={16} className="text-blue-600" />
-                    <span className="text-xs font-black text-blue-900 dark:text-blue-200 uppercase tracking-widest">{filteredTransits.length} Active Transits</span>
-                </div>
-            </div>
-        </div>
-
-        {/* Transits Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {loading ? (
-                <div className="col-span-full py-32 flex flex-col items-center justify-center space-y-4">
-                    <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                    <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">Syncing Real-time Transits...</p>
-                </div>
-            ) : filteredTransits.length > 0 ? (
-                filteredTransits.map((transit: any) => (
-                    <div
-                        key={transit._id}
-                        className="group relative bg-white dark:bg-gray-800 rounded-[32px] p-8 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all border border-gray-100 dark:border-gray-700"
-                    >
-                        {/* Status Badge */}
-                        <div className="absolute top-6 right-8">
-                             <div className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-600 rounded-full border border-green-100">
-                                <CheckCircle2 size={12} />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Ready</span>
-                             </div>
-                        </div>
-
-                        {/* Patient Profile */}
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-indigo-600 rounded-[22px] flex items-center justify-center text-white shadow-lg shadow-blue-100 overflow-hidden relative group-hover:rotate-3 transition-transform">
-                                 <User size={32} />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">{transit.patientName}</h3>
-                                <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
-                                    <span className="text-blue-600">ID: {transit.appointmentId}</span>
-                                    <span>•</span>
-                                    <span className="flex items-center gap-1"><Clock size={12} /> {new Date(transit.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            {/* TRANSIT MANIFEST GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredTransits.length > 0 ? filteredTransits.map((transit: any) => (
+                    <div key={transit._id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all group flex flex-col gap-6">
+                        
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xl uppercase transition-transform shadow-sm">
+                                    {transit.patientName?.charAt(0)}
+                                </div>
+                                <div className="overflow-hidden">
+                                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight truncate max-w-[150px]">{transit.patientName}</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">REF: {transit.appointmentId?.slice(-6).toUpperCase()}</p>
                                 </div>
                             </div>
+                            <div className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-bold uppercase tracking-widest rounded-md border border-emerald-100">
+                                Ready
+                            </div>
                         </div>
 
-                        {/* Document Stack */}
-                        <div className="space-y-4 mb-8">
+                        <div className="space-y-3 flex-1">
                             {transit.prescription && (
-                                <div className="relative group/doc p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-50 dark:border-gray-800 hover:border-blue-200 transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4 text-gray-900 dark:text-white">
-                                            <div className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-                                                <FileText className="text-blue-600" size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black uppercase tracking-tight">Prescription</p>
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase">{transit.prescription.medicines?.length || 0} Meds Prescribed</p>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => handlePrint(transit, 'prescription')}
-                                            className="p-3 bg-blue-600 shadow-md shadow-blue-200 text-white rounded-xl hover:bg-blue-700 transition-all"
-                                        >
-                                            <Printer size={18} />
-                                        </button>
-                                    </div>
-                                </div>
+                                <DocumentCard 
+                                    label="Prescription" 
+                                    icon={<FileText className="text-teal-600" size={14} />} 
+                                    onPrint={() => handlePrint(transit, 'prescription')}
+                                />
                             )}
-
                             {transit.labToken && (
-                                <div className="relative group/doc p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-50 dark:border-gray-800 hover:border-purple-200 transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4 text-gray-900 dark:text-white">
-                                            <div className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-                                                <Beaker className="text-purple-600" size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black uppercase tracking-tight">Laboratory Token</p>
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase">Token: {transit.labToken.tokenNumber}</p>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => handlePrint(transit, 'lab')}
-                                            className="p-3 bg-purple-600 shadow-md shadow-purple-200 text-white rounded-xl hover:bg-purple-700 transition-all"
-                                        >
-                                            <Printer size={18} />
-                                        </button>
-                                    </div>
-                                </div>
+                                <DocumentCard 
+                                    label="Lab Token" 
+                                    icon={<Beaker className="text-rose-600" size={14} />} 
+                                    onPrint={() => handlePrint(transit, 'lab')}
+                                />
                             )}
                         </div>
 
-                        {/* Footer & Collection */}
-                        <div className="pt-6 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Consultant</span>
-                                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Dr. {transit.doctorName}</span>
+                        <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
+                             <div>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Authorized By</p>
+                                <p className="text-[10px] font-bold text-slate-700 uppercase">Dr. {transit.doctorName}</p>
                              </div>
                              <button 
                                 onClick={() => handleCollect(transit._id)}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95"
-                            >
-                                Collect
-                                <ChevronRight size={14} />
+                                className="px-4 py-2 bg-teal-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-teal-700 transition-all active:scale-95 shadow-lg shadow-teal-900/20 flex items-center gap-2"
+                             >
+                                Collect Documents <ChevronRight size={14} />
                              </button>
                         </div>
                     </div>
-                ))
-            ) : (
-                <div className="col-span-full py-32 flex flex-col items-center justify-center text-center">
-                    <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
-                        <AlertCircle className="text-gray-300" size={48} />
+                )) : (
+                    <div className="col-span-full py-20 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                        <Activity size={32} className="text-slate-200 mx-auto mb-3" />
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No clinical transits pending distribution</p>
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">System Idle</h3>
-                    <p className="text-gray-500 font-medium italic max-w-sm">
-                        Waiting for consultations to complete. New documents will appear here automatically via real-time sync.
-                    </p>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes enter {
-            0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes leave {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(20px) scale(0.95); }
-        }
-        .animate-enter { animation: enter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .animate-leave { animation: leave 0.3s forwards; }
-      `}</style>
       
-      {/* Document Preview Modal */}
       <DocumentPreviewModal 
         isOpen={isPreviewOpen} 
         onClose={() => setIsPreviewOpen(false)} 
@@ -349,4 +241,22 @@ export default function TransitsPage() {
       />
     </div>
   );
+}
+
+function DocumentCard({ label, icon, onPrint }: any) {
+    return (
+        <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between group/doc hover:bg-white hover:border-teal-200 transition-all">
+            <div className="flex items-center gap-3">
+                {icon}
+                <span className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">{label}</span>
+            </div>
+            <button 
+                onClick={onPrint}
+                className="p-2 bg-white border border-slate-200 text-slate-400 rounded-lg hover:text-teal-600 hover:border-teal-100 transition-all"
+                aria-label={`Print ${label}`}
+            >
+                <Printer size={14} />
+            </button>
+        </div>
+    );
 }

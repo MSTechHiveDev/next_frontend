@@ -131,6 +131,17 @@ export const doctorService = {
       headers: {} 
     });
   },
+
+  searchMedicines: (query: string) => {
+    return apiClient<any>(`${DOCTOR_ENDPOINTS.SEARCH_MEDICINES}?query=${encodeURIComponent(query)}`);
+  },
+
+  getLabTests: () => 
+    apiClient<any[]>('/lab/tests'),
+
+  // Announcements
+  getAnnouncements: () =>
+    apiClient<{ announcements: any[] }>('/notifications'),
 };
 
 

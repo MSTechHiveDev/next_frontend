@@ -42,6 +42,9 @@ export interface HelpdeskProfile {
   hospital: {
     _id: string;
     name: string;
+    address?: string;
+    mobile?: string;
+    email?: string;
   };
 }
 
@@ -55,10 +58,18 @@ export interface HelpdeskDoctor {
   qualifications: string[];
   avatar?: string;
   availability?: any[];
+  department?: string;
+  user?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    mobile?: string;
+  };
 }
 
 // Patient Registration
 export interface PatientRegistrationRequest {
+  honorific?: 'Mr' | 'Mrs';
   name: string;
   mobile: string;
   age: number;
@@ -66,9 +77,11 @@ export interface PatientRegistrationRequest {
   dob: string;
   address: string;
   emergencyContact: string;
+  emergencyContactEmail?: string;
   bloodGroup?: string;
   allergies?: string[];
   medicalHistory?: string;
+  symptoms?: string[];
   vitals?: {
     height?: string;
     weight?: string;

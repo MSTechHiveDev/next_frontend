@@ -24,6 +24,7 @@ interface QueueProps {
     estimatedMinutes: number;
     showQueue: boolean;
     nextAppointmentId: string | null;
+    currentAppointmentId?: string | null;
   }) => void;
 }
 
@@ -96,6 +97,10 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
     const completedCount = appointments.filter(apt => apt.status === 'completed').length;
     const estimatedMinutes = queueAppointments.length * 20;
     const nextAppointmentId = sortedAppointments.length > 0 ? sortedAppointments[0].id : null;
+    
+    // Find ongoing appointment (in-progress status)
+    const currentAppointment = appointments.find(apt => apt.status === 'in-progress');
+    const currentAppointmentId = currentAppointment ? currentAppointment.id : null;
 
     if (onStatsChange) {
       onStatsChange({
@@ -104,16 +109,16 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
         completedCount,
         estimatedMinutes,
         showQueue,
-        nextAppointmentId
+        nextAppointmentId,
+        currentAppointmentId
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointments.length, queueAppointments.length, showQueue, sortedAppointments.length]);
+  }, [appointments.length, queueAppointments.length, showQueue, sortedAppointments.length, appointments, onStatsChange]);
 
   return (
-    <div className="bg-card dark:bg-card rounded-2xl border border-border-theme dark:border-border-theme shadow-sm">
-      {/* Header with Toggle */}
-      <div className="p-6 border-b border-border-theme dark:border-border-theme flex items-center justify-between">
+    <div className="bg-card dark:bg-card rounded-2xl border border-border-theme dark:border-border-theme shadow-sm h-full flex flex-col">
+      {/* Header with Toggle - Fixed */}
+      <div className="p-6 border-b border-border-theme dark:border-border-theme flex items-center justify-between flex-shrink-0">
         <div>
           <h2 className="text-lg font-bold text-foreground dark:text-foreground">Today's Appointments</h2>
           <p className="text-xs text-muted mt-1">
@@ -145,8 +150,8 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
         </div>
       </div>
 
-      {/* Appointments List */}
-      <div className="p-6">
+      {/* Appointments List - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
         {loading ? (
           <div className="text-center py-12">
             <Loader2 className="w-8 h-8 text-primary-theme animate-spin mx-auto mb-3" />
