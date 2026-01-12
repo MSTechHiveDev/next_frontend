@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Save, Printer, CheckCircle, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { LabBillingService } from '@/lib/integrations/services/labBilling.service';
 import { BillItem, PatientDetails, BillPayload } from '@/lib/integrations/types/labBilling';
@@ -11,6 +12,8 @@ import { toast } from 'react-hot-toast';
 
 import { LabTestService } from '@/lib/integrations/services/labTest.service';
 import { LabTest } from '@/lib/integrations/types/labTest';
+import { LabSampleService } from '@/lib/integrations/services/labSample.service';
+import { X, Check } from 'lucide-react';
 
 export default function LabBillingPage() {
     const router = useRouter();
@@ -35,6 +38,67 @@ export default function LabBillingPage() {
         fetchTests();
     }, []);
 
+    // Helper to add tests from URL
+    const searchParams = useSearchParams();
+
+    // 1. Capture Patient & Sample params immediately
+    React.useEffect(() => {
+        const name = searchParams.get('name');
+        const mobile = searchParams.get('mobile');
+        const age = searchParams.get('age');
+        const gender = searchParams.get('gender');
+        const sampleIdParam = searchParams.get('sampleId');
+
+        if (sampleIdParam) {
+            console.log("Setting Sample ID:", sampleIdParam);
+            setSampleId(sampleIdParam);
+        }
+
+        if (name || mobile) {
+            setPatient(prev => ({
+                ...prev,
+                name: name || prev.name,
+                mobile: mobile || prev.mobile,
+                age: age ? parseInt(age) : prev.age,
+                gender: (gender as any) || prev.gender,
+            }));
+        }
+    }, [searchParams]);
+
+    // 2. Map Test Names to Objects (Requires availableTests)
+    React.useEffect(() => {
+        if (!testsLoading && availableTests.length > 0) {
+            const tests = searchParams.get('tests');
+            if (tests) {
+                const testList = tests.split(',');
+                // Find matching tests
+                const testsToAdd: BillItem[] = [];
+
+                testList.forEach(tName => {
+                    const found = availableTests.find(at =>
+                        (at.testName && at.testName.toLowerCase() === tName.toLowerCase()) ||
+                        (at.name && at.name.toLowerCase() === tName.toLowerCase())
+                    );
+                    if (found) {
+                        testsToAdd.push({
+                            testName: found.testName || found.name || "Unknown",
+                            price: found.price,
+                            discount: 0
+                        });
+                    }
+                });
+
+                if (testsToAdd.length > 0) {
+                    // Filter out already selected to avoid dupes if effect runs twice
+                    setSelectedTests(prev => {
+                        const newTests = testsToAdd.filter(newT => !prev.some(existing => existing.testName === newT.testName));
+                        return [...prev, ...newTests];
+                    });
+                }
+            }
+        }
+    }, [testsLoading, availableTests, searchParams]);
+
     /* ----------------------------------------
        Patient State
     ----------------------------------------- */
@@ -46,6 +110,7 @@ export default function LabBillingPage() {
         mobile: '',
         refDoctor: '',
     });
+    const [sampleId, setSampleId] = useState<string | null>(null);
 
     const getAgeGroup = () => {
         const { age, ageUnit } = patient;
@@ -173,7 +238,7 @@ export default function LabBillingPage() {
         setSelectedTests(updated);
     };
 
-    const handleGenerateBill = async () => {
+    const handleGenerateBill = async (shouldPrint: boolean = true) => {
         if (!patient.name || !patient.mobile || selectedTests.length === 0) {
             toast.error('Please fill patient details and select tests');
             return;
@@ -189,39 +254,91 @@ export default function LabBillingPage() {
 
         setLoading(true);
         try {
-            const payload: BillPayload = {
-                patientDetails: patient,
-                items: selectedTests,
-                totalAmount,
-                discount,
-                finalAmount,
-                paidAmount,
-                balance,
-                paymentMode,
-                paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined
-            };
+            // If sampleId exists, finalize the existing order instead of creating a new one
+            if (sampleId) {
+                console.log("Finalizing existing order:", sampleId);
+                const res = await LabSampleService.finalizeOrder(sampleId, {
+                    totalAmount: finalAmount
+                });
 
-            const res = await LabBillingService.createBill(payload);
+                // Mark the transaction as paid
+                await LabSampleService.payOrder(sampleId, {
+                    paymentMode: paymentMode || 'Cash',
+                    paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined
+                });
 
-            setGeneratedBill({
-                ...payload,
-                invoiceId: res.bill.invoiceId,
-                createdAt: res.bill.createdAt,
-            });
+                setGeneratedBill({
+                    patientDetails: patient,
+                    items: selectedTests,
+                    totalAmount,
+                    discount,
+                    finalAmount,
+                    paidAmount,
+                    balance,
+                    paymentMode,
+                    paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined,
+                    invoiceId: res.transaction._id || 'N/A',
+                    createdAt: new Date().toISOString(),
+                });
 
-            toast.success('Bill generated successfully!');
+                toast.success('Payment recorded and bill generated!');
+            } else {
+                // Walk-in patient - create new bill/order
+                const payload: BillPayload = {
+                    patientDetails: patient,
+                    items: selectedTests,
+                    totalAmount,
+                    discount,
+                    finalAmount,
+                    paidAmount,
+                    balance,
+                    paymentMode,
+                    paymentDetails: paymentMode === 'Mixed' ? mixedPayments : undefined
+                };
 
-            // Trigger print after state update
-            setTimeout(() => {
-                handlePrint();
-                router.push('/lab/samples');
-            }, 500);
+                const res = await LabBillingService.createBill(payload);
+
+                setGeneratedBill({
+                    ...payload,
+                    invoiceId: res.bill.invoiceId,
+                    createdAt: res.bill.createdAt,
+                });
+
+                toast.success('Bill generated successfully!');
+            }
+
+            if (shouldPrint) {
+                // Trigger print
+                setTimeout(() => {
+                    handlePrint();
+                }, 500);
+            }
+            // Do NOT redirect here. Let user click "Close" or "Print".
         } catch (err: any) {
             console.error(err);
             toast.error(err.message || 'Billing failed');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleClose = async () => {
+        if (sampleId && !generatedBill) {
+            // Only update status if bill wasn't generated (finalizeOrder already marks as completed)
+            console.log("Closing sample without billing:", sampleId);
+            try {
+                await LabSampleService.updateResults(sampleId, { status: 'Completed' });
+                toast.success('Sample marked as Completed');
+            } catch (error) {
+                console.error("Failed to update sample status", error);
+            }
+        } else if (generatedBill) {
+            console.log("Closing completed billing session");
+            toast.success('Billing completed!');
+        } else {
+            console.warn("No sampleId found in state, cannot mark as completed.");
+        }
+        router.push('/lab/active-tests');
     };
 
     /* ----------------------------------------
@@ -547,13 +664,68 @@ export default function LabBillingPage() {
                         </div>
                     )}
 
-                    <button
-                        onClick={handleGenerateBill}
-                        disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
-                        className="mt-4 w-full bg-[#b388ff] text-white py-4 rounded-2xl font-black uppercase tracking-[2px] transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
-                    >
-                        {loading ? 'Processing...' : Object.keys(errors).length > 0 ? 'Fix Errors' : 'Generate Bill'}
-                    </button>
+                    <div className="flex flex-col gap-4 mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
+                        {/* 3 Buttons: Save, Print, Close */}
+                        {!generatedBill ? (
+                            <div className="grid grid-cols-2 gap-6">
+                                <button
+                                    onClick={() => handleGenerateBill(false)}
+                                    disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
+                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-2xl text-blue-700 dark:text-blue-400 font-bold transition-all hover:shadow-lg hover:scale-[1.02] hover:border-blue-400 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed disabled:hover:scale-100"
+                                >
+                                    <Save className="w-7 h-7 group-hover:scale-110 transition-transform" />
+                                    <div className="text-center">
+                                        <div className="text-sm font-bold">Save Bill</div>
+                                        <div className="text-[10px] font-normal opacity-70">Save without printing</div>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => handleGenerateBill(true)}
+                                    disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
+                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-bold shadow-xl shadow-indigo-300/50 dark:shadow-indigo-900/50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed disabled:hover:scale-100"
+                                >
+                                    {loading ? (
+                                        <div className="w-7 h-7 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <Printer className="w-7 h-7 group-hover:scale-110 transition-transform" />
+                                    )}
+                                    <div className="text-center">
+                                        <div className="text-sm font-bold">{loading ? 'Processing...' : 'Generate & Print'}</div>
+                                        <div className="text-[10px] font-normal opacity-90">Save and print invoice</div>
+                                    </div>
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <button
+                                    onClick={handlePrint}
+                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-2xl font-bold hover:shadow-lg hover:scale-[1.02] hover:border-gray-400 transition-all"
+                                >
+                                    <Printer className="w-7 h-7 group-hover:scale-110 transition-transform" />
+                                    <div className="text-center">
+                                        <div className="text-sm font-bold">Print Invoice</div>
+                                        <div className="text-[10px] font-normal opacity-70">Print again if needed</div>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={handleClose}
+                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-2xl font-bold shadow-xl shadow-emerald-300/50 dark:shadow-emerald-900/50 transition-all hover:scale-[1.02] active:scale-95"
+                                >
+                                    <Check className="w-7 h-7 group-hover:scale-110 transition-transform" />
+                                    <div className="text-center">
+                                        <div className="text-sm font-bold">Complete & Close</div>
+                                        <div className="text-[10px] font-normal opacity-90">Finish this order</div>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
+                        {generatedBill && (
+                            <p className="text-center text-[10px] text-green-600 dark:text-green-400 font-bold uppercase tracking-widest bg-green-50 dark:bg-green-900/20 py-2 rounded-lg">
+                                <Check size={12} className="inline mr-1" />
+                                Bill Saved Successfully
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 

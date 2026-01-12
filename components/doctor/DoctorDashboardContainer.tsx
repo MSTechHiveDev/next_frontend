@@ -78,7 +78,7 @@ export default function DoctorDashboardContainer({
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4 h-[500px] sm:h-[550px] md:h-[600px]">
                     {/* Current Session */}
                     <div className="h-full">
-                        <CurrentSessionCard 
+                        <CurrentSessionCard
                             currentAppointmentId={queueStats.currentAppointmentId}
                         />
                     </div>
@@ -96,7 +96,7 @@ export default function DoctorDashboardContainer({
                 <div className="space-y-4 md:space-y-6">
                     {/* Quick Notes */}
                     <QuickNotesInput />
-                    
+
                     {/* Today Summary */}
                     <div className="bg-card p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl border border-border-theme shadow-sm">
                         <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -125,7 +125,7 @@ export default function DoctorDashboardContainer({
                     </div>
 
                     {/* Estimated Wait */}
-                    <EstimatedWaitCard 
+                    <EstimatedWaitCard
                         queueCount={queueStats.queueCount}
                         showQueue={queueStats.showQueue}
                     />

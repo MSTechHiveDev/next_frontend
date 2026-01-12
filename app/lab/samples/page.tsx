@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { LabSample } from '@/lib/integrations/types/labSample';
 import { LabSampleService } from '@/lib/integrations/services/labSample.service';
 import { FlaskConical, Filter, Download, Eye, FileText } from 'lucide-react';
@@ -10,9 +11,11 @@ import ResultPrintView from '@/components/lab/ResultPrintView';
 import { toast } from 'react-hot-toast';
 
 export default function SampleCollectionPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [samples, setSamples] = useState<LabSample[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('All Samples');
+    const [filter, setFilter] = useState(searchParams.get('filter') || 'All Samples');
     const [printingSample, setPrintingSample] = useState<LabSample | null>(null);
 
     const printRef = useRef<HTMLDivElement>(null);
@@ -36,6 +39,41 @@ export default function SampleCollectionPage() {
 
     useEffect(() => {
         fetchSamples();
+
+        // Real-time updates
+        const handleNewOrder = (data: any) => {
+            console.log("🔔 New Lab Order Received:", data);
+
+            // Check if this new order belongs to this hospital (if filtering logic needed, though backend room handles it)
+            // Ideally backend only emits to this hospital's room so we assume it's relevant.
+
+            toast.success('New Active Test Request!', {
+                icon: '🔔',
+                duration: 5000,
+                style: {
+                    background: '#ecfccb',
+                    color: '#365314',
+                    fontWeight: 'bold',
+                },
+            });
+
+            // Optimistically update list
+            setSamples(prev => {
+                // Avoid duplicates
+                if (prev.find(s => s._id === data._id)) return prev;
+                return [data, ...prev];
+            });
+        };
+
+        import('@/lib/integrations/api/socket').then(({ subscribeToSocket, unsubscribeFromSocket }) => {
+            subscribeToSocket('hospital_channel', 'new_lab_order', handleNewOrder);
+
+            // Cleanup
+            return () => {
+                unsubscribeFromSocket('hospital_channel', 'new_lab_order', handleNewOrder);
+            };
+        });
+
     }, [filter]);
 
     const fetchSamples = async () => {
@@ -54,7 +92,8 @@ export default function SampleCollectionPage() {
         try {
             await LabSampleService.collectSample(id);
             toast.success('Sample collected successfully');
-            fetchSamples();
+            router.push(`/lab/samples/${id}`);
+            // fetchSamples(); // No longer needed as we redirect
         } catch (error) {
             toast.error('Failed to collect sample');
         }

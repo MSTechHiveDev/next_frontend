@@ -6,6 +6,7 @@ interface User {
   id: string;
   name: string;
   role: string;
+  hospitalId?: string;
   // add other fields as needed
 }
 
@@ -167,10 +168,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof document !== 'undefined') {
         const hasCookie = document.cookie.includes('accessToken=');
         if (!hasCookie && token) {
-           document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
-           if (refreshToken) {
-             document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
-           }
+          document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+          if (refreshToken) {
+            document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+          }
         }
       }
     } catch (error: any) {

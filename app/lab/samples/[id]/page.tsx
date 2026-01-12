@@ -145,8 +145,8 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
 
         setProcessing(true);
         try {
-            // Transition to Completed after result entry
-            const newStatus = 'Completed';
+            // Keep as Processing so Billing Close can finalize it
+            const newStatus = 'In Processing';
 
             // Filter out empty subtests before sending
             const cleanedTests = testResults.map(test => ({
@@ -165,7 +165,20 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
             });
 
             toast.success('Report submitted successfully!');
-            router.push('/lab/samples');
+
+            // Redirect to billing with details
+            const params = new URLSearchParams();
+            params.set('name', sample.patientDetails.name || '');
+            params.set('mobile', sample.patientDetails.mobile || ''); // Assuming mobile might exist on details
+            params.set('age', sample.patientDetails.age?.toString() || '0');
+            params.set('gender', sample.patientDetails.gender || '');
+
+            // Collect unique test names from the sample
+            const testNames = Array.from(new Set(testResults.map(t => t.testName)));
+            params.set('tests', testNames.join(','));
+            params.set('sampleId', sample._id); // Pass sampleId for closing the loop
+
+            router.push(`/lab/billing?${params.toString()}`);
         } catch (error) {
             console.error(error);
             toast.error('Failed to submit results');
