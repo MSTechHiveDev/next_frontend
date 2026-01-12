@@ -78,7 +78,7 @@ export default function TestListPage() {
     );
 
     return (
-        <div className="p-6 h-full bg-gray-50 dark:bg-gray-900 flex flex-col items-center transition-colors duration-500 min-h-screen">
+        <div className="p-6 h-full bg-gray-50 dark:bg-gray-900 flex flex-col items-center transition-colors duration-500 min-h-screen w-full max-w-[100vw] overflow-x-hidden">
             <div className="max-w-7xl w-full flex-1 flex flex-col">
 
                 {/* Header */}
@@ -157,7 +157,7 @@ export default function TestListPage() {
                 {/* Table Section */}
                 <div className="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl shadow-gray-200/50 dark:shadow-none border border-gray-50 dark:border-gray-700 flex-1 overflow-hidden flex flex-col mb-8 transition-colors">
                     <div className="overflow-x-auto flex-1">
-                        <table className="w-full text-sm text-left">
+                        <table className="w-full min-w-[1000px] text-sm text-left">
                             <thead>
                                 <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-50 dark:border-gray-700">
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Test Detail</th>

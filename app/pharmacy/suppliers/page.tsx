@@ -61,65 +61,59 @@ const SuppliersPage = () => {
     );
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-20 w-full max-w-[100vw] overflow-x-hidden">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Supplier Network</h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Vendor Management & Procurement Nodes</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Supplier Network</h1>
+                    <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Vendor Management & Relations</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchSuppliers}
-                        className="p-3.5 bg-white dark:bg-gray-800 text-gray-400 rounded-2xl border border-gray-100 dark:border-gray-700 hover:text-blue-500 transition-all shadow-sm"
+                        className="p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl hover:bg-gray-50 transition-all text-gray-400 hover:text-blue-500"
                     >
                         <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                     <button
-                        onClick={() => {
-                            setEditingSupplier(null);
-                            setIsAddModalOpen(true);
-                        }}
-                        className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-100 dark:shadow-none hover:bg-blue-700 transition-all flex items-center gap-3"
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none flex-1 md:flex-none"
                     >
-                        <Plus className="w-5 h-5 font-black" />
-                        Onboard New Vendor
+                        <Plus size={16} />
+                        Add Vendor
                     </button>
                 </div>
             </div>
 
-            {/* Controller Area */}
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row items-center gap-4">
-                <div className="relative flex-1 w-full lg:w-auto">
+            {/* Search */}
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-5 rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="relative">
                     <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
-                        placeholder="Search by vendor name, contact digits, or GSTIN taxonomy..."
+                        placeholder="Search vendors by name, contact, or ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-11 pr-4 py-4 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
                     />
-                </div>
-                <div className="px-6 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30">
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Active Nodes</p>
-                    <p className="text-lg font-black text-gray-900 dark:text-white leading-none">{filteredSuppliers.length}</p>
                 </div>
             </div>
 
-            {/* Vendor Grid/Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-4xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
-                <SupplierTable
-                    suppliers={filteredSuppliers}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    isLoading={loading}
-                />
-            </div>
+            {/* Suppliers List */}
+            <SupplierTable
+                suppliers={filteredSuppliers}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                isLoading={loading}
+            />
 
             {/* Modals */}
             <AddSupplierModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={() => {
+                    setIsAddModalOpen(false);
+                    setEditingSupplier(null);
+                }}
                 onSuccess={fetchSuppliers}
                 initialData={editingSupplier}
             />

@@ -12,7 +12,7 @@ interface ProductTableProps {
 }
 
 const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete, isLoading }) => {
-    
+
     const getStatusStyles = (status: string) => {
         switch (status) {
             case 'In Stock':
@@ -51,7 +51,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete,
     return (
         <div className="w-full bg-white dark:bg-gray-900 rounded-2xl border dark:border-gray-800 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[1000px]">
                     <thead>
                         <tr className="bg-gray-50 dark:bg-gray-800/50">
                             <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Brand Name</th>
@@ -107,14 +107,14 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete,
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                        <button 
+                                        <button
                                             onClick={() => onEdit(product)}
                                             className="p-1.5 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all"
                                             title="Edit Product"
                                         >
                                             <Edit2 size={16} />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => onDelete(product._id)}
                                             className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
                                             title="Delete Product"

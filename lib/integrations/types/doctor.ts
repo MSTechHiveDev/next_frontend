@@ -62,3 +62,20 @@ export interface DoctorProfile {
     breakEnd?: string;
   }[];
 }
+
+export interface PaginationData {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedDoctorPatients {
+  data: DoctorPatient[];
+  pagination: PaginationData;
+}
+
+export interface PaginatedDoctorAppointments {
+  data: any[];
+  pagination: PaginationData;
+}

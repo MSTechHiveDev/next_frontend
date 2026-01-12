@@ -72,6 +72,15 @@ export default function LabBillingPage() {
 
     // Validation state
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+
+    const markTouched = (field: string) => {
+        setTouchedFields(prev => {
+            const next = new Set(prev);
+            next.add(field);
+            return next;
+        });
+    };
 
     // Watch for validation errors
     const validate = () => {
@@ -228,7 +237,7 @@ export default function LabBillingPage() {
        UI
     ----------------------------------------- */
     return (
-        <div className="p-8 bg-gray-50/50 dark:bg-gray-900 min-h-screen transition-colors duration-500">
+        <div className="p-8 bg-gray-50/50 dark:bg-gray-900 min-h-screen transition-colors duration-500 w-full max-w-[100vw] overflow-x-hidden">
             <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Lab Billing</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -289,14 +298,17 @@ export default function LabBillingPage() {
                                     <button
                                         key={g}
                                         type="button"
-                                        onClick={() => setPatient({ ...patient, gender: g as any })}
+                                        onClick={() => {
+                                            setPatient({ ...patient, gender: g as any });
+                                            markTouched('gender');
+                                        }}
                                         className={`flex-1 py-2 rounded-lg text-xs font-black uppercase transition-all ${patient.gender === g ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-900/30' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                                     >
                                         {g}
                                     </button>
                                 ))}
                             </div>
-                            {errors.gender && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.gender}</p>}
+                            {touchedFields.has('gender') && errors.gender && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.gender}</p>}
                         </div>
                     </div>
 
@@ -305,7 +317,7 @@ export default function LabBillingPage() {
                         <input
                             placeholder="Enter 10-digit mobile"
                             maxLength={10}
-                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.mobile ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium dark:text-white`}
+                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${touchedFields.has('mobile') && errors.mobile ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium dark:text-white`}
                             value={patient.mobile}
                             onChange={e => {
                                 const val = e.target.value;
@@ -313,8 +325,9 @@ export default function LabBillingPage() {
                                     setPatient({ ...patient, mobile: val });
                                 }
                             }}
+                            onBlur={() => markTouched('mobile')}
                         />
-                        {errors.mobile && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.mobile}</p>}
+                        {touchedFields.has('mobile') && errors.mobile && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.mobile}</p>}
                     </div>
 
                     <div>
