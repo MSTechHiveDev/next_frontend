@@ -71,7 +71,7 @@ const TransactionsPage = () => {
             setTotalBills(data.totalBills);
         } catch (error) {
             console.error('Failed to fetch bills:', error);
-            toast.error('Failed to load transaction audit logs');
+            toast.error('Failed to load transaction records');
         } finally {
             setLoading(false);
         }
@@ -149,12 +149,12 @@ const TransactionsPage = () => {
             // Columns Definition
             const columns = [
                 { header: 'INVOICE_ID', key: 'id', width: 15 },
-                { header: 'TIMESTAMP', key: 'date', width: 15 },
-                { header: 'PATIENT_ENTITY', key: 'patient', width: 25 },
+                { header: 'DATE', key: 'date', width: 15 },
+                { header: 'PATIENT', key: 'patient', width: 25 },
                 { header: 'CONTACT', key: 'phone', width: 15 },
-                { header: 'GATEWAY', key: 'mode', width: 12 },
-                { header: 'QUANTUM (₹)', key: 'amount', width: 12 },
-                { header: 'VALIDATION', key: 'status', width: 12 },
+                { header: 'PAYMENT', key: 'mode', width: 12 },
+                { header: 'AMOUNT (₹)', key: 'amount', width: 12 },
+                { header: 'STATUS', key: 'status', width: 12 },
             ];
 
             // Header Row Styling
@@ -170,7 +170,7 @@ const TransactionsPage = () => {
                 cell.font = { color: { argb: 'FFFFFFFF' }, bold: true, size: 10 };
                 cell.alignment = { horizontal: 'center', vertical: 'middle' };
                 cell.border = {
-                    bottom: { style: 'medium', color: { argb: 'FF3B82F6' } }
+                    bottom: { style: 'medium', color: { argb: 'FF10B981' } } // Emerald 500
                 };
             });
 
@@ -222,18 +222,18 @@ const TransactionsPage = () => {
             // Footer / Metrics
             const totalQuantum = allBills.reduce((acc, b) => acc + (b.paymentSummary.grandTotal || 0), 0);
             const summaryRowIdx = 8 + allBills.length + 1;
-            worksheet.getCell(`E${summaryRowIdx}`).value = 'AGGREGATE:';
+            worksheet.getCell(`E${summaryRowIdx}`).value = 'TOTAL REVENUE:';
             worksheet.getCell(`F${summaryRowIdx}`).value = totalQuantum;
             worksheet.getCell(`E${summaryRowIdx}`).font = { bold: true };
-            worksheet.getCell(`F${summaryRowIdx}`).font = { bold: true, size: 12, color: { argb: 'FF2563EB' } };
+            worksheet.getCell(`F${summaryRowIdx}`).font = { bold: true, size: 12, color: { argb: 'FF059669' } }; // Emerald 600
 
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            saveAs(blob, `Pharma_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
-            toast.success('Audit Log exported successfully');
+            saveAs(blob, `Pharmacy_Sales_${new Date().toISOString().split('T')[0]}.xlsx`);
+            toast.success('Sales ledger exported');
         } catch (error) {
             console.error('Export Error:', error);
-            toast.error('Manifest extraction failed');
+            toast.error('Export failed');
         } finally {
             setIsExporting(false);
         }
@@ -244,17 +244,17 @@ const TransactionsPage = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Transaction Logs</h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">Sales Audit & Revenue Tracking</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Sales History</h1>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider">View and manage your pharmacy sales</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleExportExcel}
                         disabled={isExporting}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm dark:bg-indigo-950/20 dark:border-indigo-900/30 disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30 disabled:opacity-50"
                     >
                         <Download size={16} />
-                        {isExporting ? 'Exporting...' : 'Export Audit'}
+                        {isExporting ? 'Exporting...' : 'Export Ledger'}
                     </button>
                 </div>
             </div>
@@ -270,14 +270,14 @@ const TransactionsPage = () => {
                             type="date"
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white"
                         />
                     </div>
 
                     {/* Payment Filter */}
                     <div className="relative w-full md:w-auto min-w-[160px]">
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-blue-500 dark:text-white cursor-pointer appearance-none"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none ring-1 ring-gray-100 dark:ring-gray-700 focus:ring-2 focus:ring-emerald-500 dark:text-white cursor-pointer appearance-none"
                             value={paymentFilter}
                             onChange={e => setPaymentFilter(e.target.value)}
                         >
@@ -298,17 +298,17 @@ const TransactionsPage = () => {
                         <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
-                            placeholder="Search invoices by ID, patient name, or mobile..."
+                            placeholder="Search by ID, patient name, or mobile..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                            className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white"
                         />
                     </div>
 
                     {/* Refresh Button */}
                     <button
                         onClick={() => fetchBills(1)}
-                        className="p-3 w-full md:w-auto flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all border border-gray-100 dark:border-gray-700"
+                        className="p-3 w-full md:w-auto flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-emerald-500 transition-all border border-gray-100 dark:border-gray-700"
                     >
                         <RefreshCcw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
@@ -351,7 +351,7 @@ const TransactionsPage = () => {
                                     <tr key={bill._id} className="group hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
                                         <td className="px-6 md:px-8 py-5">
                                             <div className="flex items-center gap-2">
-                                                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
+                                                <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl">
                                                     <Hash size={14} />
                                                 </div>
                                                 <span className="font-black text-xs text-gray-900 dark:text-white uppercase tracking-tight">{bill.invoiceId}</span>
@@ -389,7 +389,7 @@ const TransactionsPage = () => {
                                             <div className="flex items-center justify-center gap-2">
                                                 <button
                                                     onClick={() => setSelectedBill(bill)}
-                                                    className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+                                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors"
                                                     title="View Invoice"
                                                 >
                                                     <Eye size={16} />
@@ -403,7 +403,7 @@ const TransactionsPage = () => {
                                                 </button>
                                                 <button
                                                     onClick={() => onPrintClick(bill)}
-                                                    className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                                                    className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors"
                                                     title="Print Invoice"
                                                 >
                                                     <Printer size={16} />
@@ -417,45 +417,33 @@ const TransactionsPage = () => {
                     </table>
                 </div>
 
-                {/* Pagination */}
-                {bills.length > 0 && (
-                    <div className="p-6 border-t border-gray-50 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center sm:text-left">
-                            Showing page {currentPage} of {totalPages}
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                                className="p-2 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                    <button
-                                        key={page}
-                                        onClick={() => setCurrentPage(page)}
-                                        className={`w-8 h-8 rounded-xl text-[10px] font-black transition-all ${currentPage === page
-                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none'
-                                            : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                            }`}
-                                    >
-                                        {page}
-                                    </button>
-                                ))}
-                            </div>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages}
-                                className="p-2 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
-                            >
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
+            {/* Pagination Controls */}
+            {!loading && bills.length > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 p-4 md:p-6 bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2 order-2 sm:order-1">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
+                        >
+                            Next
+                        </button>
                     </div>
-                )}
-            </div>
+                    <div className="flex items-center gap-3 order-1 sm:order-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            Page <span className="text-emerald-600">{currentPage}</span> of {totalPages}
+                        </span>
+                    </div>
+                </div>
+            )}
+        </div>
 
             {/* Hidden Print Component */}
             <div style={{ display: 'none' }}>

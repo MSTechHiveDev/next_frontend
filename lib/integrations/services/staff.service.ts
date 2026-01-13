@@ -88,7 +88,7 @@ export const staffService = {
 
   // Schedule
   getSchedule: () =>
-    apiClient<{ schedule: any }>(STAFF_ENDPOINTS.SCHEDULE),
+    apiClient<{ schedule: any; approvedLeaves: any[] }>(STAFF_ENDPOINTS.SCHEDULE),
 
   // Payroll
   getPayroll: () =>

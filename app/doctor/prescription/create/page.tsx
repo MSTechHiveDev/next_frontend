@@ -20,7 +20,8 @@ import {
     Pill,
     AlertCircle,
     CheckCircle2,
-    X
+    X,
+    FlaskConical
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -88,6 +89,8 @@ export default function CreatePrescriptionPage() {
     const [formData, setFormData] = useState<PrescriptionForm>(INITIAL_FORM);
     const [loading, setLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [isSendingLab, setIsSendingLab] = useState(false);
     
     // Suggestion State
     const [activeMedIndex, setActiveMedIndex] = useState<number | null>(null);
@@ -405,7 +408,9 @@ export default function CreatePrescriptionPage() {
                 dietAdvice: formData.dietAdvice,
                 suggestedTests: formData.suggestedTests,
                 avoid: formData.avoid,
-                aiGenerated: mode === 'AI'
+                aiGenerated: mode === 'AI',
+                age: formData.age,
+                gender: formData.gender
             });
 
             // Re-use current styled generation logic
@@ -424,6 +429,46 @@ export default function CreatePrescriptionPage() {
             toast.error(error.message || "Failed to save prescription");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleSendToPharmacy = async () => {
+        if (!appointmentId) return toast.error("Appointment ID is required");
+        if (formData.medicines.length === 0) return toast.error("At least one medicine is required");
+
+        try {
+            setIsSending(true);
+            await doctorService.createPharmacyToken({
+                appointmentId,
+                medicines: formData.medicines,
+                priority: 'routine',
+                notes: formData.followUp
+            });
+            toast.success("Sent to Pharmacy Successfully!");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to send to pharmacy");
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    const handleSendToLab = async () => {
+        if (!appointmentId) return toast.error("Appointment ID is required");
+        if (formData.suggestedTests.length === 0) return toast.error("At least one test is required");
+
+        try {
+            setIsSendingLab(true);
+            await doctorService.createLabToken({
+                appointmentId,
+                tests: formData.suggestedTests.map(t => ({ testName: t, testId: 'MANUAL', type: 'Pathology' })),
+                priority: 'regular',
+                notes: formData.diagnosis
+            });
+            toast.success("Sent to Lab Successfully!");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to send to lab");
+        } finally {
+            setIsSendingLab(false);
         }
     };
 
@@ -598,6 +643,30 @@ export default function CreatePrescriptionPage() {
                             </ul>
                         </div>
                         ` : ''}
+                    </div>
+                    
+                    {/* Suggested Tests */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-widest">Lab Tests</h2>
+                             <button onClick={() => addArrayItem('suggestedTests')} className="text-teal-600 hover:bg-teal-50 p-1.5 rounded-lg transition-colors"><Plus size={14} /></button>
+                        </div>
+                        <div className="space-y-2">
+                             {formData.suggestedTests.length === 0 && (
+                                <p className="text-xs text-slate-400 font-medium italic">No tests suggested.</p>
+                            )}
+                            {formData.suggestedTests.map((item, idx) => (
+                                <div key={idx} className="flex gap-2">
+                                    <input
+                                        value={item}
+                                        onChange={(e) => updateArrayItem('suggestedTests', idx, e.target.value)}
+                                        className="flex-1 px-3 py-2 bg-slate-50 border-slate-200 border rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                                        placeholder="Test name (e.g. CBC)..."
+                                    />
+                                    <button onClick={() => removeArrayItem('suggestedTests', idx)} className="text-slate-300 hover:text-rose-500"><X size={16} /></button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     ${formData.followUp ? `
@@ -803,7 +872,7 @@ export default function CreatePrescriptionPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between">
                                 Symptoms / Complaints
                                 {mode === 'AI' && <span className="text-indigo-500 flex items-center gap-1"><Sparkles size={10} /> AI Ready</span>}
                             </label>
@@ -818,7 +887,7 @@ export default function CreatePrescriptionPage() {
                             {mode === 'AI' && (
                                 <button
                                     onClick={handleGeneratePrescription}
-                                    className="mt-3 w-full py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"
+                                    className="mt-3 w-full py-2.5 bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"
                                 >
                                     <Sparkles size={14} /> Auto-Generate Rx
                                 </button>
@@ -855,7 +924,7 @@ export default function CreatePrescriptionPage() {
 
                     <div className="space-y-3">
                          {/* Column Headers */}
-                         <div className="grid grid-cols-12 gap-3 px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:grid">
+                         <div className="grid-cols-12 gap-3 px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:grid">
                              <div className="col-span-4">Medicine (Search)</div>
                              <div className="col-span-2">Dosage</div>
                              <div className="col-span-2">Freq</div>
@@ -981,6 +1050,30 @@ export default function CreatePrescriptionPage() {
                         </div>
                     </div>
 
+                    {/* Suggested Tests */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                         <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+                            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-widest">Lab Tests</h2>
+                             <button onClick={() => addArrayItem('suggestedTests')} className="text-teal-600 hover:bg-teal-50 p-1.5 rounded-lg transition-colors"><Plus size={14} /></button>
+                        </div>
+                        <div className="space-y-2">
+                             {formData.suggestedTests.length === 0 && (
+                                <p className="text-xs text-slate-400 font-medium italic">No tests suggested.</p>
+                            )}
+                            {formData.suggestedTests.map((item, idx) => (
+                                <div key={idx} className="flex gap-2">
+                                    <input
+                                        value={item}
+                                        onChange={(e) => updateArrayItem('suggestedTests', idx, e.target.value)}
+                                        className="flex-1 px-3 py-2 bg-slate-50 border-slate-200 border rounded-lg text-sm focus:outline-none focus:border-teal-500"
+                                        placeholder="Test name (e.g. CBC)..."
+                                    />
+                                    <button onClick={() => removeArrayItem('suggestedTests', idx)} className="text-slate-300 hover:text-rose-500"><X size={16} /></button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -1023,6 +1116,14 @@ export default function CreatePrescriptionPage() {
                         Clear Form
                     </button>
                     <button 
+                        onClick={handleSendToPharmacy}
+                        disabled={isSending || formData.medicines.length === 0}
+                        className="px-6 py-3 bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 rounded-xl font-bold uppercase text-xs tracking-wider hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                         {isSending ? <Loader2 className="animate-spin" size={16} /> : <Pill size={16} />}
+                         Send to Pharmacy
+                    </button>         
+                    <button 
                         onClick={handleSubmit} 
                         disabled={isSaving}
                         className="px-10 py-3 bg-teal-600 text-white shadow-xl shadow-teal-600/20 rounded-xl font-bold uppercase text-xs tracking-wider hover:bg-teal-700 active:scale-95 transition-all flex items-center gap-2"
@@ -1038,7 +1139,7 @@ export default function CreatePrescriptionPage() {
             {showSuccess && generatedHtml && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center space-y-6 animate-in zoom-in-95 duration-300 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-teal-400 to-indigo-500"></div>
+                        <div className="absolute top-0 left-0 right-0 h-2 bg-linear-to-r from-teal-400 to-indigo-500"></div>
                         <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
                             <CheckCircle2 size={40} />
                         </div>

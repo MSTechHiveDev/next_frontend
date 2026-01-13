@@ -113,18 +113,18 @@ export default function PatientsPage() {
                      <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b border-gray-200">
                            <tr>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Patient Name</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Demographics</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Last Visit</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Latest Condition</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Action</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Patient Name</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Demographics</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Last Visit</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Latest Condition</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right whitespace-nowrap">Action</th>
                            </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                            {patients.length > 0 ? (
                               patients.map((patient) => (
                                  <tr key={patient.id} className="hover:bg-blue-50/50 transition-colors group">
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                        <div className="flex items-center gap-3">
                                           <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
                                              {patient.name.charAt(0)}
@@ -135,19 +135,19 @@ export default function PatientsPage() {
                                           </div>
                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                        <div className="text-sm text-gray-700">
                                           <p>{patient.age ? `${patient.age} Years` : 'N/A'}</p>
                                           <p className="text-xs text-gray-500">{patient.gender || 'Unknown'}</p>
                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                        <div className="flex items-center gap-2 text-sm text-gray-600">
                                           <Calendar size={14} className="text-gray-400" />
                                           {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'N/A'}
                                        </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                        {patient.condition ? (
                                           <span className="px-3 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full border border-yellow-100 inline-flex items-center gap-1 max-w-[200px] truncate">
                                              <Activity size={12} className="shrink-0" /> {patient.condition}
@@ -156,7 +156,7 @@ export default function PatientsPage() {
                                           <span className="text-gray-400 text-sm">-</span>
                                        )}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-6 py-4 text-right whitespace-nowrap">
                                        <Link href={`/doctor/patients/${patient.id}`} className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-600 hover:text-white transition-all transform hover:scale-110">
                                           <ArrowRight size={16} />
                                        </Link>

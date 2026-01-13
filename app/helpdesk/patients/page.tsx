@@ -78,8 +78,14 @@ export default function PatientsPage() {
         try {
             const patientId = patient._id || patient.id;
             setFetchingReceipt(patientId);
-            const apps: any = await helpdeskService.getAppointments();
-            const patientApps = apps.filter((a: any) => (a.patient?._id || a.patient) === patientId);
+            
+            // Pass filtered patientId and larger limit to ensure we get history
+            const res: any = await helpdeskService.getAppointments(1, 50, patientId);
+            
+            // Handle response structure (it returns { data: [], pagination: {} })
+            const apps = Array.isArray(res) ? res : (res.data || []);
+            
+            const patientApps = apps; // Backend should already filter by patientId provided above, but apps is the result
             
             if (patientApps.length === 0) {
                 toast.error("No clinical history found");

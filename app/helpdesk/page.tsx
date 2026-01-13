@@ -246,7 +246,7 @@ export default function HelpdeskDashboard() {
 
             {/* LIST CONTENT */}
             <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-50 px-2">
-              {appointments.filter(a => activeTab === 'history' ? ['Completed', 'cancelled', 'no-show'].includes(a.status) : !['Completed', 'cancelled', 'no-show'].includes(a.status)).length > 0 ? (
+              {appointments.filter(a => activeTab === 'history' ? ['completed', 'cancelled', 'no-show', 'rejected'].includes(a.status?.toLowerCase()) : !['completed', 'cancelled', 'no-show', 'rejected'].includes(a.status?.toLowerCase())).length > 0 ? (
                 <>
                   <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                     <div className="col-span-1 border-r border-slate-100">#</div>
@@ -255,7 +255,7 @@ export default function HelpdeskDashboard() {
                     <div className="col-span-3 text-right">Actions</div>
                   </div>
                   {appointments
-                    .filter(a => activeTab === 'history' ? ['Completed', 'cancelled', 'no-show'].includes(a.status) : !['Completed', 'cancelled', 'no-show'].includes(a.status))
+                    .filter(a => activeTab === 'history' ? ['completed', 'cancelled', 'no-show', 'rejected'].includes(a.status?.toLowerCase()) : !['completed', 'cancelled', 'no-show', 'rejected'].includes(a.status?.toLowerCase()))
                     .map((apt, idx) => (
                     <div key={idx} className="p-6 grid grid-cols-1 sm:grid-cols-12 items-center gap-4 hover:bg-slate-50 transition-all group rounded-xl">
                       <div className="col-span-1 border-r border-slate-100">
@@ -272,11 +272,47 @@ export default function HelpdeskDashboard() {
                           <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight truncate">
                             {apt.patientName || "Unknown Patient"}
                           </h4>
-                          <span className={`text-[8px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-widest mt-1 inline-block ${
-                            apt.type?.toLowerCase() === 'emergency' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-100 text-slate-500 border border-transparent'
-                          }`}>
-                            {apt.type || 'Standard'} • {apt.time || "N/A"}
-                          </span>
+                          {['booked', 'pending', 'confirmed', 'in session', 'scheduled'].includes(apt.status?.toLowerCase()) ? (
+                              (() => {
+                                  let startTime = apt.createdAt ? new Date(apt.createdAt) : null;
+                                  
+                                  // Fallback to date + time parsing if createdAt is missing/invalid or results in 0m (meaning likely now)
+                                  if ((!startTime || isNaN(startTime.getTime())) && apt.date && apt.time) {
+                                      try {
+                                        const d = new Date(apt.date);
+                                        const t = apt.time.match(/(\d+):(\d+) (AM|PM)/i);
+                                        if (t) {
+                                            let hours = parseInt(t[1]);
+                                            const mins = parseInt(t[2]);
+                                            const ampm = t[3].toUpperCase();
+                                            if (ampm === 'PM' && hours < 12) hours += 12;
+                                            if (ampm === 'AM' && hours === 12) hours = 0;
+                                            d.setHours(hours, mins, 0, 0);
+                                            startTime = d;
+                                        }
+                                      } catch (e) {}
+                                  }
+                                  
+                                  if (!startTime || isNaN(startTime.getTime())) startTime = new Date(); // Safety fallback
+
+                                  const diff = Math.floor((new Date().getTime() - startTime.getTime()) / 60000);
+                                  // If diff is massive (e.g. wrong year), cap it or show 0. But let's assume reasonable.
+                                  // If diff is negative (future appointment), show 0m.
+                                  const waitTime = diff < 0 ? '0m' : diff < 60 ? diff + 'm' : Math.floor(diff / 60) + 'h ' + (diff % 60) + 'm';
+                                  
+                                  return (
+                                    <span className="text-[8px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-amber-50 text-amber-600 border border-amber-100">
+                                        <Clock size={10} /> Wait: {waitTime}
+                                    </span>
+                                  );
+                              })()
+                          ) : (
+                            <span className={`text-[8px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-widest mt-1 inline-block ${
+                                apt.type?.toLowerCase() === 'emergency' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-100 text-slate-500 border border-transparent'
+                            }`}>
+                                {apt.type || 'Standard'} • {apt.time || "N/A"}
+                            </span>
+                          )}
                         </div>
                       </div>
 

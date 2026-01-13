@@ -14,7 +14,7 @@ export default function PatientBookingPage(props: PageProps) {
   const params = use(props.params);
   const router = useRouter();
   const { getPatient, addAppointment, doctors, hospitalDetails, appointments } = useHelpdeskStore();
-  const [selectedDoctor, setSelectedDoctor] = useState(doctors[0].id);
+  const [selectedDoctor, setSelectedDoctor] = useState(doctors[0]?._id);
   const [selectedSlot, setSelectedSlot] = useState('');
   
   const [patient, setPatient] = useState<any>(null);
@@ -38,7 +38,7 @@ export default function PatientBookingPage(props: PageProps) {
         return;
     }
 
-    const doctor = doctors.find(d => d.id === selectedDoctor);
+    const doctor = doctors.find(d => d._id === selectedDoctor);
     if (!doctor || !patient) return;
 
     // Check duplicate appointment
@@ -53,11 +53,12 @@ export default function PatientBookingPage(props: PageProps) {
         patientName: patient.name,
         patientId: patient.id,
         doctorName: doctor.name,
-        doctorId: doctor.id,
+        doctorId: doctor._id,
         time: new Date().toISOString(), // In real app, combine date + slot
         type: 'Consultation',
         status: 'Scheduled' as const,
-        slot: selectedSlot // Add slot to object
+        slot: selectedSlot, // Add slot to object
+        date: new Date().toISOString() // Required by type
     };
 
     addAppointment(newAppointment);
@@ -120,7 +121,7 @@ export default function PatientBookingPage(props: PageProps) {
                       <div>
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Consultation Details</p>
                           <h2 className="text-2xl font-bold text-blue-900">{val(bookedAppointment.doctorName)}</h2>
-                          <p className="font-semibold text-gray-800 text-lg">{doctors.find(d => d.id === bookedAppointment.doctorId)?.specialty}</p>
+                          <p className="font-semibold text-gray-800 text-lg">{doctors.find(d => d._id === bookedAppointment.doctorId)?.specialties?.[0]}</p>
                           <p className="text-sm text-gray-500 mt-2">Appt ID: <span className="font-mono font-bold text-black text-base">{bookedAppointment.id}</span></p>
                       </div>
                       <div className="text-right">
@@ -263,19 +264,19 @@ export default function PatientBookingPage(props: PageProps) {
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {doctors.map((doc) => (
                 <div 
-                  key={doc.id}
-                  onClick={() => setSelectedDoctor(doc.id)}
+                  key={doc._id}
+                  onClick={() => setSelectedDoctor(doc._id)}
                   className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                    selectedDoctor === doc.id 
+                    selectedDoctor === doc._id 
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10 ring-1 ring-blue-500' 
                       : 'border-gray-100 dark:border-gray-800 hover:border-blue-200'
                   }`}
                 >
                   <p className="font-bold text-gray-900 dark:text-white">{doc.name}</p>
-                  <p className="text-xs text-gray-500">{doc.specialty}</p>
+                  <p className="text-xs text-gray-500">{doc.specialties?.[0] || 'General'}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${doc.availability === 'Available' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                    <span className="text-[10px] font-medium text-gray-400 uppercase">{doc.availability}</span>
+                    <span className={`w-2 h-2 rounded-full ${(doc.availability && doc.availability.length > 0) ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    <span className="text-[10px] font-medium text-gray-400 uppercase">{(doc.availability && doc.availability.length > 0) ? 'Available' : 'Unavailable'}</span>
                   </div>
                 </div>
               ))}

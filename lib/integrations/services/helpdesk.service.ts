@@ -173,8 +173,8 @@ export const helpdeskService = {
    * Get all appointments for the helpdesk
    * @returns List of appointments
    */
-  getAppointments: (page: number = 1, limit: number = 10) =>
-    apiClient<any>(`${HELPDESK_ENDPOINTS.APPOINTMENTS}?page=${page}&limit=${limit}`),
+  getAppointments: (page: number = 1, limit: number = 10, patientId?: string) =>
+    apiClient<any>(`${HELPDESK_ENDPOINTS.APPOINTMENTS}?page=${page}&limit=${limit}${patientId ? `&patientId=${patientId}` : ''}`),
 
   /**
    * Get all transactions/payments
@@ -188,8 +188,15 @@ export const helpdeskService = {
    * Get all clinical transits for the hospital
    * @returns List of transits
    */
-  getTransits: () =>
-    apiClient<{ success: boolean; transits: any[] }>(TRANSIT_ENDPOINTS.LIST),
+  getTransits: (params?: { page?: number; limit?: number; search?: string; type?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.search) query.append('search', params.search);
+    if (params?.type && params.type !== 'all') query.append('type', params.type);
+    
+    return apiClient<{ success: boolean; transits: any[]; pagination: any }>(`${TRANSIT_ENDPOINTS.LIST}?${query.toString()}`);
+  },
 
   /**
    * Mark transit documents as collected

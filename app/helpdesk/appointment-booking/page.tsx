@@ -157,11 +157,8 @@ export default function AppointmentBooking() {
       setSelectedSlot(null);
       const res = await helpdeskService.getAvailability(selectedDoctor._id, profile.hospital._id, selectedDate);
       setAvailableSlots(res.slots || []);
-      if (res.slots && res.slots.length > 0) {
-          setBookingMode('slot');
-      } else {
-          setBookingMode('queue');
-      }
+      // Force queue mode regardless of availability
+      setBookingMode('queue');
     } catch (e) {
       setBookingMode('queue');
       setAvailableSlots([]);
@@ -175,7 +172,6 @@ export default function AppointmentBooking() {
   const handleBooking = async () => {
     if (!selectedPatient) { toast.error("Select a patient object"); return; }
     if (!selectedDoctor) { toast.error("Select a physician"); return; }
-    if (bookingMode === 'slot' && !selectedSlot) { toast.error("Select an allocation slot"); return; }
     
     try {
       setSubmitting(true);
@@ -443,27 +439,7 @@ export default function AppointmentBooking() {
                                 />
                             </div>
                         </div>
-                        <div className="space-y-4">
-                            <FormLabel label="Booking Mode" />
-                            <div className="flex p-1 bg-slate-100 rounded-2xl border border-slate-200 h-[58px]">
-                                <button 
-                                    onClick={() => setBookingMode('queue')}
-                                    className={`flex-1 flex items-center justify-center gap-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                        bookingMode === 'queue' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                                >
-                                    <Activity size={14} /> Wait in Queue
-                                </button>
-                                <button 
-                                    onClick={() => setBookingMode('slot')}
-                                    className={`flex-1 flex items-center justify-center gap-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                        bookingMode === 'slot' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                                >
-                                    <Clock size={14} /> Scheduled Slot
-                                </button>
-                            </div>
-                        </div>
+
                     </div>
 
                     <div className="space-y-4">
@@ -496,44 +472,7 @@ export default function AppointmentBooking() {
                         </div>
                     </div>
 
-                    {selectedDoctor && bookingMode === 'slot' && (
-                        <div className="pt-8 border-t border-slate-50 space-y-6 animate-in slide-in-from-top-4 duration-300">
-                            <div className="flex items-center justify-between">
-                                <FormLabel label="Available Allocation Units" />
-                                {loadingSlots && <Loader2 size={16} className="animate-spin text-teal-600" />}
-                            </div>
-                            
-                            {availableSlots.length > 0 ? (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                    {availableSlots.map((slot, idx) => (
-                                        <button
-                                            key={idx}
-                                            disabled={slot.isFull}
-                                            onClick={() => setSelectedSlot(slot.timeSlot)}
-                                            className={`py-4 px-4 rounded-xl border-2 text-center transition-all ${
-                                                selectedSlot === slot.timeSlot
-                                                ? 'bg-teal-600 border-teal-600 text-white shadow-xl shadow-teal-900/20'
-                                                : slot.isFull
-                                                ? 'bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed opacity-50'
-                                                : 'bg-white border-slate-100 hover:border-teal-500 text-slate-700 font-bold'
-                                            }`}
-                                        >
-                                            <p className="text-[11px] font-black">{slot.timeSlot}</p>
-                                            <p className={`text-[8px] font-bold mt-1 uppercase ${selectedSlot === slot.timeSlot ? 'text-teal-100' : 'text-slate-400'}`}>
-                                                {slot.isFull ? 'CLOSED' : `${slot.availableCount} SLOTS`}
-                                            </p>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : !loadingSlots && (
-                                <div className="p-12 text-center bg-slate-50 rounded-[24px] border-2 border-dashed border-slate-200">
-                                    <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-black italic">
-                                        No slots found. Use Queue Mode for this date.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+
                 </section>
 
                 {/* 3. CLINICAL SYMPTOMS & TRIAGE */}

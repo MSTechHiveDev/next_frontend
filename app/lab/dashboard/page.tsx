@@ -63,7 +63,7 @@ export default function LabDashboard() {
                     <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 border-indigo-500`}>
                         <div className="flex-1 w-0 p-4">
                             <div className="flex items-start">
-                                <div className="flex-shrink-0 pt-0.5">
+                                <div className="shrink-0 pt-0.5">
                                     <Microscope className="h-10 w-10 text-indigo-500" />
                                 </div>
                                 <div className="ml-3 flex-1">
@@ -91,24 +91,37 @@ export default function LabDashboard() {
         };
     }, [user?.hospitalId, range]);
 
-    const StatCard = ({ title, value, icon: Icon, color, subValue }: any) => (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group transition-colors">
-            <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 bg-${color}-50 dark:bg-${color}-900/20 rounded-full group-hover:scale-110 transition-transform duration-500 opacity-50`}></div>
-            <div className="flex items-start justify-between relative z-10">
-                <div>
-                    <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-1">{title}</p>
-                    <h3 className="text-3xl font-black text-gray-900 dark:text-white">{value}</h3>
-                    {subValue && <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-semibold flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3 text-green-500" />
-                        {subValue}
-                    </p>}
+    const StatCard = ({ title, value, icon: Icon, color, subValue }: any) => {
+        const colorVariants: any = {
+            indigo: 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400',
+            emerald: 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400',
+            blue: 'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400',
+            purple: 'bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400',
+            orange: 'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400',
+            rose: 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400',
+        };
+
+        return (
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                <div className="flex items-start justify-between relative z-10">
+                    <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">{title}</p>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{value}</h3>
+                        {subValue && (
+                            <div className="flex items-center gap-1.5 mt-3 px-2 py-1 bg-gray-50 dark:bg-gray-700/50 rounded-lg w-fit">
+                                <Activity className="w-3 h-3 text-emerald-500" />
+                                <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">{subValue}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className={`p-3.5 rounded-2xl ${colorVariants[color] || colorVariants.indigo} transition-transform group-hover:scale-110 duration-300`}>
+                        <Icon className="w-6 h-6" />
+                    </div>
                 </div>
-                <div className={`p-3 bg-${color}-50 dark:bg-${color}-900/30 rounded-xl text-${color}-600 dark:text-${color}-400`}>
-                    <Icon className="w-6 h-6" />
-                </div>
+                <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gray-50 dark:bg-gray-700/20 rounded-full group-hover:scale-150 transition-transform duration-700 opacity-50" />
             </div>
-        </div>
-    );
+        );
+    };
 
     const rangeLabels: any = {
         'today': 'Today',
@@ -116,28 +129,45 @@ export default function LabDashboard() {
         '1month': 'Last 1 Month'
     };
 
-    if (loading && !stats) return <div className="p-10 text-center font-bold text-gray-400 animate-pulse uppercase tracking-widest">Loading Analytics...</div>;
+    if (loading && !stats) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Microscope className="w-6 h-6 text-indigo-600 animate-pulse" />
+                    </div>
+                </div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading Lab Dashboard...</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto min-h-screen bg-gray-50/30 dark:bg-gray-900 transition-colors duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
+            {/* Header Section */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-                        <Microscope className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
-                        Lab Dashboard
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">Real-time laboratory diagnostics & performance tracking</p>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                            <Microscope className="w-6 h-6 text-white" />
+                        </div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Lab Dashboard</h1>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                        Real-time <span className="text-indigo-600 dark:text-indigo-400">Statistics & Overview</span>
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
+                <div className="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl border border-gray-200/50 dark:border-gray-700 w-fit">
                     {Object.keys(rangeLabels).map((r) => (
                         <button
                             key={r}
                             onClick={() => setRange(r)}
-                            className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${range === r
-                                ? 'bg-indigo-600 text-white shadow-md'
-                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            className={`px-6 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${range === r
+                                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-white shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-600/50'
+                                : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
                                 }`}
                         >
                             {rangeLabels[r]}
@@ -146,8 +176,8 @@ export default function LabDashboard() {
                 </div>
             </div>
 
-            {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
+            {/* Core Metrics Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
                 <StatCard
                     title="Revenue"
                     value={`₹${stats?.revenue.toLocaleString() || 0}`}
@@ -167,14 +197,14 @@ export default function LabDashboard() {
                     color="blue"
                 />
                 <StatCard
-                    title="Total Tests"
+                    title="Master List"
                     value={stats?.totalTestMaster || 0}
                     icon={Layers}
                     color="purple"
-                    subValue={stats?.totalTests ? `${stats.totalTests} performed` : undefined}
+                    subValue={stats?.totalTests ? `${stats.totalTests} done` : undefined}
                 />
                 <StatCard
-                    title="Departments"
+                    title="Units"
                     value={stats?.totalDepartments || 0}
                     icon={Network}
                     color="orange"
@@ -187,112 +217,132 @@ export default function LabDashboard() {
                 />
             </div>
 
-            {/* Payment Breakdown Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4 transition-colors">
-                    <div className="p-3 bg-green-50 dark:bg-green-500/10 rounded-xl text-green-600 dark:text-green-400">
-                        <Wallet className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cash Collection</p>
-                        <h4 className="text-xl font-black text-gray-900 dark:text-white">₹{stats?.paymentBreakdown.Cash.toLocaleString() || 0}</h4>
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4 transition-colors">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
-                        <ArrowUpRight className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">UPI Collection</p>
-                        <h4 className="text-xl font-black text-gray-900 dark:text-white">₹{stats?.paymentBreakdown.UPI.toLocaleString() || 0}</h4>
-                    </div>
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4 transition-colors">
-                    <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-xl text-purple-600 dark:text-purple-400">
-                        <Layers className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Card Collection</p>
-                        <h4 className="text-xl font-black text-gray-900 dark:text-white">₹{stats?.paymentBreakdown.Card.toLocaleString() || 0}</h4>
-                    </div>
-                </div>
-            </div>
-
-            {/* Active Tests Section */}
-            <div className="mb-10">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-                        <Activity className="text-rose-500 animate-pulse" />
-                        Active Patient Tests
-                        <span className="bg-rose-100 text-rose-600 text-xs px-2 py-1 rounded-full">{activeTests.length} Pending</span>
-                    </h2>
-                    <Link href="/lab/samples" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-                        View All Samples <ArrowUpRight className="w-4 h-4" />
-                    </Link>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                    {activeTests.length === 0 ? (
-                        <div className="p-8 text-center text-gray-400">
-                            <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                            <p className="font-medium">No active tests at the moment</p>
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+                {/* Active Projects / Tests */}
+                <div className="xl:col-span-8 flex flex-col gap-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Activity className="w-5 h-5 text-rose-500" />
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Pending Lab Orders</h2>
+                            <div className="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/30 rounded-lg border border-rose-100 dark:border-rose-900/30">
+                                <span className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">{activeTests.length} Active Orders</span>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-400 font-black tracking-widest">
-                                    <tr>
-                                        <th className="p-4 pl-6">Token / ID</th>
-                                        <th className="p-4">Patient</th>
-                                        <th className="p-4">Tests</th>
-                                        <th className="p-4 text-center">Status</th>
-                                        <th className="p-4 text-right pr-6">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                    {activeTests.map((test) => (
-                                        <tr key={test._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors animate-in fade-in slide-in-from-top-2 duration-300">
-                                            <td className="p-4 pl-6">
-                                                <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm block">{test.tokenNumber || test.sampleId}</span>
-                                                <span className="text-[10px] text-gray-400">{new Date(test.createdAt).toLocaleTimeString()}</span>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="font-bold text-gray-900 dark:text-white text-sm">{test.patientDetails.name}</div>
-                                                <div className="text-[10px] text-gray-400 uppercase font-bold">{test.patientDetails.age}Y • {test.patientDetails.gender}</div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {test.tests.slice(0, 2).map((t, i) => (
-                                                        <span key={i} className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded text-[10px] font-bold border border-purple-100 dark:border-purple-800">
-                                                            {t.testName}
-                                                        </span>
-                                                    ))}
-                                                    {test.tests.length > 2 && (
-                                                        <span className="text-[10px] text-gray-400 font-bold self-center">+{test.tests.length - 2} more</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="p-4 text-center">
-                                                <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wide">
-                                                    {test.status}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-right pr-6">
-                                                <Link href={`/lab/samples`} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
-                                                    Collect Sample
-                                                </Link>
-                                            </td>
+                        <Link href="/lab/samples" className="group flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:text-indigo-700 transition-all">
+                            Lab Samples <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </Link>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-800 rounded-[32px] border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden min-h-[400px]">
+                        {activeTests.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-24 gap-4">
+                                <div className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-full">
+                                    <ClipboardList className="w-12 h-12 text-gray-200" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">All Caught Up</p>
+                                    <p className="text-xs text-gray-300 font-medium">No active samples require attention</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse min-w-[700px]">
+                                    <thead>
+                                        <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                                            <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sample ID</th>
+                                            <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Patient Details</th>
+                                            <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Requested Tests</th>
+                                            <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Status</th>
+                                            <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+                                        {activeTests.map((test) => (
+                                            <tr key={test._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-all group">
+                                                <td className="px-8 py-6">
+                                                    <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg w-fit mb-1 border border-indigo-100 dark:border-indigo-800">
+                                                        <span className="font-bold text-indigo-600 dark:text-indigo-400 text-xs tracking-tight">{test.sampleId}</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{new Date(test.createdAt).toLocaleTimeString()}</span>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <div className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-tight">{test.patientDetails.name}</div>
+                                                    <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-0.5">{test.patientDetails.age}Y • {test.patientDetails.gender}</div>
+                                                </td>
+                                                <td className="px-8 py-6">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {test.tests.slice(0, 2).map((t, i) => (
+                                                            <span key={i} className="bg-slate-50 dark:bg-gray-700/50 text-slate-600 dark:text-gray-300 px-2.5 py-1 rounded-lg text-[9px] font-bold border border-slate-100 dark:border-gray-600 uppercase tracking-wider">
+                                                                {t.testName}
+                                                            </span>
+                                                        ))}
+                                                        {test.tests.length > 2 && (
+                                                            <span className="text-[10px] text-indigo-400 font-bold self-center">+{test.tests.length - 2} ADD</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-6 text-center">
+                                                    <span className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border border-amber-100 dark:border-amber-900/30">
+                                                        {test.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <Link href={`/lab/samples`} className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 dark:shadow-none translate-y-0 active:scale-95">
+                                                        Collect
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Secondary Analytics / Payment Breakdown */}
+                <div className="xl:col-span-4 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <Wallet className="w-5 h-5 text-emerald-500" />
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Payment Breakdown</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        {[
+                            { label: 'Cash Collection', value: stats?.paymentBreakdown.Cash || 0, icon: Wallet, color: 'emerald' },
+                            { label: 'UPI Settlements', value: stats?.paymentBreakdown.UPI || 0, icon: ArrowUpRight, color: 'blue' },
+                            { label: 'Card Terminals', value: stats?.paymentBreakdown.Card || 0, icon: Layers, color: 'purple' },
+                        ].map((item, idx) => (
+                            <div key={idx} className="bg-white dark:bg-gray-800 p-6 rounded-[32px] border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between group transition-all duration-300">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-4 rounded-2xl bg-${item.color}-50 dark:bg-${item.color}-900/20 text-${item.color}-600 dark:text-${item.color}-400 group-hover:scale-110 transition-transform duration-300`}>
+                                        <item.icon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-[2px] mb-1">{item.label}</p>
+                                        <h4 className="text-xl font-bold text-gray-900 dark:text-white">₹{item.value.toLocaleString()}</h4>
+                                    </div>
+                                </div>
+                                <div className={`w-8 h-8 rounded-full bg-${item.color}-50 dark:bg-${item.color}-900/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity`}>
+                                    <ChevronDown className="w-4 h-4 text-gray-400 -rotate-90" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Quick Access Card */}
+                    <div className="bg-indigo-600 rounded-[40px] p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-200 dark:shadow-none">
+                        <div className="relative z-10">
+                            <h3 className="text-xl font-bold mb-2">Need Reports?</h3>
+                            <p className="text-indigo-100 text-sm mb-6 leading-relaxed">Access and export comprehensive diagnostic records for the selected period.</p>
+                            <button className="bg-white text-indigo-600 px-6 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-50 transition-colors">
+                                Export Summary
+                            </button>
                         </div>
-                    )}
+                        <Layers className="absolute -bottom-8 -right-8 w-40 h-40 text-indigo-500/20 rotate-12" />
+                    </div>
                 </div>
             </div>
-
-            {/* Bottom Section */}
-
         </div>
     );
 }

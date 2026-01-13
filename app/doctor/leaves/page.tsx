@@ -109,21 +109,21 @@ export default function DoctorLeaves() {
 
       {/* Main Content: Leave Log */}
       <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-         <div className="p-8 border-b border-gray-50 dark:border-gray-700 flex items-center justify-between">
+         <div className="p-8 border-b border-gray-50 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter italic">Absence Chronology</h3>
                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Registry of all historical and active requests</p>
             </div>
-            <div className="flex items-center gap-3">
-               <div className="relative hidden md:block">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+               <div className="relative w-full md:w-auto">
                   <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="text" 
                     placeholder="Search logs..." 
-                    className="pl-12 pr-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold outline-none ring-2 ring-transparent focus:ring-emerald-500/20 transition-all w-64"
+                    className="pl-12 pr-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold outline-none ring-2 ring-transparent focus:ring-emerald-500/20 transition-all w-full md:w-64"
                   />
                </div>
-               <button className="p-3 bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-2xl hover:text-emerald-500 transition-all">
+               <button className="p-3 bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-2xl hover:text-emerald-500 transition-all shrink-0">
                   <Filter size={18} />
                </button>
             </div>

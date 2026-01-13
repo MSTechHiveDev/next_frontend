@@ -37,6 +37,7 @@ export interface PharmacyBillPayload {
     customerPhone: string;
     items: BillItem[];
     paymentSummary: PaymentSummary;
+    orderId?: string;
 }
 
 export interface PharmacyBill extends PharmacyBillPayload {

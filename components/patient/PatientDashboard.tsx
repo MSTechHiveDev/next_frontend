@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Pill, FlaskConical, FileCheck, Activity, Loader2 } from 'lucide-react';
+import { Calendar, Pill, FlaskConical, FileCheck, Activity, Loader2, UserCircle } from 'lucide-react';
 import { patientService } from '@/lib/integrations/services/patient.service';
 import AppointmentsSection from './AppointmentsSection';
 import PrescriptionsSection from './PrescriptionsSection';
 import LabRecordsSection from './LabRecordsSection';
-import HelpdeskPrescriptionsSection from './HelpdeskPrescriptionsSection';
+import ProfileSection from './ProfileSection';
 
-type TabType = 'appointments' | 'prescriptions' | 'lab-records' | 'helpdesk';
+type TabType = 'appointments' | 'prescriptions' | 'lab-records' | 'profile';
 
 interface DashboardData {
+    profile: any;
     appointments: { count: number; data: any[] };
     prescriptions: { count: number; data: any[] };
     labRecords: { count: number; data: any[] };
@@ -49,31 +50,31 @@ export default function PatientDashboard() {
     const tabs = [
         {
             id: 'appointments' as TabType,
-            label: 'Appointments',
+            label: 'Visits',
             icon: Calendar,
-            count: dashboardData?.appointments.count || 0,
+            count: dashboardData?.appointments?.count || 0,
             color: 'blue',
         },
         {
             id: 'prescriptions' as TabType,
-            label: 'Prescriptions',
+            label: 'Rx',
             icon: Pill,
-            count: dashboardData?.prescriptions.count || 0,
+            count: dashboardData?.prescriptions?.count || 0,
             color: 'green',
         },
         {
             id: 'lab-records' as TabType,
-            label: 'Lab Records',
+            label: 'Lab',
             icon: FlaskConical,
-            count: dashboardData?.labRecords.count || 0,
+            count: dashboardData?.labRecords?.count || 0,
             color: 'purple',
         },
         {
-            id: 'helpdesk' as TabType,
-            label: 'Helpdesk Bookings',
-            icon: FileCheck,
-            count: dashboardData?.helpdeskPrescriptions.count || 0,
-            color: 'indigo',
+            id: 'profile' as TabType,
+            label: 'Profile',
+            icon: UserCircle,
+            count: dashboardData?.profile ? 1 : 0,
+            color: 'orange',
         },
     ];
 
@@ -94,10 +95,10 @@ export default function PatientDashboard() {
                 inactive: 'text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20',
                 badge: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
             },
-            indigo: {
-                active: 'bg-indigo-600 text-white',
-                inactive: 'text-gray-600 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20',
-                badge: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+            orange: {
+                active: 'bg-orange-600 text-white',
+                inactive: 'text-gray-600 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20',
+                badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
             },
         };
 
@@ -109,7 +110,7 @@ export default function PatientDashboard() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                    <p className="text-gray-600 dark:text-gray-300 font-medium">Loading your medical records...</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-medium tracking-tight">Loading Records...</p>
                 </div>
             </div>
         );
@@ -118,17 +119,17 @@ export default function PatientDashboard() {
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center max-w-md">
+                <div className="text-center max-w-md p-6">
                     <Activity className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        Unable to Load Dashboard
+                        Access Error
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
                     <button
                         onClick={fetchDashboardData}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors shadow-lg"
                     >
-                        Try Again
+                        Retry
                     </button>
                 </div>
             </div>
@@ -136,23 +137,35 @@ export default function PatientDashboard() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-lg">
-                <div className="flex items-center gap-3 mb-2">
-                    <Activity className="w-8 h-8" />
-                    <h1 className="text-3xl font-black uppercase tracking-tighter italic">
-                        Medical Dashboard
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 animate-in fade-in duration-700">
+            {/* Simple Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 pb-6 border-b border-gray-100 dark:border-white/5">
+                <div>
+                    <h1 className="text-3xl md:text-5xl font-black text-gray-950 dark:text-white uppercase tracking-tight italic flex items-center gap-3">
+                        <div className="w-1.5 h-8 md:w-2 md:h-10 bg-blue-600 rounded-full hidden sm:block" />
+                        Health <span className="text-blue-600">Records</span>
                     </h1>
+                    <p className="text-gray-500 dark:text-gray-400 font-bold uppercase tracking-[0.2em] text-[9px] sm:text-xs mt-1 sm:mt-2 ml-0.5">
+                        Your Personal Medical History
+                    </p>
                 </div>
-                <p className="text-blue-100 text-sm font-medium">
-                    Access your complete medical history and records
-                </p>
+                
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-white/5 p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-gray-200/50 dark:border-white/5 shadow-sm self-start sm:self-auto">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                        <UserCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+                    </div>
+                    <div>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase text-gray-400 tracking-widest">Signed In</p>
+                        <p className="font-black text-gray-900 dark:text-white uppercase tracking-tight italic text-sm sm:text-base">
+                            {dashboardData?.profile?.user?.name || 'Member'}
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            {/* Tabs */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl p-2 shadow-md">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {/* Responsive Tabs - More Compact on Mobile */}
+            <div className="sticky top-4 z-40">
+                <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl sm:rounded-full p-1.5 shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-white/10 flex overflow-x-auto no-scrollbar md:grid md:grid-cols-4 gap-1.5">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -161,37 +174,53 @@ export default function PatientDashboard() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg font-bold transition-all duration-300 ${getTabColorClasses(tab.color, isActive)}`}
+                                className={`flex-none min-w-[100px] md:min-w-0 md:flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-full font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all duration-300 ${
+                                    isActive 
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 scale-102' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                                }`}
                             >
-                                <div className="flex items-center gap-2">
-                                    <Icon className="w-5 h-5" />
-                                    <span className="hidden md:inline">{tab.label}</span>
-                                    <span className="md:hidden text-xs">{tab.label.split(' ')[0]}</span>
-                                </div>
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${isActive ? 'bg-white/20' : tab.color === 'blue' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' : tab.color === 'green' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' : tab.color === 'purple' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'}`}>
-                                    {tab.count}
-                                </span>
+                                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'animate-pulse' : ''}`} />
+                                <span className="hidden xs:inline">{tab.label}</span>
+                                <span className="xs:hidden">{tab.id === 'appointments' ? 'Visits' : tab.id === 'lab-records' ? 'Labs' : tab.label}</span>
+                                {tab.count > 0 && (
+                                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] ${isActive ? 'bg-white/20' : 'bg-gray-100 dark:bg-white/10 text-gray-400'}`}>
+                                        {tab.count}
+                                    </span>
+                                )}
                             </button>
                         );
                     })}
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="min-h-[400px]">
+            {/* Content Area */}
+            <div className="min-h-[400px] sm:min-h-[600px] animate-in slide-in-from-bottom-4 fade-in duration-500 pb-10">
+                {activeTab === 'profile' && (
+                    <ProfileSection 
+                        profile={dashboardData?.profile} 
+                        appointments={dashboardData?.appointments?.data || []} 
+                    />
+                )}
                 {activeTab === 'appointments' && (
-                    <AppointmentsSection appointments={dashboardData?.appointments.data || []} />
+                    <AppointmentsSection appointments={dashboardData?.appointments?.data || []} />
                 )}
                 {activeTab === 'prescriptions' && (
-                    <PrescriptionsSection prescriptions={dashboardData?.prescriptions.data || []} />
+                    <PrescriptionsSection 
+                        prescriptions={dashboardData?.prescriptions?.data || []} 
+                        patientName={dashboardData?.profile?.user?.name}
+                        patientEmail={dashboardData?.profile?.user?.email || dashboardData?.profile?.email}
+                    />
                 )}
                 {activeTab === 'lab-records' && (
-                    <LabRecordsSection labRecords={dashboardData?.labRecords.data || []} />
-                )}
-                {activeTab === 'helpdesk' && (
-                    <HelpdeskPrescriptionsSection helpdeskItems={dashboardData?.helpdeskPrescriptions.data || []} />
+                    <LabRecordsSection 
+                        labRecords={dashboardData?.labRecords?.data || []} 
+                        patientName={dashboardData?.profile?.user?.name}
+                        patientEmail={dashboardData?.profile?.user?.email || dashboardData?.profile?.email}
+                    />
                 )}
             </div>
         </div>
     );
 }
+

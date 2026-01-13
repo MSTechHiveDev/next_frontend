@@ -1,4 +1,7 @@
 import React from 'react';
+
+export const dynamic = 'force-dynamic';
+
 import { Mail, Phone, Award, MapPin, Edit2 } from 'lucide-react';
 import { getDoctorProfileAction } from '@/lib/integrations';
 import { getDoctorCalendarStatsAction } from '@/lib/integrations/actions/calendar.actions';

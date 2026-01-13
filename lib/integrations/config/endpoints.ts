@@ -76,6 +76,7 @@ export const PHARMACY_ENDPOINTS = {
     BY_ID: (id: string) => `/pharmacy/invoices/${id}`,
     STATS: '/pharmacy/reports/dashboard',
   },
+  ORDERS: (hospitalId: string) => `/pharmacy/orders/hospital/${hospitalId}`,
 };
 
 export const LAB_ENDPOINTS = {
@@ -175,6 +176,7 @@ export const DOCTOR_ENDPOINTS = {
   GET_LAB_TOKEN: (id: string) => `/doctor/lab-tokens/${id}`,
   UPLOAD_PHOTO: '/doctors/upload-photo',
   SEARCH_MEDICINES: '/doctor/medicines/search',
+  CREATE_PHARMACY_TOKEN: '/doctor/pharmacy-tokens',
 };
 
 export const TRANSIT_ENDPOINTS = {

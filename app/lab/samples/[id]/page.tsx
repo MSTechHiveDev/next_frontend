@@ -9,6 +9,7 @@ import { LabSample, SampleTestResult } from '@/lib/integrations/types/labSample'
 import { useReactToPrint } from 'react-to-print';
 import ResultPrintView from '@/components/lab/ResultPrintView';
 import { toast } from 'react-hot-toast';
+import { Activity, ChevronRight, Trash2, Download, Bookmark, Clock } from 'lucide-react';
 
 export default function LabResultEntryPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = React.use(params);
@@ -236,242 +237,368 @@ export default function LabResultEntryPage({ params }: { params: Promise<{ id: s
     if (!sample) return <div className="p-10 text-center text-red-500">Sample not found</div>;
 
     return (
-        <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen pb-32 transition-colors duration-500">
-            {/* Header / Breadcrumb */}
-            <div className="mb-6 flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
-                <div>
-                    <h2 className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide">Entering Results For</h2>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{sample.patientDetails.name}</h1>
-                    <div className="text-gray-600 dark:text-gray-400 text-sm mt-1 flex gap-3">
-                        <span>Sample ID: <span className="font-semibold text-black dark:text-white">{sample.sampleId}</span></span>
-                        <span>•</span>
-                        <span>{sample.patientDetails.age}Y / {sample.patientDetails.gender}</span>
+        <div className="min-h-screen bg-gray-50/50 dark:bg-black p-4 lg:p-8 pb-32 transition-all duration-500">
+            <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700">
+                
+                {/* Strategic Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none animate-pulse">
+                                <Activity className="w-5 h-5 text-white" />
+                            </div>
+                            <h1 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                                Enter Lab Results
+                            </h1>
+                        </div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] ml-1">
+                            Data Entry & Result Validation
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-[20px] shadow-sm border border-gray-100 dark:border-gray-700">
+                        <div className="px-5 py-2.5 bg-gray-50 dark:bg-gray-900 rounded-[14px]">
+                            <span className="text-[10px] font-black text-gray-400 uppercase block tracking-widest">Sample ID</span>
+                            <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 tabular-nums">#{sample.sampleId}</span>
+                        </div>
+                        <div className="px-5 py-2.5 bg-indigo-600 rounded-[14px] text-white">
+                            <span className="text-[10px] font-black opacity-70 uppercase block tracking-widest">Sample Type</span>
+                            <span className="text-sm font-black uppercase tracking-tight">{sample.sampleType}</span>
+                        </div>
                     </div>
                 </div>
-                <div className="bg-purple-100 dark:bg-purple-900/20 px-4 py-2 rounded-lg text-right">
-                    <span className="text-purple-800 dark:text-purple-300 text-xs font-bold uppercase block mb-1">Sample Type</span>
-                    <span className="text-purple-900 dark:text-purple-200 font-semibold">{sample.sampleType}</span>
+
+                {/* Patient Details */}
+                <div className="bg-white dark:bg-gray-900 rounded-[32px] p-8 border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-3xl -mr-32 -mt-32 transition-transform group-hover:scale-110 duration-1000"></div>
+                    
+                    <div className="relative flex flex-col md:flex-row md:items-center gap-10">
+                        <div className="flex items-center gap-6">
+                            <div className="w-20 h-20 rounded-3xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none">
+                                <span className="text-2xl font-black uppercase">{sample.patientDetails.name.charAt(0)}</span>
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                                    {sample.patientDetails.name}
+                                </h2>
+                                <div className="flex items-center gap-3 mt-1.5 font-bold text-gray-400 text-xs">
+                                    <span className="uppercase tracking-wider">{sample.patientDetails.gender}</span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-200"></span>
+                                    <span>{sample.patientDetails.age} Years</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-8">
+                             <div className="space-y-1">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Reference ID</p>
+                                <p className="text-sm font-bold text-gray-700 dark:text-gray-300">REF-{id.slice(-6).toUpperCase()}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sample Type</p>
+                                <p className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight">{sample.sampleType}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Primary Contact</p>
+                                <p className="text-sm font-bold text-gray-700 dark:text-gray-300 tabular-nums">+{sample.patientDetails.mobile || 'N/A'}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Current Status</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    <p className="text-sm font-black text-emerald-600 uppercase tracking-tight">{sample.status}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Analytical Domain Filter */}
+                {(() => {
+                    const departments = Array.from(new Set(testResults.map(t => t.departmentName).filter(Boolean)));
+                    if (departments.length > 0) {
+                        return (
+                            <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-2 rounded-[24px] border border-gray-100 dark:border-gray-800 shadow-sm w-fit max-w-full overflow-hidden">
+                                 <button
+                                    onClick={() => setSelectedDept('All')}
+                                    className={`px-6 py-2.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedDept === 'All'
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
+                                        : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+                                        }`}
+                                >
+                                    All Departments
+                                </button>
+                                {departments.map(dept => (
+                                    <button
+                                        key={dept}
+                                        onClick={() => setSelectedDept(dept as string)}
+                                        className={`px-6 py-2.5 rounded-[18px] text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedDept === dept
+                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
+                                            : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+                                            }`}
+                                    >
+                                        {dept}
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
+
+                {/* Test Results Entry */}
+                <div className="space-y-8 pb-12">
+                    {testResults
+                        .filter(t => selectedDept === 'All' || t.departmentName === selectedDept)
+                        .map((test, index) => (
+                            <div key={index} className="bg-white dark:bg-gray-900 rounded-[40px] border border-gray-100 dark:border-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                                <div className="p-8 lg:p-10">
+                                    {/* Protocol Header */}
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 pb-8 border-b border-gray-50 dark:border-gray-800">
+                                        <div className="space-y-3">
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+                                                    {test.testName}
+                                                </h3>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 font-black text-gray-500 tabular-nums tracking-widest">
+                                                        {test.testCode}
+                                                    </span>
+                                                    {test.departmentName && (
+                                                        <span className="text-[10px] px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest">
+                                                            {test.departmentName}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex flex-wrap items-center gap-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                                {test.method && test.method !== 'N/A' && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                                        <span>Method: <span className="text-gray-700 dark:text-gray-300">{test.method}</span></span>
+                                                    </div>
+                                                )}
+                                                 <div className="flex items-center gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                                    <span>Unit: <span className="text-gray-700 dark:text-gray-300">{test.unit || 'Standard'}</span></span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span>Price: <span className="text-emerald-600">₹{test.price}</span></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {!isCompleted && (
+                                             <button
+                                                onClick={() => handleAddSubTest(index)}
+                                                className="px-6 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                                            >
+                                                + Add Sub-Test
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Core Data Input Matrix */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+                                        {/* Result Magnitude */}
+                                         <div className="lg:col-span-4 space-y-4">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Result Value *</label>
+                                            <div className="group relative">
+                                                <input
+                                                    className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-indigo-500 dark:focus:border-indigo-500 text-gray-900 dark:text-white rounded-[24px] px-6 py-4 outline-none disabled:opacity-50 font-black text-xl tracking-tight transition-all placeholder:text-gray-300 tabular-nums"
+                                                    placeholder="0.00"
+                                                    value={test.resultValue || ''}
+                                                    disabled={isCompleted}
+                                                    onChange={(e) => handleResultChange(index, 'resultValue', e.target.value)}
+                                                />
+                                                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 font-black text-xs uppercase group-focus-within:text-indigo-500 transition-colors">
+                                                    {test.unit || 'VAL'}
+                                                </div>
+                                            </div>
+                                             <div className="flex items-center gap-2 px-1">
+                                                <Bookmark className="w-3 h-3 text-indigo-400" />
+                                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                                                    Normal Range: {getDisplayRange(test)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Clinical Annotations */}
+                                         <div className="lg:col-span-5 space-y-4">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Remarks</label>
+                                            <input
+                                                className="w-full bg-gray-50 dark:bg-gray-800 border-2 border-transparent focus:border-indigo-500 dark:focus:border-indigo-500 text-gray-900 dark:text-white rounded-[24px] px-6 py-4 outline-none disabled:opacity-50 font-bold text-sm transition-all placeholder:text-gray-300"
+                                                placeholder="OPTIONAL ANALYTICAL REMARKS..."
+                                                value={test.remarks || ''}
+                                                disabled={isCompleted}
+                                                onChange={(e) => handleResultChange(index, 'remarks', e.target.value)}
+                                            />
+                                        </div>
+
+                                         {/* Abnormal Toggle */}
+                                        <div className="lg:col-span-3 space-y-4">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Result Status</label>
+                                            <div className={`flex items-center justify-between h-[60px] rounded-[24px] px-6 transition-all duration-500 border-2 ${
+                                                test.isAbnormal 
+                                                ? 'bg-rose-50 border-rose-200 shadow-lg shadow-rose-100 dark:shadow-none' 
+                                                : 'bg-gray-50 dark:bg-gray-800 border-transparent'
+                                            }`}>
+                                                <span className={`text-[10px] font-black tracking-widest uppercase transition-colors ${test.isAbnormal ? 'text-rose-600' : 'text-gray-400'}`}>
+                                                    Abnormal Result
+                                                </span>
+                                                <button
+                                                    onClick={() => !isCompleted && handleResultChange(index, 'isAbnormal', !test.isAbnormal)}
+                                                    className={`relative w-12 h-6 rounded-full transition-all cursor-pointer ${test.isAbnormal ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                                >
+                                                    <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform cursor-pointer ${test.isAbnormal ? 'translate-x-6' : 'translate-x-0'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Supplement Data Matrices (Sub Tests) */}
+                                    {test.subTests && test.subTests.length > 0 && (
+                                        <div className="mt-12 pt-10 border-t-2 border-dashed border-gray-50 dark:border-gray-800 space-y-6">
+                                             <div className="flex items-center gap-3">
+                                                <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                                                <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.25em]">
+                                                    Sub-Test Parameters
+                                                </h4>
+                                            </div>
+                                                                                        <div className="grid-cols-1 md:grid-cols-12 gap-6 px-4 py-2 text-[9px] font-black text-gray-300 uppercase tracking-widest hidden md:grid">
+                                                <div className="md:col-span-4">Parameter Name</div>
+                                                <div className="md:col-span-2 text-center">Result</div>
+                                                <div className="md:col-span-2 text-center">Unit</div>
+                                                <div className="md:col-span-3 text-center">Normal Range</div>
+                                                <div className="md:col-span-1 text-right">Actions</div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                {test.subTests.map((sub, sIndex) => (
+                                                    <div key={sIndex} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-white dark:bg-black/20 p-4 rounded-[24px] border border-gray-100 dark:border-gray-800 hover:border-indigo-100 dark:hover:border-indigo-900 transition-all shadow-sm">
+                                                        <div className="md:col-span-4">
+                                                            <input
+                                                                className="w-full bg-transparent border-b border-transparent focus:border-indigo-600 px-2 py-1 text-sm font-bold text-gray-900 dark:text-white outline-none transition-all placeholder:text-gray-300"
+                                                                placeholder="PARAMETER NAME..."
+                                                                value={sub.name}
+                                                                disabled={isCompleted}
+                                                                onChange={(e) => handleSubTestChange(index, sIndex, 'name', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <input
+                                                                className="w-full bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-center px-4 py-2.5 rounded-xl font-black text-sm outline-none transition-all placeholder:text-indigo-300"
+                                                                placeholder="0.0"
+                                                                value={sub.result}
+                                                                disabled={isCompleted}
+                                                                onChange={(e) => handleSubTestChange(index, sIndex, 'result', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-2">
+                                                            <input
+                                                                className="w-full bg-gray-50/50 dark:bg-gray-800/50 text-center px-4 py-2.5 rounded-xl font-bold text-xs text-gray-500 uppercase outline-none transition-all"
+                                                                placeholder="UNIT"
+                                                                value={sub.unit}
+                                                                disabled={isCompleted}
+                                                                onChange={(e) => handleSubTestChange(index, sIndex, 'unit', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-3">
+                                                            <input
+                                                                className="w-full bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 text-center px-4 py-2.5 rounded-xl font-bold text-xs outline-none transition-all"
+                                                                placeholder="REFERENCE RANGE"
+                                                                value={sub.range || ''}
+                                                                disabled={isCompleted}
+                                                                onChange={(e) => handleSubTestChange(index, sIndex, 'range', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="md:col-span-1 flex justify-end">
+                                                            {!isCompleted && (
+                                                                <button
+                                                                    onClick={() => removeSubTest(index, sIndex)}
+                                                                    className="p-2 text-rose-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                                                >
+                                                                    <Trash2 size={18} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
                 </div>
             </div>
 
-            {/* Department Filter */}
-            {(() => {
-                const departments = Array.from(new Set(testResults.map(t => t.departmentName).filter(Boolean)));
-                if (departments.length > 0) {
-                    return (
-                        <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+            {/* Tactical Command Bar */}
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-[800px] z-50">
+                 <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 dark:border-gray-800 shadow-[0_32px_128px_-15px_rgba(0,0,0,0.15)] rounded-[32px] p-4 flex items-center justify-between gap-6 px-10">
+                    <div className="hidden md:flex flex-col">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Action Center</span>
+                        <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">Results Entry</span>
+                    </div>
+
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                         <button
+                            onClick={() => router.back()}
+                            className="flex-1 md:flex-none px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 transition-all"
+                        >
+                            Cancel
+                        </button>
+                        
+                        {sample.status === 'Completed' && (
                             <button
-                                onClick={() => setSelectedDept('All')}
-                                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${selectedDept === 'All'
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    }`}
+                                onClick={handlePrint}
+                                className="flex-1 md:flex-none px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl"
                             >
-                                All Departments
+                                <Download size={14} /> Download Report
                             </button>
-                            {departments.map(dept => (
-                                <button
-                                    key={dept}
-                                    onClick={() => setSelectedDept(dept as string)}
-                                    className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${selectedDept === dept
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                        }`}
-                                >
-                                    {dept}
-                                </button>
-                            ))}
-                        </div>
-                    );
-                }
-                return null;
-            })()}
+                        )}
 
-            {/* Test Cards */}
-            <div className="space-y-6 mb-8">
-                {testResults
-                    .filter(t => selectedDept === 'All' || t.departmentName === selectedDept)
-                    .map((test, index) => (
-                        <div key={index} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden transition-colors">
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4 border-b border-gray-100 dark:border-gray-700 pb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{test.testName} {test.shortName ? `(${test.shortName})` : ''}</h3>
-                                            <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 font-mono text-gray-600 dark:text-gray-300">
-                                                {test.testCode}
-                                            </span>
-                                            {test.departmentName && (
-                                                <span className="text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold uppercase">
-                                                    {test.departmentName}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-1 text-xs text-gray-500 dark:text-gray-400 mt-2 uppercase tracking-wide font-medium">
-                                            {test.method && test.method !== 'N/A' && (
-                                                <div><span className="font-bold text-gray-700 dark:text-gray-300">Method:</span> {test.method}</div>
-                                            )}
-                                            {test.unit && test.unit !== 'N/A' && (
-                                                <div><span className="font-bold text-gray-700 dark:text-gray-300">Unit:</span> {test.unit}</div>
-                                            )}
-                                            <div><span className="font-bold text-gray-700 dark:text-gray-300">Sample:</span> {sample.sampleType}</div>
-                                            <div><span className="font-bold text-gray-700 dark:text-gray-300">Price:</span> ₹{test.price}</div>
-                                        </div>
-                                        <div className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 font-bold">
-                                            Standard Range: {getDisplayRange(test)}
-                                        </div>
-                                    </div>
-                                    {!isCompleted && (
-                                        <button
-                                            onClick={() => handleAddSubTest(index)}
-                                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-none shadow-sm hover:bg-indigo-700"
-                                        >
-                                            + Add Sub Test
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end mb-6">
-                                    {/* Result Value */}
-                                    <div className="md:col-span-4">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Result Value *</label>
-                                        <input
-                                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-500 font-bold transition-colors"
-                                            placeholder="Enter main value"
-                                            value={test.resultValue || ''}
-                                            disabled={isCompleted}
-                                            onChange={(e) => handleResultChange(index, 'resultValue', e.target.value)}
-                                        />
-                                    </div>
-
-                                    {/* Remarks */}
-                                    <div className="md:col-span-5">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Remarks</label>
-                                        <input
-                                            className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 transition-colors"
-                                            placeholder="Optional remarks"
-                                            value={test.remarks || ''}
-                                            disabled={isCompleted}
-                                            onChange={(e) => handleResultChange(index, 'remarks', e.target.value)}
-                                        />
-                                    </div>
-
-                                    {/* Abnormal Toggle */}
-                                    <div className="md:col-span-3">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Auto Status</label>
-                                        <div className="flex items-center h-[46px] bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 px-3 transition-colors">
-                                            <label className="flex items-center cursor-pointer select-none space-x-3 w-full">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 text-red-600 rounded focus:ring-red-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 transition-none disabled:opacity-50"
-                                                    checked={test.isAbnormal}
-                                                    disabled={isCompleted}
-                                                    onChange={(e) => handleResultChange(index, 'isAbnormal', e.target.checked)}
-                                                />
-                                                <span className={`text-xs font-black tracking-tighter ${test.isAbnormal ? 'text-red-600 dark:text-red-400' : 'text-gray-500/50 dark:text-gray-500'} uppercase`}>
-                                                    ⚠️ Mark Abnormal
-                                                </span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Sub Tests Parameters */}
-                                {test.subTests && test.subTests.length > 0 && (
-                                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-                                        <h4 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase mb-4 flex items-center gap-2">
-                                            <div className="w-1 h-4 bg-indigo-600 dark:bg-indigo-400 rounded-full"></div>
-                                            Sub Test Parameters
-                                        </h4>
-                                        <div className="space-y-3">
-                                            {test.subTests.map((sub, sIndex) => (
-                                                <div key={sIndex} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700 transition-colors">
-                                                    <div className="md:col-span-4">
-                                                        <input
-                                                            className="w-full border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 transition-colors"
-                                                            placeholder="Sub-test Name"
-                                                            value={sub.name}
-                                                            disabled={isCompleted}
-                                                            onChange={(e) => handleSubTestChange(index, sIndex, 'name', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <input
-                                                            className="w-full border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 font-bold transition-colors"
-                                                            placeholder="Result"
-                                                            value={sub.result}
-                                                            disabled={isCompleted}
-                                                            onChange={(e) => handleSubTestChange(index, sIndex, 'result', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-2">
-                                                        <input
-                                                            className="w-full border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 transition-colors"
-                                                            placeholder="Units"
-                                                            value={sub.unit}
-                                                            disabled={isCompleted}
-                                                            onChange={(e) => handleSubTestChange(index, sIndex, 'unit', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-3">
-                                                        <input
-                                                            className="w-full border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded px-3 py-2 text-sm outline-none disabled:bg-gray-50 dark:disabled:bg-gray-700 transition-colors"
-                                                            placeholder="Ref range"
-                                                            value={sub.range || ''}
-                                                            disabled={isCompleted}
-                                                            onChange={(e) => handleSubTestChange(index, sIndex, 'range', e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="md:col-span-1 flex justify-end">
-                                                        {!isCompleted && (
-                                                            <button
-                                                                onClick={() => removeSubTest(index, sIndex)}
-                                                                className="text-red-400 hover:text-red-500 p-1 transition-none"
-                                                            >
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                        {!isCompleted && (
+                            <button
+                                onClick={handleSubmit}
+                                disabled={processing}
+                                className="flex-1 md:flex-none px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl shadow-indigo-200 dark:shadow-none disabled:opacity-50"
+                            >
+                                 {processing ? (
+                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <span>Submit Results</span>
+                                        <ChevronRight size={14} />
+                                    </>
                                 )}
-                            </div>
-                        </div>
-                    ))}
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
 
-            {/* Actions */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex justify-end gap-4 z-10 md:pl-64 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-colors">
-                {sample.status === 'Completed' && (
-                    <button
-                        onClick={handlePrint}
-                        className="px-6 py-3 bg-gray-800 dark:bg-gray-700 text-white rounded font-bold transition-all hover:bg-gray-700 dark:hover:bg-gray-600 flex items-center gap-2"
-                    >
-                        <span>⬇ DOWNLOAD RESULT</span>
-                    </button>
-                )}
-
-                {!isCompleted && (
-                    <button
-                        onClick={handleSubmit}
-                        disabled={processing}
-                        className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-bold shadow-lg transition-transform active:scale-95 disabled:opacity-70"
-                    >
-                        {processing ? 'SAVING...' : 'REPORT SUBMISSION'}
-                    </button>
-                )}
-            </div>
-
-            {/* Hidden Print Component */}
+            {/* Hidden Analytical Rendering Component */}
             <div style={{ position: 'absolute', top: '-9999px' }}>
                 <div ref={printRef}>
                     <ResultPrintView sample={{ ...sample, tests: testResults }} />
                 </div>
             </div>
-            {/* Padding for fixed footer */}
-            <div className="h-20"></div>
+
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    height: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #e2e8f0;
+                    border-radius: 20px;
+                }
+            `}</style>
         </div>
     );
 }

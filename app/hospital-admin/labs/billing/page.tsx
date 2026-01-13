@@ -49,6 +49,7 @@ export default function HospitalAdminLabBillingPage() {
     const [patient, setPatient] = useState<PatientDetails>({
         name: '',
         age: 0,
+        ageUnit: 'Years',
         gender: '' as any,
         mobile: '',
         refDoctor: '',

@@ -54,73 +54,49 @@ export default function AppointmentsSection({ appointments }: AppointmentsSectio
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in fade-in duration-500">
             {appointments.map((appointment) => (
-                <Card key={appointment._id} className="p-6 hover:shadow-lg transition-all duration-300">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                        <div className="flex-1">
-                            {/* Header */}
-                            <div className="flex items-start justify-between mb-3">
+                <div key={appointment._id} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/5 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm hover:border-blue-200 transition-all duration-300 group">
+                    <div className="flex flex-row items-center gap-4 sm:gap-6">
+                        {/* Compact Date Chip */}
+                        <div className="flex-none flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gray-50 dark:bg-white/5 rounded-xl sm:rounded-2xl group-hover:bg-blue-600 transition-colors duration-500">
+                            <span className="text-[8px] sm:text-[10px] font-black uppercase text-gray-400 group-hover:text-blue-200 tracking-tighter">
+                                {format(new Date(appointment.date), 'MMM')}
+                            </span>
+                            <span className="text-xl sm:text-2xl font-black text-gray-950 dark:text-white group-hover:text-white leading-none">
+                                {format(new Date(appointment.date), 'dd')}
+                            </span>
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0 space-y-1 sm:space-y-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                                 <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-                                        {appointment.doctor?.user?.name || appointment.doctor?.name || 'Unknown Doctor'}
+                                    <h3 className="font-black text-gray-950 dark:text-white text-sm sm:text-base uppercase tracking-tight truncate">
+                                        {appointment.doctor?.user?.name || appointment.doctor?.name || 'Medical Specialist'}
                                     </h3>
-                                    {(appointment.doctor?.specialties || appointment.doctor?.department) && (
-                                        <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                                            {appointment.doctor?.specialties?.[0] || ''}
-                                            {appointment.doctor.department && ` • ${appointment.doctor.department}`}
-                                        </p>
-                                    )}
+                                    <p className="text-[8px] sm:text-[10px] font-black uppercase text-blue-600 tracking-widest truncate">
+                                        {appointment.doctor?.specialties?.[0] || 'Healthcare Unit'}
+                                    </p>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(appointment.status)}`}>
+                                <span className={`self-start sm:self-center px-3 py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest ${getStatusColor(appointment.status)}`}>
                                     {appointment.status}
                                 </span>
                             </div>
 
-                            {/* Details */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Calendar className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-600 dark:text-gray-300">
-                                        {format(new Date(appointment.date), 'MMM dd, yyyy')}
-                                    </span>
+                            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-y-1 gap-x-4 pt-1">
+                                <div className="flex items-center gap-1.5">
+                                    <Clock className="w-3 h-3 text-gray-400" />
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">{appointment.appointmentTime || 'TBD'}</span>
                                 </div>
-                                {appointment.appointmentTime && (
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <Clock className="w-4 h-4 text-gray-400" />
-                                        <span className="text-gray-600 dark:text-gray-300">
-                                            {appointment.appointmentTime}
-                                        </span>
-                                    </div>
-                                )}
-                                <div className="flex items-center gap-2 text-sm">
-                                    <MapPin className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-600 dark:text-gray-300 truncate">
-                                        {appointment.hospital?.name || 'Unknown Hospital'}
-                                    </span>
+                                <div className="flex items-center gap-1.5">
+                                    <MapPin className="w-3 h-3 text-gray-400" />
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase truncate">{appointment.hospital?.name}</span>
                                 </div>
-                                {appointment.appointmentId && (
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <FileText className="w-4 h-4 text-gray-400" />
-                                        <span className="text-gray-600 dark:text-gray-300">
-                                            {appointment.appointmentId}
-                                        </span>
-                                    </div>
-                                )}
                             </div>
-
-                            {/* Reason */}
-                            {appointment.reason && (
-                                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        <span className="font-semibold">Reason: </span>
-                                        {appointment.reason}
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     </div>
-                </Card>
+                </div>
             ))}
         </div>
     );

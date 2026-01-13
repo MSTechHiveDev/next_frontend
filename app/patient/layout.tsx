@@ -105,6 +105,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
                     isDarkMode={isDarkMode}
                     onThemeToggle={() => setIsDarkMode(!isDarkMode)}
                     onLogout={() => setIsLogoutModalOpen(true)}
+                    showProfileDropdown={false}
                     user={{
                         name: user?.name || 'Patient',
                         role: 'Patient',

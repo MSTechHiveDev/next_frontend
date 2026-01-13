@@ -12,3 +12,12 @@ export async function getPatientProfileAction(): Promise<{ success: boolean; dat
         return { success: false, error: error.message || 'Failed to fetch patient profile' };
     }
 }
+
+export async function getPatientAppointmentsAction(): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+        const data = await apiServer(PATIENT_ENDPOINTS.APPOINTMENTS) as any;
+        return { success: true, data };
+    } catch (error: any) {
+        return { success: false, error: error.message || 'Failed to fetch appointments' };
+    }
+}

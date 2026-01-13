@@ -71,13 +71,13 @@ export default function EmergencyLogin() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
+        <div className="min-h-screen bg-linear-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+            <div className="w-full max-w-sm md:max-w-md space-y-6 md:space-y-8">
                 {/* Emergency Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
+                <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-red-100 rounded-full mb-4 shadow-sm transition-transform hover:scale-105">
                         <svg
-                            className="w-12 h-12 text-red-600"
+                            className="w-8 h-8 md:w-12 md:h-12 text-red-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -90,39 +90,42 @@ export default function EmergencyLogin() {
                             />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
                         Emergency Login
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-sm md:text-base text-gray-600 font-medium">
                         Ambulance Personnel Access
                     </p>
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100 backdrop-blur-sm bg-white/90">
+                    <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
                                 {error}
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 Employee ID / Mobile
                             </label>
                             <input
                                 type="text"
                                 value={identifier}
                                 onChange={(e) => setIdentifier(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all outline-none"
                                 placeholder="AMB-001 or 9876543210"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                                 Password
                             </label>
                             <div className="relative">
@@ -130,49 +133,24 @@ export default function EmergencyLogin() {
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 pr-12 border border-gray-200 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all outline-none"
                                     placeholder="Enter your password"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-all"
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
                                     {showPassword ? (
-                                        <svg
-                                            className="w-5 h-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                                            />
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                         </svg>
                                     ) : (
-                                        <svg
-                                            className="w-5 h-5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                            />
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                            />
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                     )}
                                 </button>
@@ -182,38 +160,49 @@ export default function EmergencyLogin() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-3 rounded-lg font-semibold hover:from-red-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                            className="w-full bg-linear-to-r from-red-600 to-orange-600 text-white py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm hover:from-red-700 hover:to-orange-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/30 active:scale-[0.98]"
                         >
-                            {loading ? "Logging in..." : "Emergency Login"}
+                            {loading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Authenticating...
+                                </span>
+                            ) : "Secure Login"}
                         </button>
 
-                        {/* Test Credentials Button */}
+                        {/* Test Credentials Button - Optional, keeping as requested */}
                         <button
                             type="button"
                             onClick={fillTestCredentials}
-                            className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 transition-all border border-gray-300"
+                            className="w-full bg-gray-50 text-gray-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-100 hover:text-gray-700 transition-all border border-transparent hover:border-gray-200"
                         >
-                            🧪 Fill Test Credentials (AMB-001)
+                            🧪 Auto-Fill Test Data
                         </button>
                     </form>
 
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                        <p className="text-sm text-gray-500 text-center">
-                            For emergency personnel only
+                    <div className="mt-8 pt-6 border-t border-gray-100">
+                        <p className="text-xs font-semibold text-gray-400 text-center uppercase tracking-wide">
+                            Restricted Access • Authorized Personnel Only
                         </p>
-                        <p className="text-xs text-gray-400 text-center mt-2">
-                            Need help? Contact: 1800-EMERGENCY
+                        <p className="text-[10px] text-gray-300 text-center mt-2 font-mono">
+                            System ID: EMR-2024-SECURE
                         </p>
                     </div>
                 </div>
 
                 {/* Back to Regular Login */}
-                <div className="text-center mt-6">
+                <div className="text-center">
                     <button
                         onClick={() => router.push("/login")}
-                        className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+                        className="group inline-flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-bold transition-colors px-4 py-2 rounded-full hover:bg-white/50"
                     >
-                        ← Back to Regular Login
+                        <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Return to Main Portal
                     </button>
                 </div>
             </div>

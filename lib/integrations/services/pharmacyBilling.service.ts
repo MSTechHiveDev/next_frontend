@@ -88,5 +88,21 @@ export const PharmacyBillingService = {
         return apiClient<{ message: string }>(PHARMACY_ENDPOINTS.BILLS.BY_ID(id), {
             method: 'DELETE'
         });
+    },
+
+    getHospitalOrders: async (hospitalId: string, status?: string): Promise<any> => {
+        let url = PHARMACY_ENDPOINTS.ORDERS(hospitalId);
+        if (status) {
+            url += `?status=${status}`;
+        }
+        return apiClient<any>(url, {
+            method: 'GET'
+        });
+    },
+
+    getPharmacyOrder: async (id: string): Promise<any> => {
+        return apiClient<any>(`/pharmacy/orders/${id}`, {
+            method: 'GET'
+        });
     }
 };

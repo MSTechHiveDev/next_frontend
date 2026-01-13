@@ -83,7 +83,7 @@ export default function NotificationCenter() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden transform animate-in fade-in slide-in-from-top-5 duration-200">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 z-[100] overflow-hidden transform animate-in fade-in slide-in-from-top-5 duration-200">
           {/* Header */}
           <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">

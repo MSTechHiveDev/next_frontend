@@ -82,17 +82,17 @@ const ProductsPage = () => {
         try {
             if (editingProduct) {
                 await ProductService.updateProduct(editingProduct._id, data);
-                toast.success('Inventory record updated');
+                toast.success('Product updated');
             } else {
                 await ProductService.addProduct(data);
-                toast.success('SKU added to registry');
+                toast.success('Medicine added');
             }
             setIsModalOpen(false);
             setEditingProduct(null);
             fetchProducts();
         } catch (error: any) {
             console.error('Failed to save product:', error);
-            toast.error(error.message || 'Registry update failed');
+            toast.error(error.message || 'Failed to save product');
             throw error;
         }
     };
@@ -185,8 +185,8 @@ const ProductsPage = () => {
 
         const buffer = await workbook.xlsx.writeBuffer();
         const data = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(data, `Pharma_Registry_${new Date().toISOString().split('T')[0]}.xlsx`);
-        toast.success('Registry manifest exported');
+        saveAs(data, `Pharmacy_Catalog_${new Date().toISOString().split('T')[0]}.xlsx`);
+        toast.success('Catalog exported');
     };
 
     const suppliers = ['All Suppliers', ...Array.from(new Set(products.map(p => {
@@ -201,30 +201,30 @@ const ProductsPage = () => {
             {/* Header */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight italic">Inventory Registry</h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-bold mt-1 uppercase tracking-widest text-[10px]">SKU Management & Stock Oversight</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Pharmacy Inventory</h1>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider">Manage your medicines and stock levels</p>
                 </div>
                 <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                     <button
                         onClick={() => setIsBulkModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30"
                     >
                         <FileSpreadsheet size={16} />
-                        Bulk Manifest
+                        Bulk Upload
                     </button>
                     <button
                         onClick={handleExportExcel}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm dark:bg-indigo-950/20 dark:border-indigo-900/30"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-100 transition-all shadow-sm dark:bg-emerald-950/20 dark:border-emerald-900/30"
                     >
                         <Download size={16} />
-                        Export Audit
+                        Export Catalog
                     </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 dark:shadow-none"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 dark:shadow-none"
                     >
                         <Plus size={16} />
-                        Onboard SKU
+                        Add Medicine
                     </button>
                 </div>
             </div>
@@ -235,27 +235,27 @@ const ProductsPage = () => {
                     <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
-                        placeholder="Search by nomenclature, composition, or SKU..."
+                        placeholder="Search by name, composition, or SKU..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-none rounded-2xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none dark:text-white"
                     />
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <button
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className={`p-3 flex-1 md:flex-none flex justify-center rounded-xl transition-all ${isFilterOpen ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-400 hover:text-blue-500'}`}
+                        className={`p-3 flex-1 md:flex-none flex justify-center rounded-xl transition-all ${isFilterOpen ? 'bg-emerald-600 text-white' : 'bg-gray-50 dark:bg-gray-700/50 text-gray-400 hover:text-emerald-500'}`}
                     >
                         <Filter className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => fetchProducts(currentPage)}
-                        className="p-3 flex-1 md:flex-none flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all"
+                        className="p-3 flex-1 md:flex-none flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-emerald-500 transition-all"
                     >
                         <RefreshCcw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                     </button>
                     <div className="h-10 w-px bg-gray-100 dark:bg-gray-700 hidden md:block mx-1" />
-                    <button className="p-3 flex-1 md:flex-none flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-blue-500 transition-all">
+                    <button className="p-3 flex-1 md:flex-none flex justify-center bg-gray-50 dark:bg-gray-700/50 text-gray-400 rounded-xl hover:text-emerald-500 transition-all">
                         <LayoutGrid className="w-5 h-5" />
                     </button>
                 </div>
@@ -264,10 +264,10 @@ const ProductsPage = () => {
             {/* Filters */}
             {isFilterOpen && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4 duration-300">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-emerald-100 dark:border-emerald-900/30">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Stock Threshold</p>
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer dark:text-white"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                         >
@@ -277,20 +277,20 @@ const ProductsPage = () => {
                             <option>Out of Stock</option>
                         </select>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-emerald-100 dark:border-emerald-900/30">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Vendor Origin</p>
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer dark:text-white"
                             value={supplierFilter}
                             onChange={(e) => setSupplierFilter(e.target.value)}
                         >
                             {suppliers.map(s => <option key={s}>{s}</option>)}
                         </select>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-blue-100 dark:border-blue-900/30">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-emerald-100 dark:border-emerald-900/30">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Stability Status</p>
                         <select
-                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"
+                            className="w-full bg-gray-50 dark:bg-gray-700/50 border-none px-4 py-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer dark:text-white"
                             value={expiryStatusFilter}
                             onChange={(e) => setExpiryStatusFilter(e.target.value)}
                         >
@@ -313,24 +313,32 @@ const ProductsPage = () => {
 
             {/* Pagination Controls */}
             {!isLoading && products.length > 0 && (
-                <div className="flex justify-between items-center mt-6 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                    <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                    >
-                        Next
-                    </button>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 p-4 md:p-6 bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2 order-2 sm:order-1">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
+                        >
+                            Next
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-3 order-1 sm:order-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            Page <span className="text-emerald-600">{currentPage}</span> of {totalPages}
+                        </span>
+                        <div className="h-4 w-px bg-gray-100 dark:bg-gray-700" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            {totalProducts} Items
+                        </span>
+                    </div>
                 </div>
             )}
 

@@ -53,5 +53,11 @@ export const LabSampleService = {
             method: 'POST',
             body: JSON.stringify(payload)
         });
+    },
+
+    deleteSample: async (id: string): Promise<{ message: string }> => {
+        return apiClient<{ message: string }>(LAB_ENDPOINTS.SAMPLES.BY_ID(id), {
+            method: 'DELETE'
+        });
     }
 };

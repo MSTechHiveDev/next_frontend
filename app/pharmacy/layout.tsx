@@ -13,11 +13,13 @@ import {
     BarChart,
     PlusCircle,
     Users,
+    Pill, // Added Pill
 } from "lucide-react";
 
 // Pharmacy specific menu items
 const pharmacyMenu: SidebarItem[] = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/pharmacy/dashboard" },
+    { icon: Pill, label: "Active Orders", href: "/pharmacy/orders" },
     { icon: PlusCircle, label: "Create Invoice", href: "/pharmacy/billing" },
     { icon: Package, label: " Products", href: "/pharmacy/products" },
     { icon: Users, label: "Suppliers", href: "/pharmacy/suppliers" },
@@ -77,10 +79,10 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="flex flex-col items-center gap-6">
                     <div className="relative w-24 h-24">
-                        <div className="absolute inset-0 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
-                        <div className="absolute inset-4 border-4 border-blue-600/20 border-b-blue-600 rounded-full animate-spin-reverse"></div>
+                        <div className="absolute inset-0 border-4 border-emerald-600/20 border-t-emerald-600 rounded-full animate-spin"></div>
+                        <div className="absolute inset-4 border-4 border-emerald-600/20 border-b-emerald-600 rounded-full animate-spin-reverse"></div>
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-2 h-2 bg-indigo-600 rounded-full animate-ping"></div>
+                            <div className="w-2 h-2 bg-emerald-600 rounded-full animate-ping"></div>
                         </div>
                     </div>
                     <div>
@@ -107,6 +109,7 @@ const PharmacyLayout = ({ children }: { children: React.ReactNode }) => {
                 onClose={() => setIsSidebarOpen(false)}
                 items={pharmacyMenu}
                 onLogout={() => setIsLogoutModalOpen(true)}
+                activeColor="emerald"
             />
 
             <LogoutModal

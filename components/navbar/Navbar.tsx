@@ -49,6 +49,10 @@ interface NavbarProps {
      * Additional class names
      */
     className?: string;
+    /**
+     * Whether to show the profile dropdown
+     */
+    showProfileDropdown?: boolean;
 }
 
 /**
@@ -72,7 +76,8 @@ export default function Navbar({
     actions,
     onSearch,
     onLogout,
-    className = ""
+    className = "",
+    showProfileDropdown = true
 }: NavbarProps) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -126,20 +131,7 @@ export default function Navbar({
                 </Link>
             </div>
 
-            {/* Center Section: Search (Desktop only) */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
-                {onSearch && (
-                    <div className="relative w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                        <input
-                            type="text"
-                            placeholder="Search protocol registry..."
-                            onChange={(e) => onSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-secondary-theme border border-border-theme focus:border-primary-theme rounded-xl focus:outline-none transition-all text-sm font-bold shadow-xs whitespace-nowrap text-foreground placeholder:text-muted"
-                        />
-                    </div>
-                )}
-            </div>
+
 
             {/* Right Section: Actions */}
             <div className="flex items-center gap-2 sm:gap-4">
@@ -159,7 +151,8 @@ export default function Navbar({
                 </button>
 
                 {/* Profile Dropdown Trigger */}
-                <div className="relative" ref={dropdownRef}>
+                {showProfileDropdown && (
+                    <div className="relative" ref={dropdownRef}>
                     <button
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className="flex items-center gap-3 pl-4 border-l border-gray-100 dark:border-gray-800 ml-2 group transition-all"
@@ -222,6 +215,7 @@ export default function Navbar({
                         </div>
                     )}
                 </div>
+                )}
             </div>
 
         </nav>

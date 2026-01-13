@@ -395,7 +395,16 @@ const TransactionsPage = () => {
             {/* Hidden Print Area */}
             <div className="hidden">
                 <div ref={printRef}>
-                    {selectedBill && <PharmacyBillPrint billData={selectedBill} />}
+                    {selectedBill && <PharmacyBillPrint 
+                        billData={selectedBill} 
+                        shopDetails={{
+                            name: 'CureChain Pharmacy',
+                            address: '123 Health Avenue, Medicity, NY 10001',
+                            phone: '+1 (555) 123-4567',
+                            email: 'pharmacy@curechain.health',
+                            gstin: '29ABCDE1234F1Z5'
+                        }}
+                    />}
                 </div>
             </div>
         </div>

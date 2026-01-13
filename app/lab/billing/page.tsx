@@ -50,8 +50,13 @@ export default function LabBillingPage() {
         const sampleIdParam = searchParams.get('sampleId');
 
         if (sampleIdParam) {
-            console.log("Setting Sample ID:", sampleIdParam);
+            console.log("Setting Order ID (DB):", sampleIdParam);
             setSampleId(sampleIdParam);
+        }
+
+        const displayIdParam = searchParams.get('displayId');
+        if (displayIdParam) {
+            setDisplayId(displayIdParam);
         }
 
         if (name || mobile) {
@@ -111,6 +116,7 @@ export default function LabBillingPage() {
         refDoctor: '',
     });
     const [sampleId, setSampleId] = useState<string | null>(null);
+    const [displayId, setDisplayId] = useState<string | null>(null);
 
     const getAgeGroup = () => {
         const { age, ageUnit } = patient;
@@ -350,394 +356,411 @@ export default function LabBillingPage() {
         router.push('/lab/active-tests');
     };
 
-    /* ----------------------------------------
-       UI
-    ----------------------------------------- */
     return (
-        <div className="p-8 bg-gray-50/50 dark:bg-gray-900 min-h-screen transition-colors duration-500 w-full max-w-[100vw] overflow-x-hidden">
-            <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Lab Billing</h1>
+        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
+            {/* Header Section */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+                        <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                            <Save className="w-5 h-5 text-white" />
+                        </div>
+                        Lab Billing
+                    </h1>
+                    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                        Billing & <span className="text-indigo-600 dark:text-indigo-400">Transaction Control</span>
+                    </p>
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Patient Info */}
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-5 transition-colors">
-                    <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 uppercase tracking-wider mb-2">Patient Details</h3>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Patient Name</label>
-                        <input
-                            placeholder="Enter patient name"
-                            className="w-full bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium dark:text-white"
-                            value={patient.name}
-                            onChange={e => setPatient({ ...patient, name: e.target.value })}
-                        />
+                {sampleId && (
+                    <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-2xl">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">Active Order: {displayId || sampleId}</span>
                     </div>
+                )}
+            </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Age & Unit</label>
-                            <div className="flex gap-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Column 1: Patient & Tests */}
+                <div className="lg:col-span-8 space-y-8">
+                    {/* Patient Info Card */}
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-[32px] border border-gray-100 dark:border-gray-700 shadow-sm transition-all">
+                        <div className="flex items-center gap-3 mb-8">
+                            <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 uppercase tracking-widest">Patient Details</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
                                 <input
-                                    type="number"
-                                    placeholder="Age"
-                                    min="0"
-                                    className={`w-1/2 bg-gray-50/50 dark:bg-gray-900 border ${errors.age ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium dark:text-white`}
-                                    value={patient.age || ''}
+                                    placeholder="Enter patient name"
+                                    className="w-full bg-gray-50/50 dark:bg-gray-900 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 rounded-2xl px-6 py-4 outline-none transition-all font-semibold dark:text-white shadow-xs"
+                                    value={patient.name}
+                                    onChange={e => setPatient({ ...patient, name: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Mobile Number</label>
+                                <input
+                                    placeholder="10-digit mobile"
+                                    maxLength={10}
+                                    className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${touchedFields.has('mobile') && errors.mobile ? 'border-amber-400 focus:border-amber-500' : 'border-transparent focus:border-indigo-500'} focus:bg-white dark:focus:bg-gray-800 rounded-2xl px-6 py-4 outline-none transition-all font-semibold dark:text-white shadow-xs`}
+                                    value={patient.mobile}
                                     onChange={e => {
                                         const val = e.target.value;
-                                        if (val === '' || (/^\d+$/.test(val))) {
-                                            setPatient({ ...patient, age: val === '' ? 0 : parseInt(val) });
+                                        if (val === '' || /^\d+$/.test(val)) {
+                                            setPatient({ ...patient, mobile: val });
                                         }
                                     }}
+                                    onBlur={() => markTouched('mobile')}
                                 />
-                                <select
-                                    className="w-1/2 bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3 outline-none transition-all font-medium dark:text-white"
-                                    value={patient.ageUnit}
-                                    onChange={e => setPatient({ ...patient, ageUnit: e.target.value as any })}
-                                >
-                                    <option value="Years">Years</option>
-                                    <option value="Months">Months</option>
-                                    <option value="Days">Days</option>
-                                </select>
+                                {touchedFields.has('mobile') && errors.mobile && <p className="text-[9px] text-amber-600 font-bold uppercase tracking-tight ml-4">{errors.mobile}</p>}
                             </div>
-                            <div className="mt-1 ml-1 flex items-center gap-2">
-                                {errors.age && <p className="text-[10px] text-red-500 font-bold">{errors.age}</p>}
-                                {!errors.age && patient.age > 0 && (
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-md">
-                                        Group: {getAgeGroup()}
-                                    </span>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Age Details</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        placeholder="Age"
+                                        min="0"
+                                        className={`w-24 bg-gray-50/50 dark:bg-gray-900 border ${errors.age ? 'border-amber-400 focus:border-amber-500' : 'border-transparent focus:border-indigo-500'} focus:bg-white dark:focus:bg-gray-800 rounded-2xl px-6 py-4 outline-none transition-all font-semibold dark:text-white shadow-xs center-input`}
+                                        value={patient.age || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || (/^\d+$/.test(val))) {
+                                                setPatient({ ...patient, age: val === '' ? 0 : parseInt(val) });
+                                            }
+                                        }}
+                                    />
+                                    <select
+                                        className="flex-1 bg-gray-50/50 dark:bg-gray-900 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 rounded-2xl px-6 py-4 outline-none transition-all font-semibold dark:text-white shadow-xs cursor-pointer appearance-none"
+                                        value={patient.ageUnit}
+                                        onChange={e => setPatient({ ...patient, ageUnit: e.target.value as any })}
+                                    >
+                                        <option value="Years">Years (Adult/Geriatric)</option>
+                                        <option value="Months">Months (Infant)</option>
+                                        <option value="Days">Days (Neonatal)</option>
+                                    </select>
+                                </div>
+                                <div className="flex justify-between items-center px-1">
+                                    {errors.age && <p className="text-[9px] text-amber-600 font-bold uppercase tracking-tight">{errors.age}</p>}
+                                    {patient.age > 0 && (
+                                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-indigo-500">
+                                            Classification: {getAgeGroup()}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Gender</label>
+                                <div className="grid grid-cols-3 gap-2 bg-gray-50/50 dark:bg-gray-900 p-1.5 rounded-2xl">
+                                    {['Male', 'Female', 'Other'].map(g => (
+                                        <button
+                                            key={g}
+                                            type="button"
+                                            onClick={() => {
+                                                setPatient({ ...patient, gender: g as any });
+                                                markTouched('gender');
+                                            }}
+                                            className={`py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${patient.gender === g ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            {g}
+                                        </button>
+                                    ))}
+                                </div>
+                                {touchedFields.has('gender') && errors.gender && <p className="text-[9px] text-amber-600 font-bold uppercase tracking-tight ml-4">{errors.gender}</p>}
+                            </div>
+
+                            <div className="md:col-span-2 space-y-1.5">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Referral / Doctor</label>
+                                <input
+                                    placeholder="Doctor or Department name"
+                                    className="w-full bg-gray-50/50 dark:bg-gray-900 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-800 rounded-2xl px-6 py-4 outline-none transition-all font-semibold dark:text-white shadow-xs"
+                                    value={patient.refDoctor}
+                                    onChange={e => setPatient({ ...patient, refDoctor: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tests Selection Card */}
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-[40px] border border-gray-100 dark:border-gray-700 shadow-sm transition-all min-h-[500px] flex flex-col">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <span className="w-2 h-6 bg-indigo-600 rounded-full" />
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 uppercase tracking-widest">Select Lab Tests</h3>
+                            </div>
+                            <span className="text-[10px] font-extrabold text-indigo-500 uppercase tracking-[3px] bg-indigo-50 dark:bg-indigo-900/30 px-4 py-1.5 rounded-full">{selectedTests.length} ITEMS SELECTED</span>
+                        </div>
+
+                        <div className="relative group mb-8">
+                            <select
+                                className="w-full bg-indigo-50/30 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 rounded-2xl px-6 py-5 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold text-indigo-700 dark:text-indigo-400 appearance-none cursor-pointer"
+                                onChange={handleAddTest}
+                                value=""
+                            >
+                                <option value="" disabled className="dark:text-gray-400">
+                                    {testsLoading ? 'Loading Tests...' : 'Select Test'}
+                                </option>
+                                {availableTests.map(t => (
+                                    <option key={t._id} value={t._id} className="dark:bg-gray-800 dark:text-white py-2">
+                                        {t.testName || t.name} — [₹{t.price}]
+                                    </option>
+                                ))}
+                            </select>
+                            <ArrowRight className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                        </div>
+
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-min max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+                            {availableTests.map((test) => {
+                                const currentName = test.testName || test.name || "Unknown Test";
+                                const isSelected = selectedTests.some(t => t.testName === currentName);
+
+                                return (
+                                    <div
+                                        key={test._id}
+                                        onClick={() => {
+                                            const nameToUse = test.testName || test.name || "Unknown Test";
+                                            if (isSelected) {
+                                                const idx = selectedTests.findIndex(t => t.testName === nameToUse);
+                                                removeTest(idx);
+                                            } else {
+                                                setSelectedTests([...selectedTests, { testName: nameToUse, price: test.price, discount: 0 }]);
+                                            }
+                                        }}
+                                        className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 relative group overflow-hidden ${
+                                            isSelected
+                                                ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100 dark:shadow-none'
+                                                : 'bg-gray-50/50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-800'
+                                        }`}
+                                    >
+                                        <div className="relative z-10 flex justify-between gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-bold text-sm tracking-tight mb-2 truncate ${isSelected ? 'text-white' : 'text-gray-800 dark:text-gray-100'}`}>
+                                                    {test.testName || test.name}
+                                                </p>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
+                                                            {test.sampleType || 'Type'}
+                                                        </span>
+                                                        <span className={`text-[8px] font-black uppercase tracking-widest ${isSelected ? 'text-indigo-200' : 'text-indigo-400'}`}>
+                                                            {(typeof test.departmentId === 'object' ? test.departmentId.name : 'GEN')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`}>₹{test.price}</p>
+                                                {isSelected && <CheckCircle className="w-4 h-4 text-white/50 ml-auto mt-2" />}
+                                            </div>
+                                        </div>
+                                        {isSelected && (
+                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                                <Save className="w-16 h-16 -mr-4 -mt-4 rotate-12" />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Column 2: Financial Summary */}
+                <div className="lg:col-span-4 space-y-8">
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-[40px] border border-gray-100 dark:border-gray-700 shadow-lg transition-all sticky top-8">
+                        <div className="flex items-center gap-3 mb-8">
+                            <span className="w-2 h-6 bg-emerald-500 rounded-full" />
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 uppercase tracking-widest">Payment Summary</h3>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center px-2">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Amount</span>
+                                <span className="text-xl font-bold text-gray-900 dark:text-white">₹{totalAmount}</span>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Discount (₹)</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        placeholder="0"
+                                        min="0"
+                                        className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.discount ? 'border-amber-400' : 'border-transparent'} focus:border-indigo-500 rounded-2xl px-6 py-4 outline-none transition-all font-bold text-xl text-right dark:text-white shadow-xs`}
+                                        value={discount || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || (parseFloat(val) >= 0)) {
+                                                setDiscount(val === '' ? 0 : parseFloat(val));
+                                            }
+                                        }}
+                                    />
+                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 font-bold">₹</span>
+                                </div>
+                                {errors.discount && <p className="text-[9px] text-amber-600 font-bold uppercase tracking-tight text-right pr-2">{errors.discount}</p>}
+                            </div>
+
+                            <div className="bg-emerald-50/30 dark:bg-emerald-950/20 p-6 rounded-[24px] border border-emerald-100/50 dark:border-emerald-900/30">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Net Payable</span>
+                                    <span className="text-3xl font-bold text-emerald-600">₹{finalAmount}</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2">Amount Paid</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        placeholder="0"
+                                        min="0"
+                                        className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.paidAmount ? 'border-amber-400' : 'border-transparent'} focus:border-indigo-500 rounded-2xl px-6 py-4 outline-none transition-all font-bold text-xl text-right dark:text-white shadow-xs`}
+                                        value={paidAmount || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || (parseFloat(val) >= 0)) {
+                                                setPaidAmount(val === '' ? 0 : parseFloat(val));
+                                            }
+                                        }}
+                                    />
+                                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 font-bold">₹</span>
+                                </div>
+                                {errors.paidAmount && <p className="text-[9px] text-amber-600 font-bold uppercase tracking-tight text-right pr-2">{errors.paidAmount}</p>}
+                            </div>
+
+                            <div className="flex justify-between items-center px-4 py-3 bg-amber-50/30 dark:bg-amber-950/20 rounded-2xl border border-amber-100/50 dark:border-amber-900/30">
+                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Outstanding</span>
+                                <span className="text-xl font-bold text-amber-600 tracking-tight">₹{balance}</span>
+                            </div>
+
+                            <div className="space-y-4 pt-4">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[2px] ml-2">Payment Mode</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {['Cash', 'UPI', 'Card', 'Mixed'].map((mode) => (
+                                        <button
+                                            key={mode}
+                                            onClick={() => setPaymentMode(mode as any)}
+                                            className={`p-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                                                paymentMode === mode
+                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
+                                                    : 'bg-gray-50/50 dark:bg-gray-900/50 text-gray-400 border-gray-100 dark:border-gray-800'
+                                            }`}
+                                        >
+                                            {mode}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {paymentMode === 'Mixed' && (
+                                <div className="space-y-4 p-6 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-3xl border border-indigo-100 dark:border-indigo-900/30 border-dashed animate-in fade-in zoom-in-95 duration-300">
+                                    <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-2 text-center">Payment Split</p>
+                                    <div className="space-y-4">
+                                        {[
+                                            { label: 'CASH', key: 'cash' },
+                                            { label: 'UPI', key: 'upi' },
+                                            { label: 'CARD', key: 'card' }
+                                        ].map((pM) => (
+                                            <div key={pM.key} className="flex items-center gap-4">
+                                                <span className="text-[9px] font-bold text-gray-400 w-10">{pM.label}</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
+                                                    value={(mixedPayments as any)[pM.key] || ''}
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        if (val === '' || parseFloat(val) >= 0) {
+                                                            setMixedPayments({ ...mixedPayments, [pM.key]: val === '' ? 0 : parseFloat(val) });
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
+                                        <div className="pt-4 border-t border-indigo-100 dark:border-indigo-900/30">
+                                            <div className="flex justify-between text-[10px] font-black tracking-widest uppercase">
+                                                <span className="text-gray-400">Aggregated:</span>
+                                                <span className={errors.mixedMatch ? 'text-amber-600' : 'text-indigo-600 dark:text-indigo-400'}>
+                                                    ₹{mixedPayments.cash + mixedPayments.upi + mixedPayments.card} / ₹{finalAmount}
+                                                </span>
+                                            </div>
+                                            {(errors.mixed || errors.mixedMatch) && (
+                                                <p className="text-[8px] text-amber-600 font-bold uppercase tracking-tight mt-1 text-center">
+                                                    {errors.mixed || errors.mixedMatch}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-8 space-y-4">
+                                {!generatedBill ? (
+                                    <div className="space-y-4">
+                                        <button
+                                            onClick={() => handleGenerateBill(true)}
+                                            disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
+                                            className="w-full group relative flex items-center justify-center gap-4 px-8 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[24px] font-bold shadow-xl shadow-indigo-100 dark:shadow-none transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed"
+                                        >
+                                            {loading ? (
+                                                <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                 <>
+                                                    <Printer className="w-5 h-5 transition-transform group-hover:scale-110" />
+                                                    <div className="flex flex-col items-start leading-tight">
+                                                        <span className="text-sm font-bold tracking-tight">Save and Print Invoice</span>
+                                                        <span className="text-[10px] font-medium opacity-70">Finalize & Print</span>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </button>
+
+                                         <button
+                                            onClick={() => handleGenerateBill(false)}
+                                            disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
+                                            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30 rounded-[24px] text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all disabled:opacity-40"
+                                        >
+                                            <Save className="w-4 h-4" />
+                                            Save (No Print)
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 animate-in slide-in-from-bottom-6 duration-700">
+                                        <div className="flex items-center gap-3 px-6 py-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 mb-4">
+                                            <CheckCircle className="w-6 h-6" />
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-bold uppercase tracking-widest">Billing Completed</span>
+                                                <span className="text-[10px] font-medium opacity-70">ID: {generatedBill.invoiceId}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button
+                                                onClick={handlePrint}
+                                                className="flex flex-col items-center gap-2 p-5 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[24px] text-gray-500 hover:text-indigo-600 transition-all group"
+                                            >
+                                                <Printer className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-bold uppercase tracking-widest">Reprint</span>
+                                            </button>
+                                            <button
+                                                onClick={handleClose}
+                                                className="flex flex-col items-center gap-2 p-5 bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 rounded-[24px] text-white shadow-lg shadow-emerald-100 dark:shadow-none transition-all group"
+                                            >
+                                                <Check className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[9px] font-bold uppercase tracking-widest">Close</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Gender</label>
-                            <div className="flex bg-gray-50 dark:bg-gray-900 items-center justify-between gap-1 p-1 rounded-xl border border-gray-100 dark:border-gray-700">
-                                {['Male', 'Female', 'Other'].map(g => (
-                                    <button
-                                        key={g}
-                                        type="button"
-                                        onClick={() => {
-                                            setPatient({ ...patient, gender: g as any });
-                                            markTouched('gender');
-                                        }}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-black uppercase transition-all ${patient.gender === g ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-900/30' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                    >
-                                        {g}
-                                    </button>
-                                ))}
-                            </div>
-                            {touchedFields.has('gender') && errors.gender && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.gender}</p>}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Mobile</label>
-                        <input
-                            placeholder="Enter 10-digit mobile"
-                            maxLength={10}
-                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${touchedFields.has('mobile') && errors.mobile ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-medium dark:text-white`}
-                            value={patient.mobile}
-                            onChange={e => {
-                                const val = e.target.value;
-                                if (val === '' || /^\d+$/.test(val)) {
-                                    setPatient({ ...patient, mobile: val });
-                                }
-                            }}
-                            onBlur={() => markTouched('mobile')}
-                        />
-                        {touchedFields.has('mobile') && errors.mobile && <p className="text-[10px] text-red-500 font-bold mt-1 ml-1">{errors.mobile}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase mb-1.5 ml-1">Ref Doctor</label>
-                        <input
-                            placeholder="Referring doctor name"
-                            className="w-full bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium dark:text-white"
-                            value={patient.refDoctor}
-                            onChange={e => setPatient({ ...patient, refDoctor: e.target.value })}
-                        />
-                    </div>
-                </div>
-
-                {/* Tests Selection */}
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col transition-colors">
-                    <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 uppercase tracking-wider mb-6">Select Tests</h3>
-
-                    <div className="relative mb-6">
-                        <select
-                            className="w-full bg-gray-50/50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium appearance-none dark:text-white"
-                            onChange={handleAddTest}
-                            value=""
-                        >
-                            <option value="" disabled className="dark:text-gray-400">
-                                {testsLoading ? 'Loading tests...' : 'Select Test'}
-                            </option>
-                            {availableTests.map(t => (
-                                <option key={t._id} value={t._id} className="dark:bg-gray-800 dark:text-white">
-                                    {t.testName || t.name} - ₹{t.price}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-                        {availableTests.map((test) => {
-                            const currentName = test.testName || test.name || "Unknown Test";
-                            const isSelected = selectedTests.some(t => t.testName === currentName);
-                            // Show details if selected? Actually the user said "display ... in the Lab Billing page".
-                            // I will show them in the list always, or just when selected.
-                            // The availableTests map iterate over ALL tests. I should show Method/TAT here for reference.
-
-                            return (
-                                <div
-                                    key={test._id}
-                                    onClick={() => {
-                                        const nameToUse = test.testName || test.name || "Unknown Test";
-                                        if (isSelected) {
-                                            const idx = selectedTests.findIndex(t => t.testName === nameToUse);
-                                            removeTest(idx);
-                                        } else {
-                                            setSelectedTests([...selectedTests, { testName: nameToUse, price: test.price, discount: 0 }]);
-                                        }
-                                    }}
-                                    className={`flex justify-between items-start p-4 rounded-xl mb-2 cursor-pointer transition-all border ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-white dark:bg-gray-800 border-transparent hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className={`mt-1 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300 dark:border-gray-600'}`}>
-                                            {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                                        </div>
-                                        <div>
-                                            <p className={`font-black text-sm leading-tight mb-1 ${isSelected ? 'text-indigo-900 dark:text-indigo-300' : 'text-gray-800 dark:text-gray-200'}`}>
-                                                {test.testName || test.name}
-                                            </p>
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex gap-2 items-center">
-                                                    <span className="text-[10px] font-bold text-gray-400 uppercase">
-                                                        Sample: <span className="text-gray-600 dark:text-gray-400">{test.sampleType || 'N/A'}</span>
-                                                    </span>
-                                                    {test.departmentId && (
-                                                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter">
-                                                            | {(typeof test.departmentId === 'object' ? test.departmentId.name : 'Lab')}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex gap-2 items-center text-[10px]">
-                                                    {test.method && (
-                                                        <span className="font-medium text-gray-400 uppercase">Method: <span className="text-gray-600 dark:text-gray-300">{test.method}</span></span>
-                                                    )}
-                                                    {test.turnaroundTime && (
-                                                        <span className="font-medium text-gray-400 uppercase ml-1">TAT: <span className="text-gray-600 dark:text-gray-300">{test.turnaroundTime}</span></span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p className={`font-black text-sm whitespace-nowrap pt-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`}>₹{test.price}</p>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Payment & Summary */}
-                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-6 transition-colors">
-                    <h3 className="text-lg font-black text-gray-800 dark:text-gray-100 uppercase tracking-wider mb-2">Payment</h3>
-
-                    <div className="flex justify-between items-center">
-                        <span className="font-bold text-gray-800 dark:text-gray-200">Total:</span>
-                        <span className="text-xl font-black text-gray-900 dark:text-white">₹{totalAmount}</span>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase mb-2">Discount</label>
-                        <input
-                            type="number"
-                            placeholder="0"
-                            min="0"
-                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.discount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right dark:text-white`}
-                            value={discount || ''}
-                            onChange={e => {
-                                const val = e.target.value;
-                                if (val === '' || (parseFloat(val) >= 0)) {
-                                    setDiscount(val === '' ? 0 : parseFloat(val));
-                                }
-                            }}
-                        />
-                        {errors.discount && <p className="text-[10px] text-red-500 font-bold mt-1 text-right">{errors.discount}</p>}
-                    </div>
-
-                    <div className="flex justify-between items-center border-t border-dashed dark:border-gray-700 pt-4">
-                        <span className="font-bold text-green-600 text-lg uppercase">Final:</span>
-                        <span className="text-2xl font-black text-green-600">₹{finalAmount}</span>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-bold text-gray-400 uppercase mb-2">Amount Paid</label>
-                        <input
-                            type="number"
-                            placeholder="0"
-                            min="0"
-                            className={`w-full bg-gray-50/50 dark:bg-gray-900 border ${errors.paidAmount ? 'border-red-400 focus:ring-red-500' : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'} rounded-xl px-4 py-3 outline-none transition-all font-black text-lg text-right dark:text-white`}
-                            value={paidAmount || ''}
-                            onChange={e => {
-                                const val = e.target.value;
-                                if (val === '' || (parseFloat(val) >= 0)) {
-                                    setPaidAmount(val === '' ? 0 : parseFloat(val));
-                                }
-                            }}
-                        />
-                        {errors.paidAmount && <p className="text-[10px] text-red-500 font-bold mt-1 text-right">{errors.paidAmount}</p>}
-                    </div>
-
-                    <div className="flex justify-between items-center bg-orange-50/50 dark:bg-orange-900/10 p-4 rounded-xl border border-orange-100 dark:border-orange-900/30 border-dashed">
-                        <span className="font-bold text-orange-600 dark:text-orange-400 uppercase">Balance:</span>
-                        <span className="text-2xl font-black text-orange-600 dark:text-orange-400">₹{balance}</span>
-                    </div>
-
-                    <div className="space-y-3 pt-2">
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Payment Method</label>
-                        <div className="grid grid-cols-2 gap-2">
-                            {['Cash', 'UPI', 'Card', 'Mixed'].map((mode) => (
-                                <button
-                                    key={mode}
-                                    onClick={() => setPaymentMode(mode as any)}
-                                    className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${paymentMode === mode ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-50 dark:bg-gray-900 text-gray-500 border-gray-100 dark:border-gray-700 dark:text-gray-400'}`}
-                                >
-                                    {mode}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {paymentMode === 'Mixed' && (
-                        <div className="space-y-3 p-4 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 border-dashed">
-                            <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">Split Amount</p>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center gap-4">
-                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 w-12">CASH</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        className="w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
-                                        value={mixedPayments.cash || ''}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            if (val === '' || parseFloat(val) >= 0) {
-                                                setMixedPayments({ ...mixedPayments, cash: val === '' ? 0 : parseFloat(val) });
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex justify-between items-center gap-4">
-                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 w-12">UPI</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        className="w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
-                                        value={mixedPayments.upi || ''}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            if (val === '' || parseFloat(val) >= 0) {
-                                                setMixedPayments({ ...mixedPayments, upi: val === '' ? 0 : parseFloat(val) });
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex justify-between items-center gap-4">
-                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 w-12">CARD</span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        className="w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-right dark:text-white"
-                                        value={mixedPayments.card || ''}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            if (val === '' || parseFloat(val) >= 0) {
-                                                setMixedPayments({ ...mixedPayments, card: val === '' ? 0 : parseFloat(val) });
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className="pt-2 border-t border-indigo-100 dark:border-indigo-900/30 flex flex-col gap-1">
-                                    <div className="flex justify-between text-[10px] font-black tracking-widest uppercase">
-                                        <span className="text-gray-400">Total Mixed:</span>
-                                        <span className={errors.mixedMatch ? 'text-red-500' : 'text-indigo-600 dark:text-indigo-400'}>
-                                            ₹{mixedPayments.cash + mixedPayments.upi + mixedPayments.card} / ₹{finalAmount}
-                                        </span>
-                                    </div>
-                                    {(errors.mixed || errors.mixedMatch) && (
-                                        <p className="text-[9px] text-red-500 font-bold uppercase tracking-tighter">
-                                            {errors.mixed || errors.mixedMatch}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="flex flex-col gap-4 mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
-                        {/* 3 Buttons: Save, Print, Close */}
-                        {!generatedBill ? (
-                            <div className="grid grid-cols-2 gap-6">
-                                <button
-                                    onClick={() => handleGenerateBill(false)}
-                                    disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
-                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-2 border-blue-200 dark:border-gray-600 rounded-2xl text-blue-700 dark:text-blue-400 font-bold transition-all hover:shadow-lg hover:scale-[1.02] hover:border-blue-400 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed disabled:hover:scale-100"
-                                >
-                                    <Save className="w-7 h-7 group-hover:scale-110 transition-transform" />
-                                    <div className="text-center">
-                                        <div className="text-sm font-bold">Save Bill</div>
-                                        <div className="text-[10px] font-normal opacity-70">Save without printing</div>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => handleGenerateBill(true)}
-                                    disabled={loading || Object.keys(errors).length > 0 || selectedTests.length === 0}
-                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl font-bold shadow-xl shadow-indigo-300/50 dark:shadow-indigo-900/50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:grayscale disabled:cursor-not-allowed disabled:hover:scale-100"
-                                >
-                                    {loading ? (
-                                        <div className="w-7 h-7 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        <Printer className="w-7 h-7 group-hover:scale-110 transition-transform" />
-                                    )}
-                                    <div className="text-center">
-                                        <div className="text-sm font-bold">{loading ? 'Processing...' : 'Generate & Print'}</div>
-                                        <div className="text-[10px] font-normal opacity-90">Save and print invoice</div>
-                                    </div>
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <button
-                                    onClick={handlePrint}
-                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-2xl font-bold hover:shadow-lg hover:scale-[1.02] hover:border-gray-400 transition-all"
-                                >
-                                    <Printer className="w-7 h-7 group-hover:scale-110 transition-transform" />
-                                    <div className="text-center">
-                                        <div className="text-sm font-bold">Print Invoice</div>
-                                        <div className="text-[10px] font-normal opacity-70">Print again if needed</div>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={handleClose}
-                                    className="group flex flex-col items-center justify-center gap-3 px-6 py-5 bg-gradient-to-br from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-2xl font-bold shadow-xl shadow-emerald-300/50 dark:shadow-emerald-900/50 transition-all hover:scale-[1.02] active:scale-95"
-                                >
-                                    <Check className="w-7 h-7 group-hover:scale-110 transition-transform" />
-                                    <div className="text-center">
-                                        <div className="text-sm font-bold">Complete & Close</div>
-                                        <div className="text-[10px] font-normal opacity-90">Finish this order</div>
-                                    </div>
-                                </button>
-                            </div>
-                        )}
-                        {generatedBill && (
-                            <p className="text-center text-[10px] text-green-600 dark:text-green-400 font-bold uppercase tracking-widest bg-green-50 dark:bg-green-900/20 py-2 rounded-lg">
-                                <Check size={12} className="inline mr-1" />
-                                Bill Saved Successfully
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>
@@ -762,8 +785,11 @@ export default function LabBillingPage() {
                     background: transparent;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #e2e8f0;
+                    background: #e5e7eb;
                     border-radius: 10px;
+                }
+                .center-input {
+                    text-align: center;
                 }
             `}</style>
         </div>

@@ -234,12 +234,12 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                                 }}
                                 className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 w-full text-left relative overflow-hidden
                                     ${isActive
-                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                                        ? 'bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
                                         : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:scale-[1.01]'
                                     }`}
                             >
                                 {isActive && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 animate-pulse" />
+                                    <div className="absolute inset-0 bg-linear-to-r from-blue-400/20 to-indigo-400/20 animate-pulse" />
                                 )}
                                 <item.icon
                                     size={22}
@@ -300,8 +300,8 @@ const LabLayout = ({ children }: { children: React.ReactNode }) => {
                         <ThemeToggle />
 
                         {/* User Info Badge */}
-                        <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border border-blue-200 dark:border-gray-600">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                        <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-xl bg-linear-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border border-blue-200 dark:border-gray-600">
+                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                                 {labUser.name?.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex flex-col">

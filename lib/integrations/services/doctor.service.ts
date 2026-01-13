@@ -109,6 +109,12 @@ export const doctorService = {
       body: JSON.stringify(data),
     }),
 
+  createPharmacyToken: (data: any) =>
+    apiClient<any>(DOCTOR_ENDPOINTS.CREATE_PHARMACY_TOKEN, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   getPrescriptionById: (id: string) =>
     apiClient<any>(DOCTOR_ENDPOINTS.GET_PRESCRIPTION(id)),
 
@@ -142,6 +148,12 @@ export const doctorService = {
   // Announcements
   getAnnouncements: () =>
     apiClient<{ announcements: any[] }>('/notifications'),
+
+  updateAppointmentStatus: (id: string, status: string) =>
+    apiClient<any>(`/doctor/appointments/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 };
 
 

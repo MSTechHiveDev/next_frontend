@@ -41,6 +41,11 @@ interface SidebarProps {
      * Callback for the default logout button
      */
     onLogout?: () => void;
+    /**
+     * Active color theme (e.g. 'blue', 'green', 'indigo')
+     * Defaults to 'blue'
+     */
+    activeColor?: string;
 }
 
 const defaultItems: SidebarItem[] = [
@@ -68,7 +73,8 @@ export default function Sidebar({
     items = defaultItems,
     className = "",
     footer,
-    onLogout
+    onLogout,
+    activeColor = 'blue'
 }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
@@ -84,7 +90,7 @@ export default function Sidebar({
         <>
             {/* Mobile Overlay Backdrop */}
             <div
-                className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 bg-black/60 z-50 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                 onClick={onClose}
                 aria-hidden="true"
@@ -92,7 +98,7 @@ export default function Sidebar({
 
             {/* Sidebar Container */}
             <aside
-                className={`fixed top-0 left-0 z-40 h-screen w-64 bg-card border-r border-border-theme transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                className={`fixed top-0 left-0 z-[60] h-screen w-64 bg-card border-r border-border-theme transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     } ${className}`}
             >
                 <div className="flex flex-col h-full">
@@ -136,13 +142,13 @@ export default function Sidebar({
                                             : 'text-muted hover:bg-secondary-theme hover:text-foreground'
                                             }`}
                                     >
-                                        <item.icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500'
+                                        <item.icon className={`w-5 h-5 ${isActive ? `text-${activeColor}-600 dark:text-${activeColor}-400` : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500'
                                             }`} />
                                         <span className="flex-1">{item.label}</span>
 
                                         {item.badge && (
                                             <span className={`px-2 py-0.5 text-xs rounded-full ${isActive
-                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200'
+                                                ? `bg-${activeColor}-100 text-${activeColor}-700 dark:bg-${activeColor}-800 dark:text-${activeColor}-200`
                                                 : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
                                                 }`}>
                                                 {item.badge}

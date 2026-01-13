@@ -87,12 +87,13 @@ export default function DoctorAppointmentsPage() {
 
    return (
       <div className="space-y-6 animate-in fade-in duration-500">
-         <div className="flex justify-between items-center">
+
+         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Appointments</h1>
                <p className="text-gray-500 mt-1">Manage your schedule and patient consultations.</p>
             </div>
-            <button className="px-4 py-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg shadow-blue-600/20 transition-all">
+            <button className="px-4 py-2 bg-blue-600 cursor-pointer hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg shadow-blue-600/20 transition-all w-full md:w-auto">
                + New Appointment
             </button>
          </div>
@@ -178,12 +179,12 @@ export default function DoctorAppointmentsPage() {
                      <table className="w-full text-left">
                         <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
                            <tr>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Time</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Patient Details</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Symptoms</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Time</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Patient Details</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Symptoms</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right whitespace-nowrap">Actions</th>
                            </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -191,18 +192,71 @@ export default function DoctorAppointmentsPage() {
                               <tr key={apt.id || apt._id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors group">
                                  <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex flex-col">
-                                       <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
-                                          <Clock size={16} className="text-gray-400" />
-                                          {apt.time}
-                                       </div>
-                                       {apt.date && (
+                                       {!['completed', 'cancelled', 'no show', 'no-show', 'finished', 'rejected', 'in session', 'in-progress'].includes(apt.status?.toLowerCase()) ? (
+                                           (() => {
+                                               let targetTime = null;
+
+                                               if (apt.date && apt.time) {
+                                                  try {
+                                                    const d = new Date(apt.date);
+                                                    const t = apt.time.match(/(\d+):(\d+) (AM|PM)/i);
+                                                    if (t) {
+                                                        let hours = parseInt(t[1]);
+                                                        const mins = parseInt(t[2]);
+                                                        const ampm = t[3].toUpperCase();
+                                                        if (ampm === 'PM' && hours < 12) hours += 12;
+                                                        if (ampm === 'AM' && hours === 12) hours = 0;
+                                                        d.setHours(hours, mins, 0, 0);
+                                                        targetTime = d;
+                                                    }
+                                                  } catch (e) {}
+                                               }
+                                               
+                                               if (!targetTime || isNaN(targetTime.getTime())) {
+                                                    return (
+                                                       <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
+                                                          <Clock size={16} className="text-gray-400" />
+                                                          {apt.time}
+                                                       </div>
+                                                    );
+                                               }
+
+                                               const diff = Math.floor((targetTime.getTime() - new Date().getTime()) / 60000);
+                                               
+                                               let label = '';
+                                               let colorClass = '';
+
+                                               if (diff > 0) {
+                                                   const timeStr = diff < 60 ? diff + 'm' : Math.floor(diff / 60) + 'h ' + (diff % 60) + 'm';
+                                                   label = `Starts in: ${timeStr}`;
+                                                   colorClass = 'bg-blue-50 text-blue-600 border-blue-100';
+                                               } else {
+                                                   const absDiff = Math.abs(diff);
+                                                   const timeStr = absDiff < 60 ? absDiff + 'm' : Math.floor(absDiff / 60) + 'h ' + (absDiff % 60) + 'm';
+                                                   label = `Overdue: ${timeStr}`;
+                                                   colorClass = 'bg-rose-50 text-rose-600 border-rose-100';
+                                               }
+                                               
+                                               return (
+                                                 <span className={`inline-flex w-fit items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest ${colorClass}`}>
+                                                     <Clock size={12} /> {label}
+                                                 </span>
+                                               );
+                                           })()
+                                       ) : (
+                                           <div className="flex items-center gap-2 text-gray-900 dark:text-white font-medium">
+                                              <Clock size={16} className="text-gray-400" />
+                                              {apt.time}
+                                           </div>
+                                       )}
+                                       {apt.date && (['completed', 'cancelled', 'no show', 'finished', 'rejected'].includes(apt.status?.toLowerCase())) && (
                                           <span className="text-[10px] text-gray-400 ml-6">
                                              {new Date(apt.date).toLocaleDateString()}
                                           </span>
                                        )}
                                     </div>
                                  </td>
-                                 <td className="px-6 py-4">
+                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center gap-3">
                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-xs capitalize">
                                           {(apt.patientName || '?').charAt(0)}
@@ -218,12 +272,12 @@ export default function DoctorAppointmentsPage() {
                                        {Array.isArray(apt.symptoms) && apt.symptoms.length > 0 ? apt.symptoms.join(', ') : (apt.symptoms || '-')}
                                     </span>
                                  </td>
-                                 <td className="px-6 py-4">
+                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700">
                                        {apt.type}
                                     </span>
                                  </td>
-                                 <td className="px-6 py-4">
+                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${apt.status?.toLowerCase() === 'scheduled' || apt.status?.toLowerCase() === 'booked' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' :
                                        apt.status?.toLowerCase() === 'completed' || apt.status?.toLowerCase() === 'finished' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' :
                                           apt.status?.toLowerCase() === 'cancelled' || apt.status?.toLowerCase() === 'rejected' ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' :
@@ -232,7 +286,7 @@ export default function DoctorAppointmentsPage() {
                                        {apt.status}
                                     </span>
                                  </td>
-                                 <td className="px-6 py-4 text-right">
+                                 <td className="px-6 py-4 text-right whitespace-nowrap">
                                     {apt.status?.toLowerCase() === 'completed' || apt.status?.toLowerCase() === 'finished' ? (
                                        <button
                                           onClick={() => {

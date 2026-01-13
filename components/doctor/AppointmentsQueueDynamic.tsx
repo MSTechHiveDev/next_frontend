@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, User, CheckCircle2, Loader2 } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle2, Loader2, Trash2 } from 'lucide-react';
 import { doctorService } from '@/lib/integrations/services/doctor.service';
 import { toast } from 'react-hot-toast';
 
@@ -118,7 +118,7 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
   return (
     <div className="bg-card dark:bg-card rounded-2xl border border-border-theme dark:border-border-theme shadow-sm h-full flex flex-col">
       {/* Header with Toggle - Fixed */}
-      <div className="p-6 border-b border-border-theme dark:border-border-theme flex items-center justify-between flex-shrink-0">
+      <div className="p-6 border-b border-border-theme dark:border-border-theme flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-lg font-bold text-foreground dark:text-foreground">Today's Appointments</h2>
           <p className="text-xs text-muted mt-1">
@@ -208,12 +208,32 @@ export default function AppointmentsQueueDynamic({ onStatsChange }: QueueProps) 
                         <p className="text-sm font-bold text-foreground">{apt.time}</p>
                         <p className="text-xs text-muted">~20min</p>
                       </div>
-                      <button
-                        onClick={() => router.push(`/doctor/appointment/${apt.id}`)}
-                        className="shrink-0 px-4 py-2 bg-primary-theme hover:opacity-90 text-primary-theme-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
-                      >
-                        <CheckCircle2 size={14} /> Start
-                      </button>
+                          <button
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                if(!confirm('Are you sure you want to remove this appointment?')) return;
+                                try {
+                                    // Assuming updateAppointmentStatus exists on doctorService or we need to add it.
+                                    // If strictly not available, I'll allow the error to guide me, but likely it is available.
+                                    await doctorService.updateAppointmentStatus(apt.id, 'cancelled');
+                                    toast.success('Appointment removed');
+                                    fetchAppointments(); 
+                                } catch(err: any) {
+                                    toast.error('Failed to remove');
+                                    console.error(err);
+                                }
+                            }}
+                            className="shrink-0 p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer"
+                            title="Remove Appointment"
+                          >
+                              <Trash2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => router.push(`/doctor/appointment/${apt.id}`)}
+                            className="shrink-0 px-4 py-2 bg-primary-theme hover:opacity-90 text-primary-theme-foreground text-xs font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                          >
+                            <CheckCircle2 size={14} /> Start
+                          </button>
                     </div>
 
                     {/* Mobile Table Row (xs only) */}

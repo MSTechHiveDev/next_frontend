@@ -174,94 +174,153 @@ export default function TransactionsPage() {
     };
 
     return (
-        <div className="p-6 transition-colors duration-500">
-            <div className="flex justify-between items-center mb-6">
+        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-700 pb-12">
+            {/* Header Section */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">Transactions</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage and track all laboratory billings</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+                        <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                            <Download className="w-5 h-5 text-white" />
+                        </div>
+                        Lab Transactions
+                    </h1>
+                    <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-2">
+                        Billing History & <span className="text-indigo-600">Payment Records</span>
+                    </p>
                 </div>
+
                 <button
                     onClick={handleExport}
                     disabled={exporting || loading}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2.5 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-indigo-100 dark:shadow-none transition-all active:scale-95 disabled:opacity-50"
                 >
-                    <Download className="w-4 h-4" />
+                    {exporting ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                        <Download className="w-4 h-4" />
+                    )}
                     {exporting ? 'Exporting...' : 'Export Excel'}
                 </button>
             </div>
 
-            {/* Filter Bar */}
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm mb-6 flex flex-wrap gap-4 items-end transition-colors">
-                <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1 tracking-widest">Start Date</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-green-500 transition-all placeholder:text-gray-400"
-                    />
+            {/* Filter Section */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+                <div className="md:col-span-8 bg-white dark:bg-gray-800 p-6 rounded-[32px] border border-gray-100 dark:border-gray-700 shadow-sm flex flex-wrap gap-6 items-center">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2 ml-1 tracking-widest text-center md:text-left">Filter by Date</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-xs font-bold text-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                            />
+                            <div className="text-gray-300 font-bold">→</div>
+                            <input
+                                type="date"
+                                value={endDate}
+                                min={startDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-xs font-bold text-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                            />
+                        </div>
+                    </div>
+                    { (startDate || endDate) && (
+                        <button
+                            onClick={() => { setStartDate(''); setEndDate(''); }}
+                            className="text-[10px] font-bold text-rose-500 uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-950/20 px-4 py-2 rounded-lg transition-all pt-7 md:pt-4"
+                        >
+                            Reset
+                        </button>
+                    )}
                 </div>
-                <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1 tracking-widest">End Date</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        min={startDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-bold text-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-green-500 transition-all placeholder:text-gray-400"
-                    />
+                
+                <div className="md:col-span-4 bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-[32px] border border-indigo-100 dark:border-indigo-800/30">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Items per Page</span>
+                        <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-widest">10 ITEMS</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">Transaction Count</span>
+                        <div className="flex gap-1.5">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i+1 === page ? 'bg-indigo-600' : 'bg-indigo-200 dark:bg-indigo-800'}`} />
+                            ))}
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={() => { setStartDate(''); setEndDate(''); }}
-                    className="px-4 py-2 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors"
-                >
-                    Clear Filters
-                </button>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-                        <thead className="bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200 font-medium border-b border-gray-200 dark:border-gray-700">
-                            <tr>
-                                <th className="px-6 py-4">Invoice ID</th>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Patient Name</th>
-                                <th className="px-6 py-4">Mobile</th>
-                                <th className="px-6 py-4">Total</th>
-                                <th className="px-6 py-4">Paid</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Mode</th>
+            {/* Table Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-[40px] border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden min-h-[500px] flex flex-col">
+                <div className="overflow-x-auto flex-1">
+                    <table className="w-full text-left border-collapse min-w-[900px]">
+                        <thead>
+                            <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                                 <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Invoice ID</th>
+                                <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date & Time</th>
+                                <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Patient Name</th>
+                                <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount</th>
+                                <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Paid Amount</th>
+                                <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Status</th>
+                                <th className="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Payment Mode</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">Loading transactions...</td>
+                                    <td colSpan={7} className="px-8 py-24 text-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                             <div className="w-8 h-8 border-3 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading Transactions...</span>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : bills.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No transactions found</td>
+                                    <td colSpan={7} className="px-8 py-24 text-center">
+                                        <div className="flex flex-col items-center gap-3 opacity-20 grayscale">
+                                             <Download className="w-12 h-12 text-gray-400" />
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No Transactions Found</span>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : (
                                 bills.map((bill) => (
-                                    <tr key={bill._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-gray-800 dark:text-white">{bill.invoiceId}</td>
-                                        <td className="px-6 py-4">{new Date(bill.createdAt).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">{bill.patientDetails.name}</td>
-                                        <td className="px-6 py-4">{bill.patientDetails.mobile}</td>
-                                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">₹{bill.finalAmount}</td>
-                                        <td className="px-6 py-4 text-green-600 dark:text-green-400 font-bold">₹{bill.paidAmount}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${bill.status === 'Paid' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                                bill.status === 'Due' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                                                    'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                                                }`}>
+                                    <tr key={bill._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-all group">
+                                        <td className="px-8 py-6">
+                                            <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg w-fit mb-1 border border-indigo-100 dark:border-indigo-800">
+                                                <span className="font-bold text-indigo-600 dark:text-indigo-400 text-xs tracking-tight">{bill.invoiceId}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(bill.createdAt).toLocaleDateString()}</span>
+                                            <div className="text-[9px] text-gray-300 font-medium">@ {new Date(bill.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-tight">{bill.patientDetails.name}</div>
+                                            <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-0.5">{bill.patientDetails.mobile}</div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className="font-bold text-gray-900 dark:text-white text-sm">₹{bill.finalAmount.toLocaleString()}</span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">₹{bill.paidAmount.toLocaleString()}</span>
+                                            {bill.balance > 0 && <div className="text-[9px] text-rose-400 font-bold">Due: ₹{bill.balance}</div>}
+                                        </td>
+                                        <td className="px-8 py-6 text-center">
+                                            <span className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest border transition-all ${
+                                                bill.status === 'Paid' 
+                                                    ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30' 
+                                                    : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30'
+                                            }`}>
                                                 {bill.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{bill.paymentMode}</span>
+                                        <td className="px-8 py-6 text-right">
+                                            <span className="px-3 py-1 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest border border-gray-100 dark:border-gray-600">
+                                                {bill.paymentMode}
+                                            </span>
                                         </td>
                                     </tr>
                                 ))
@@ -270,25 +329,29 @@ export default function TransactionsPage() {
                     </table>
                 </div>
 
-                {/* Pagination */}
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900 transition-colors">
-                    <button
-                        disabled={page <= 1}
-                        onClick={() => setPage(p => p - 1)}
-                        className="px-6 py-2 text-xs font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50 shadow-sm active:scale-95"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Page {page} of {totalPages}</span>
-                    <button
-                        disabled={page >= totalPages}
-                        onClick={() => setPage(p => p + 1)}
-                        className="px-6 py-2 text-xs font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all disabled:opacity-50 shadow-sm active:scale-95"
-                    >
-                        Next
-                    </button>
+                {/* Pagination Controls */}
+                <div className="p-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/30 flex flex-col sm:flex-row justify-between items-center gap-6">
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Page <span className="text-indigo-600">{page}</span> / {totalPages}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            disabled={page <= 1}
+                            onClick={() => setPage(p => p - 1)}
+                            className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 hover:border-indigo-400 transition-all disabled:opacity-30 disabled:hover:border-gray-200"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            disabled={page >= totalPages}
+                            onClick={() => setPage(p => p + 1)}
+                            className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 hover:border-indigo-400 transition-all disabled:opacity-30 disabled:hover:border-gray-200"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
